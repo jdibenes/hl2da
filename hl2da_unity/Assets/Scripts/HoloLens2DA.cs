@@ -45,15 +45,20 @@ public class HoloLens2DA : MonoBehaviour
         float[,] extrinsics_acc = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_IMU_ACCELEROMETER);
         float[,] extrinsics_gyr = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_IMU_GYROSCOPE);
 
-        /*
+        
         float[,] image_points = new float[1, 2];
+        float[,] camera_points = new float[1, 2];
 
         image_points[0, 0] = 320.0f;
         image_points[0, 1] = 240.0f;
 
-        float[,] camera_points = hl2da.MapImagePointToCameraUnitPlane(hl2da.sensor_id.RM_VLC_LEFTFRONT, image_points);
-        float[,] image_points2 = hl2da.MapCameraSpaceToImagePoint(hl2da.sensor_id.RM_VLC_LEFTFRONT, camera_points);
-        */
+        camera_points[0, 0] = 0.0f;
+        camera_points[0, 1] = 0.0f;
+
+        float[,] mpoint = hl2da.MapImagePointToCameraUnitPlane(hl2da.sensor_id.RM_VLC_LEFTFRONT, image_points);
+        float[,] ppoint = hl2da.MapCameraSpaceToImagePoint(hl2da.sensor_id.RM_VLC_LEFTFRONT, camera_points);
+
+
 
         hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_LEFTFRONT,     30);
         hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_LEFTLEFT,      30);
