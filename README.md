@@ -17,3 +17,6 @@ Unified HoloLens 2 plugin for acquiring sensor data.
   - Gyroscope
   - Magnetometer
 
+## References
+
+This project uses the HoloLens 2 Research Mode API available at the [HoloLens2ForCV](https://github.com/microsoft/HoloLens2ForCV) repository.
