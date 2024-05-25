@@ -30,6 +30,9 @@ public static class hl2da
     private static extern void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements);
 
     [DllImport("hl2da")]
+    private static extern void Unpack_Float2(IntPtr source, float[,] destination, int elements);
+
+    [DllImport("hl2da")]
     private static extern void InitializeGlobal();
 
     [DllImport("hl2da")]
@@ -110,6 +113,11 @@ public static class hl2da
     }
 
     private static void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_Float2(IntPtr source, float[,] destination, int elements)
     {
 
     }
@@ -453,5 +461,16 @@ public static class hl2da
     {
         destination = new MagDataStruct[length];
         Unpack_RM_IMU_Magnetometer(source, destination, length);
+    }
+
+    public static void Unpack(IntPtr source, int n, int m, out float[,] destination)
+    {
+        destination = new float[n, m];
+        Unpack_Float2(source, destination, n * m);
+    }
+
+    public static void UnpackPose(IntPtr source, out float[,] pose)
+    {
+        Unpack(source, 4, 4, out pose);
     }
 }
