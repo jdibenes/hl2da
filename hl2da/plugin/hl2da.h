@@ -20,31 +20,16 @@ enum sensor_id
 };
 
 PLUGIN_IMPORT
+void Copy(void const* source, void* destination, int bytes);
+
+PLUGIN_IMPORT
 void DebugMessage(char const* str);
 
 PLUGIN_IMPORT
-void Unpack_U8(void const* source, uint8_t* destination, int elements);
-
-PLUGIN_IMPORT
-void Unpack_U16(void const* source, uint16_t* destination, int elements);
-
-PLUGIN_IMPORT
-void Unpack_U32(void const* source, uint32_t* destination, int elements);
-
-PLUGIN_IMPORT
-void Unpack_U64(void const* source, uint64_t* destination, int elements);
-
-PLUGIN_IMPORT
-void Unpack_RM_IMU_Accelerometer(void const* source, AccelDataStruct* destination, int elements);
-
-PLUGIN_IMPORT
-void Unpack_RM_IMU_Gyroscope(void const* source, GyroDataStruct* destination, int elements);
-
-PLUGIN_IMPORT
-void Unpack_RM_IMU_Magnetometer(void const* source, MagDataStruct* destination, int elements);
-
-PLUGIN_IMPORT
 void InitializeGlobal();
+
+PLUGIN_IMPORT
+int OverrideWorldCoordinateSystem(void* scs_ptr);
 
 PLUGIN_IMPORT
 void Initialize(int id, int buffer_size);

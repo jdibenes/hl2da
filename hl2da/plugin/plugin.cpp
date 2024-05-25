@@ -6,10 +6,10 @@
 
 #define PLUGIN_EXPORT extern "C" __declspec(dllexport)
 
-template<typename T>
-void BlockCopy(void const* source, T* destination, int elements)
+PLUGIN_EXPORT
+void Copy(void const* source, void* destination, int bytes)
 {
-    memcpy(destination, source, elements * sizeof(T));
+    memcpy(destination, source, bytes);
 }
 
 PLUGIN_EXPORT
@@ -19,59 +19,25 @@ void DebugMessage(char const* str)
 }
 
 PLUGIN_EXPORT
-void Unpack_U8(void const* source, uint8_t* destination, int elements)
-{
-    BlockCopy(source, destination, elements);
-}
-
-PLUGIN_EXPORT
-void Unpack_U16(void const* source, uint16_t* destination, int elements)
-{
-    BlockCopy(source, destination, elements);
-}
-
-PLUGIN_EXPORT
-void Unpack_U32(void const* source, uint32_t* destination, int elements)
-{
-    BlockCopy(source, destination, elements);
-}
-
-PLUGIN_EXPORT
-void Unpack_U64(void const* source, uint64_t* destination, int elements)
-{
-    BlockCopy(source, destination, elements);
-}
-
-PLUGIN_EXPORT
-void Unpack_RM_IMU_Accelerometer(void const* source, AccelDataStruct* destination, int elements)
-{
-    BlockCopy(source, destination, elements);
-}
-
-PLUGIN_EXPORT
-void Unpack_RM_IMU_Gyroscope(void const* source, GyroDataStruct* destination, int elements)
-{
-    BlockCopy(source, destination, elements);
-}
-
-PLUGIN_EXPORT
-void Unpack_RM_IMU_Magnetometer(void const* source, MagDataStruct* destination, int elements)
-{
-    BlockCopy(source, destination, elements);
-}
-
-PLUGIN_EXPORT
-void Unpack_Float2(void const* source, float* destination, int elements)
-{
-    BlockCopy(source, destination, elements);
-}
-
-PLUGIN_EXPORT
 void InitializeGlobal()
 {
     Locator_Initialize();
     ResearchMode_Initialize();
     RM_InitializeDepthLock();
+}
+
+PLUGIN_EXPORT
+int OverrideWorldCoordinateSystem(void* scs_ptr)
+{
+    winrt::Windows::Perception::Spatial::SpatialCoordinateSystem scs = nullptr;
+    if (scs_ptr)
+    {
+    winrt::copy_from_abi(scs, scs_ptr);
+    scs = Locator_SanitizeSpatialCoordinateSystem(scs);
+    if (!scs) { return false; }
+    }
+    Locator_OverrideWorldCoordinateSystem(scs);
+    return true;
 }
 
 PLUGIN_EXPORT
