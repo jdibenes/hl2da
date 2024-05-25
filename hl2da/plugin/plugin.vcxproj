@@ -246,7 +246,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\hl2da\comref_wrapper.h" />
     <ClInclude Include="..\hl2da\locator.h" />
     <ClInclude Include="..\hl2da\lock.h" />
     <ClInclude Include="..\hl2da\log.h" />
@@ -255,7 +254,7 @@
     <ClInclude Include="..\hl2da\stream_rm.h" />
     <ClInclude Include="..\hl2da\timestamps.h" />
     <ClInclude Include="..\hl2da\types.h" />
-    <ClInclude Include="plugin.h" />
+    <ClInclude Include="hl2da.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\hl2da\locator.cpp" />

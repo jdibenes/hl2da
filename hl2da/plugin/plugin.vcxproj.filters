@@ -35,11 +35,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="plugin.h">
+    <ClInclude Include="hl2da.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\hl2da\comref_wrapper.h">
-      <Filter>Libraries</Filter>
     </ClInclude>
     <ClInclude Include="..\hl2da\locator.h">
       <Filter>Libraries</Filter>
