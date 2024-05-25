@@ -121,7 +121,7 @@
     <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="App.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="locator.cpp" />
     <ClCompile Include="lock.cpp" />
     <ClCompile Include="log.cpp" />
