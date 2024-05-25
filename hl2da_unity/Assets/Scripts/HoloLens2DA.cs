@@ -104,7 +104,7 @@ public class HoloLens2DA : MonoBehaviour
         // Get most recent frame
         hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
-        //hl2da.UnpackPose(fb.pose_buffer, out float[,] pose);
+        float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, 4, 4);
 
         // Load frame data into textures
         tex.LoadRawTextureData(fb.buffer, fb.length); // Image is u8 -> hl2da.Unpack(fb.buffer, fb.length, out byte[] image);
@@ -119,7 +119,7 @@ public class HoloLens2DA : MonoBehaviour
         // Get most recent frame
         hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_DEPTH_AHAT, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
-        //hl2da.UnpackPose(fb.pose_buffer, out float[,] pose);
+        float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, 4, 4);
 
         // Load frame data into textures
         tex_ht.LoadRawTextureData(fb.buffer, fb.length * sizeof(ushort));                      // Depth is u16 -> hl2da.Unpack(fb.buffer, fb.length, out ushort[] depth);
@@ -137,7 +137,7 @@ public class HoloLens2DA : MonoBehaviour
         // Get most recent frame
         hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_DEPTH_LONGTHROW, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
-        //hl2da.UnpackPose(fb.pose_buffer, out float[,] pose);
+        float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, 4, 4);
 
         // Load frame data into textures
         tex_lt.LoadRawTextureData(fb.buffer, fb.length * sizeof(ushort));                      // Depth is u16 -> hl2da.Unpack(fb.buffer, fb.length, out ushort[] depth);
@@ -158,8 +158,8 @@ public class HoloLens2DA : MonoBehaviour
         // Get most recent frame
         hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_IMU_ACCELEROMETER, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
-        hl2da.Unpack(fb.buffer, fb.length, out hl2da.AccelDataStruct[] samples);
-        //hl2da.UnpackPose(fb.pose_buffer, out float[,] pose);
+        hl2da.AccelDataStruct[] samples = hl2da.Unpack1D<hl2da.AccelDataStruct>(fb.buffer, fb.length);
+        float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, 4, 4);
 
         // Display first sample in the batch
         hl2da.AccelDataStruct sample0 = samples[0];
@@ -171,8 +171,8 @@ public class HoloLens2DA : MonoBehaviour
         // Get most recent frame
         hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_IMU_GYROSCOPE, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
-        hl2da.Unpack(fb.buffer, fb.length, out hl2da.GyroDataStruct[] samples);
-        //hl2da.UnpackPose(fb.pose_buffer, out float[,] pose);
+        hl2da.GyroDataStruct[] samples = hl2da.Unpack1D<hl2da.GyroDataStruct>(fb.buffer, fb.length);
+        float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, 4, 4);
 
         // Display first sample in the batch
         hl2da.GyroDataStruct sample0 = samples[0];
@@ -184,8 +184,8 @@ public class HoloLens2DA : MonoBehaviour
         // Get most recent frame
         hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_IMU_MAGNETOMETER, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
-        hl2da.Unpack(fb.buffer, fb.length, out hl2da.MagDataStruct[] samples);
-        //hl2da.UnpackPose(fb.pose_buffer, out float[,] pose);
+        hl2da.MagDataStruct[] samples = hl2da.Unpack1D<hl2da.MagDataStruct>(fb.buffer, fb.length);
+        float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, 4, 4);
 
         // Display first sample in the batch
         hl2da.MagDataStruct sample0 = samples[0];

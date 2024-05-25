@@ -6,31 +6,10 @@ public static class hl2da
 {
 #if WINDOWS_UWP
     [DllImport("hl2da")]
+    private static extern void Copy(IntPtr source, IntPtr destination, int bytes);
+
+    [DllImport("hl2da")]
     private static extern void DebugMessage(string str);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_U8(IntPtr source, byte[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_U16(IntPtr source, ushort[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_U32(IntPtr source, uint[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_U64(IntPtr source, ulong[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_RM_IMU_Accelerometer(IntPtr source, AccelDataStruct[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_RM_IMU_Gyroscope(IntPtr source, GyroDataStruct[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_Float2(IntPtr source, float[,] destination, int elements);
 
     [DllImport("hl2da")]
     private static extern void InitializeGlobal();
@@ -77,47 +56,12 @@ public static class hl2da
     [DllImport("hl2da")]
     private static extern void MapCameraSpaceToImagePoint_RM(int id, float[,] camera_points, float[,] image_points, int point_count);
 #else
+    private static void Copy(IntPtr source, IntPtr destination, int bytes)
+    {
+
+    }
+
     private static void DebugMessage(string str)
-    {
-
-    }
-
-    private static void Unpack_U8(IntPtr source, byte[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_U16(IntPtr source, ushort[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_U32(IntPtr source, uint[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_U64(IntPtr source, ulong[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_RM_IMU_Accelerometer(IntPtr source, AccelDataStruct[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_RM_IMU_Gyroscope(IntPtr source, GyroDataStruct[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_Float2(IntPtr source, float[,] destination, int elements)
     {
 
     }
@@ -344,6 +288,32 @@ public static class hl2da
         }
     };
 
+    public static void Copy<T>(IntPtr source, IntPtr destination, int length)
+    {
+        Copy(source, destination, length * Marshal.SizeOf(typeof(T)));
+    }
+
+    public static void Copy<T>(IntPtr source, object destination, int length)
+    {
+        GCHandle h = GCHandle.Alloc(destination, GCHandleType.Pinned);
+        Copy<T>(source, h.AddrOfPinnedObject(), length);
+        h.Free();
+    }
+
+    public static T[] Unpack1D<T>(IntPtr source, int length)
+    {
+        T[] destination = new T[length];
+        Copy<T>(source, destination, destination.Length);
+        return destination;
+    }
+
+    public static T[,] Unpack2D<T>(IntPtr source, int d0, int d1)
+    {
+        T[,] destination = new T[d0, d1];
+        Copy<T>(source, destination, destination.Length);
+        return destination;
+    }
+
     public static void Print(string str)
     {
         DebugMessage(str);
@@ -398,6 +368,10 @@ public static class hl2da
         return fb;
     }
 
+
+
+
+
     public static float[,] GetSensorExtrinsics(sensor_id id)
     {
         float[,] extrinsics = new float[4, 4];
@@ -420,7 +394,105 @@ public static class hl2da
         MapCameraSpaceToImagePoint_RM((int)id, camera_points, image_points, point_count);
         return image_points;
     }
+}
 
+
+
+
+
+/*
+public static void UnpackPose(IntPtr source, out float[] pose)
+{
+    Unpack(source, 16, out pose);
+}
+*/
+/*
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_U8(IntPtr source, byte[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_U16(IntPtr source, ushort[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_U32(IntPtr source, uint[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_U64(IntPtr source, ulong[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_RM_IMU_Accelerometer(IntPtr source, AccelDataStruct[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_RM_IMU_Gyroscope(IntPtr source, GyroDataStruct[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_F32(IntPtr source, float[] destination, int elements);
+
+    private static void Unpack_U8(IntPtr source, byte[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_U16(IntPtr source, ushort[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_U32(IntPtr source, uint[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_U64(IntPtr source, ulong[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_RM_IMU_Accelerometer(IntPtr source, AccelDataStruct[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_RM_IMU_Gyroscope(IntPtr source, GyroDataStruct[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_F32(IntPtr source, float[] destination, int elements)
+    {
+
+    }
+
+        /*
+    public static void Unpack(IntPtr source, int length, out GyroDataStruct[] destination)
+    {
+        destination = new GyroDataStruct[length];
+        Unpack_RM_IMU_Gyroscope(source, destination, length);
+    }
+
+    public static void Unpack(IntPtr source, int length, out MagDataStruct[] destination)
+    {
+        destination = new MagDataStruct[length];
+        Unpack_RM_IMU_Magnetometer(source, destination, length);
+    }
+
+
+    public static void Unpack(IntPtr source, int length, out float[] destination)
+    {
+        destination = new float[length];
+        Unpack_F32(source, destination, length);
+    }
+    */
+/*
     public static void Unpack(IntPtr source, int length, out byte[] destination)
     {
         destination = new byte[length];
@@ -448,29 +520,9 @@ public static class hl2da
     public static void Unpack(IntPtr source, int length, out AccelDataStruct[] destination)
     {
         destination = new AccelDataStruct[length];
-        Unpack_RM_IMU_Accelerometer(source, destination, length);
+        GCHandle h = GCHandle.Alloc(destination, GCHandleType.Pinned);
+        Copy(source, h.AddrOfPinnedObject(), length * Marshal.SizeOf(typeof(AccelDataStruct)));
+        //Unpack_RM_IMU_Accelerometer(source, destination, length);
+        h.Free();
     }
-
-    public static void Unpack(IntPtr source, int length, out GyroDataStruct[] destination)
-    {
-        destination = new GyroDataStruct[length];
-        Unpack_RM_IMU_Gyroscope(source, destination, length);
-    }
-
-    public static void Unpack(IntPtr source, int length, out MagDataStruct[] destination)
-    {
-        destination = new MagDataStruct[length];
-        Unpack_RM_IMU_Magnetometer(source, destination, length);
-    }
-
-    public static void Unpack(IntPtr source, int n, int m, out float[,] destination)
-    {
-        destination = new float[n, m];
-        Unpack_Float2(source, destination, n * m);
-    }
-
-    public static void UnpackPose(IntPtr source, out float[,] pose)
-    {
-        Unpack(source, 4, 4, out pose);
-    }
-}
+    */
