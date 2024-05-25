@@ -183,7 +183,7 @@ void Extract_RM_VLC(void* frame, void const** buffer, int32_t* length, void** po
     *buffer = d.buffer;
     *length = (int32_t)d.length;
     *pose_buffer = &(f->pose);
-    *pose_length = sizeof(rm_frame::pose);
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 PLUGIN_EXPORT
@@ -197,7 +197,7 @@ void Extract_RM_Depth_AHAT(void* frame, void const** buffer, int32_t* length, vo
     *ab_depth_buffer = d.ab_depth_buffer;
     *ab_depth_length = (int32_t)d.ab_depth_length;
     *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose);
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 PLUGIN_EXPORT
@@ -213,7 +213,7 @@ void Extract_RM_Depth_Longthrow(void* frame, void const** buffer, int32_t* lengt
     *sigma_buffer = d.sigma_buffer;
     *sigma_length = (int32_t)d.sigma_length;
     *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose);
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 PLUGIN_EXPORT
@@ -225,7 +225,7 @@ void Extract_RM_IMU_Accelerometer(void* frame, void const** buffer, int32_t* len
     *buffer = d.buffer;
     *length = (int32_t)d.length;
     *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose);
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 PLUGIN_EXPORT
@@ -237,7 +237,7 @@ void Extract_RM_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length,
     *buffer = d.buffer;
     *length = (int32_t)d.length;
     *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose);
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 PLUGIN_EXPORT
@@ -249,7 +249,7 @@ void Extract_RM_IMU_Magnetometer(void* frame, void const** buffer, int32_t* leng
     *buffer = d.buffer;
     *length = (int32_t)d.length;
     *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose);
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 PLUGIN_EXPORT
