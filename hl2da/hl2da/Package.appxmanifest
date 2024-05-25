@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10" xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest" xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"  xmlns:uap2="http://schemas.microsoft.com/appx/manifest/uap/windows10/2" IgnorableNamespaces="uap mp uap2">
+  <Identity
+    Name="b576d831-6d1e-4fdc-9542-0f0f5baab1cc"
+    Publisher="CN=jcds"
+    Version="1.0.0.0" />
+  <mp:PhoneIdentity PhoneProductId="b576d831-6d1e-4fdc-9542-0f0f5baab1cc" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
+  <Properties>
+    <DisplayName>hl2da</DisplayName>
+    <PublisherDisplayName>jcds</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+  </Properties>
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.0.0" MaxVersionTested="10.0.0.0" />
+  </Dependencies>
+  <Resources>
+    <Resource Language="x-generate" />
+  </Resources>
+  <Applications>
+    <Application Id="App" Executable="$targetnametoken$.exe" EntryPoint="hl2da.App">
+      <uap:VisualElements DisplayName="hl2da" Description="A project for a C++/WinRT Universal Windows Platform (UWP) app directly implementing CoreApplication"
+        Square150x150Logo="Assets\Square150x150Logo.png" Square44x44Logo="Assets\Square44x44Logo.png" BackgroundColor="transparent">
+        <uap:SplashScreen Image="Assets\SplashScreen.png" />
+        <uap:DefaultTile/>
+      </uap:VisualElements>
+    </Application>
+  </Applications>
+  <Capabilities>
+    <Capability Name="internetClient" />
+    <uap2:Capability Name="spatialPerception"/>
+    <DeviceCapability Name="microphone"/>
+    <DeviceCapability Name="gazeInput"/>
+    <DeviceCapability Name="webcam"/>
+  </Capabilities>
+</Package>
