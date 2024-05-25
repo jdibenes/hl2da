@@ -61,6 +61,12 @@ void Unpack_RM_IMU_Magnetometer(void const* source, MagDataStruct* destination, 
 }
 
 PLUGIN_EXPORT
+void Unpack_Float2(void const* source, float* destination, int elements)
+{
+    BlockCopy(source, destination, elements);
+}
+
+PLUGIN_EXPORT
 void InitializeGlobal()
 {
     Locator_Initialize();
