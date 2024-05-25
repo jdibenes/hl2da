@@ -6,10 +6,58 @@
 
 #define PLUGIN_EXPORT extern "C" __declspec(dllexport)
 
+template<typename T>
+void BlockCopy(void const* source, T* destination, int elements)
+{
+    memcpy(destination, source, elements * sizeof(T));
+}
+
 PLUGIN_EXPORT
 void DebugMessage(char const* str)
 {
     ShowMessage("%s", str);
+}
+
+PLUGIN_EXPORT
+void Unpack_U8(void const* source, uint8_t* destination, int elements)
+{
+    BlockCopy(source, destination, elements);
+}
+
+PLUGIN_EXPORT
+void Unpack_U16(void const* source, uint16_t* destination, int elements)
+{
+    BlockCopy(source, destination, elements);
+}
+
+PLUGIN_EXPORT
+void Unpack_U32(void const* source, uint32_t* destination, int elements)
+{
+    BlockCopy(source, destination, elements);
+}
+
+PLUGIN_EXPORT
+void Unpack_U64(void const* source, uint64_t* destination, int elements)
+{
+    BlockCopy(source, destination, elements);
+}
+
+PLUGIN_EXPORT
+void Unpack_RM_IMU_Accelerometer(void const* source, AccelDataStruct* destination, int elements)
+{
+    BlockCopy(source, destination, elements);
+}
+
+PLUGIN_EXPORT
+void Unpack_RM_IMU_Gyroscope(void const* source, GyroDataStruct* destination, int elements)
+{
+    BlockCopy(source, destination, elements);
+}
+
+PLUGIN_EXPORT
+void Unpack_RM_IMU_Magnetometer(void const* source, MagDataStruct* destination, int elements)
+{
+    BlockCopy(source, destination, elements);
 }
 
 PLUGIN_EXPORT

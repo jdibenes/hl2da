@@ -2,10 +2,11 @@
 #pragma once
 
 #include <stdint.h>
+#include "researchmode/ResearchModeApi.h"
 
 #define PLUGIN_IMPORT extern "C" __declspec(dllimport)
 
-enum SensorId
+enum sensor_id
 {
     RM_VLC_LEFTFRONT,
     RM_VLC_LEFTLEFT,
@@ -20,6 +21,27 @@ enum SensorId
 
 PLUGIN_IMPORT
 void DebugMessage(char const* str);
+
+PLUGIN_IMPORT
+void Unpack_U8(void const* source, uint8_t* destination, int elements);
+
+PLUGIN_IMPORT
+void Unpack_U16(void const* source, uint16_t* destination, int elements);
+
+PLUGIN_IMPORT
+void Unpack_U32(void const* source, uint32_t* destination, int elements);
+
+PLUGIN_IMPORT
+void Unpack_U64(void const* source, uint64_t* destination, int elements);
+
+PLUGIN_IMPORT
+void Unpack_RM_IMU_Accelerometer(void const* source, AccelDataStruct* destination, int elements);
+
+PLUGIN_IMPORT
+void Unpack_RM_IMU_Gyroscope(void const* source, GyroDataStruct* destination, int elements);
+
+PLUGIN_IMPORT
+void Unpack_RM_IMU_Magnetometer(void const* source, MagDataStruct* destination, int elements);
 
 PLUGIN_IMPORT
 void InitializeGlobal();
