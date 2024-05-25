@@ -278,7 +278,7 @@ void RM_MapImagePointToCameraUnitPlane(int id, float const* in, float* out, int 
 
     sensor->QueryInterface(IID_PPV_ARGS(&pCameraSensor));
 
-    for (int i = 0; i < point_count; i)
+    for (int i = 0; i < point_count; ++i)
     {
     float uv[2] = { in[2 * i], in[(2 * i) + 1] };
     float xy[2];
@@ -300,7 +300,7 @@ void RM_MapCameraSpaceToImagePoint(int id, float const* in, float* out, int poin
 
     sensor->QueryInterface(IID_PPV_ARGS(&pCameraSensor));
 
-    for (int i = 0; i < point_count; i)
+    for (int i = 0; i < point_count; ++i)
     {
     float xy[2] = { in[2 * i], in[(2 * i) + 1] };
     float uv[2];
