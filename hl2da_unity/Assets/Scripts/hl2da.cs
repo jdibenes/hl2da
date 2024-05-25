@@ -1,15 +1,33 @@
 
 using System;
 using System.Runtime.InteropServices;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
 
 public static class hl2da
 {
 #if WINDOWS_UWP
     [DllImport("hl2da")]
     private static extern void DebugMessage(string str);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_U8(IntPtr source, byte[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_U16(IntPtr source, ushort[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_U32(IntPtr source, uint[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_U64(IntPtr source, ulong[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_RM_IMU_Accelerometer(IntPtr source, AccelDataStruct[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_RM_IMU_Gyroscope(IntPtr source, GyroDataStruct[] destination, int elements);
+
+    [DllImport("hl2da")]
+    private static extern void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements);
 
     [DllImport("hl2da")]
     private static extern void InitializeGlobal();
@@ -46,8 +64,52 @@ public static class hl2da
 
     [DllImport("hl2da")]
     private static extern void Extract_RM_IMU_Magnetometer(IntPtr frame, out IntPtr buffer, out int length, out IntPtr pose_buffer, out int pose_length);
+
+    [DllImport("hl2da")]
+    private static extern void GetExtrinsics_RM(int id, float[,] extrinsics);
+
+    [DllImport("hl2da")]
+    private static extern void MapImagePointToCameraUnitPlane_RM(int id, float[,] image_points, float[,] camera_points, int point_count);
+
+    [DllImport("hl2da")]
+    private static extern void MapCameraSpaceToImagePoint_RM(int id, float[,] camera_points, float[,] image_points, int point_count);
 #else
     private static void DebugMessage(string str)
+    {
+
+    }
+
+    private static void Unpack_U8(IntPtr source, byte[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_U16(IntPtr source, ushort[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_U32(IntPtr source, uint[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_U64(IntPtr source, ulong[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_RM_IMU_Accelerometer(IntPtr source, AccelDataStruct[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_RM_IMU_Gyroscope(IntPtr source, GyroDataStruct[] destination, int elements)
+    {
+
+    }
+
+    private static void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements)
     {
 
     }
@@ -135,76 +197,95 @@ public static class hl2da
         pose_buffer = IntPtr.Zero;
         pose_length = 0;
     }
+
+    private static void GetExtrinsics_RM(int id, float[,] extrinsics)
+    {
+
+    }
+
+    private static void MapImagePointToCameraUnitPlane_RM(int id, float[,] image_points, float[,] camera_points, int point_count)
+    {
+
+    }
+
+    private static void MapCameraSpaceToImagePoint_RM(int id, float[,] camera_points, float[,] image_points, int point_count)
+    {
+
+    }
 #endif
-    public static void Print(string str)
+
+    public enum sensor_id
     {
-        DebugMessage(str);
+        RM_VLC_LEFTFRONT,
+        RM_VLC_LEFTLEFT,
+        RM_VLC_RIGHTFRONT,
+        RM_VLC_RIGHTRIGHT,
+        RM_DEPTH_AHAT,
+        RM_DEPTH_LONGTHROW,
+        RM_IMU_ACCELEROMETER,
+        RM_IMU_GYROSCOPE,
+        RM_IMU_MAGNETOMETER
+    };
+
+    public enum get_status
+    {
+        DISCARDED = -1,
+        OK = 0,
+        NOT_YET_ARRIVED = 1,
     }
 
-    public static void InitializeComponents()
+    public enum search_preference
     {
-        InitializeGlobal();
+        PAST = -1,
+        NEAREST = 0,
+        FUTURE = 1
     }
 
-    public static void InitializeStream(int id, int buffer_size)
+    [StructLayout(LayoutKind.Explicit)]
+    public struct AccelDataStruct
     {
-        Initialize(id, buffer_size);
-    }
+        [FieldOffset( 0)] public ulong VinylHupTicks;
+        [FieldOffset( 8)] public ulong SocTicks;
+        [FieldOffset(16)] public float x;
+        [FieldOffset(20)] public float y;
+        [FieldOffset(24)] public float z;
+        [FieldOffset(28)] public float temperature;
+        // 32
+    };
 
-    public static void SetStreamEnable(int id, bool enable)
+    [StructLayout(LayoutKind.Explicit)]
+    public struct GyroDataStruct
     {
-        SetEnable(id, enable ? 1 : 0);
-    }
+        [FieldOffset( 0)] public ulong VinylHupTicks;
+        [FieldOffset( 8)] public ulong SocTicks;
+        [FieldOffset(16)] public float x;
+        [FieldOffset(20)] public float y;
+        [FieldOffset(24)] public float z;
+        [FieldOffset(28)] public float temperature;
+        // 32
+    };
 
-    private static void Extract(frame_buffer fb)
+    [StructLayout(LayoutKind.Explicit)]
+    public struct MagDataStruct
     {
-        if (fb.frame == IntPtr.Zero) { return; }
-
-        switch (fb.id)
-        {
-        case 0: Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case 1: Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case 2: Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case 3: Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case 4: Extract_RM_Depth_AHAT(fb.frame, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.pose_buffer, out fb.pose_length); break;
-        case 5: Extract_RM_Depth_Longthrow(fb.frame, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
-        case 6: Extract_RM_IMU_Accelerometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case 7: Extract_RM_IMU_Gyroscope(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case 8: Extract_RM_IMU_Magnetometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        }
-    }
-
-    public static frame_buffer GetStreamFrame(int id, int stamp)
-    {
-        frame_buffer fb = new frame_buffer();
-        fb.status = GetByFramestamp(id, stamp, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
-        fb.id = id;
-        Extract(fb);
-        return fb;
-    }
-
-    public static frame_buffer GetStreamFrame(int id, ulong stamp, int time_preference, int tiebreak_right)
-    {
-        frame_buffer fb = new frame_buffer();
-        fb.status = GetByTimestamp(id, stamp, time_preference, tiebreak_right, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
-        fb.id = id;
-        Extract(fb);
-        return fb;
-    }
-
-    
-
-
+        [FieldOffset( 0)] public ulong VinylHupTicks;
+        [FieldOffset( 8)] public ulong SocTicks;
+        [FieldOffset(16)] public float x;
+        [FieldOffset(20)] public float y;
+        [FieldOffset(24)] public float z;
+        [FieldOffset(28)] private float _pad;
+        // 32
+    };
 
     public class frame_buffer
     {
         public IntPtr frame;
 
-        public int status;
-        public int id;
+        public get_status status;
+        public sensor_id id;
         public ulong timestamp;
         public int framestamp;
-        public int _reserved;
+        private int _reserved;
 
         public IntPtr buffer;
         public IntPtr ab_depth_buffer;
@@ -216,29 +297,37 @@ public static class hl2da
         public int sigma_length;        
         public int pose_length;
 
-        public frame_buffer()
+        private void reset()
         {
             frame = IntPtr.Zero;
-            status = -1;
-            id = -1;
-            timestamp = 0;
+
+            status     = (get_status)(-1);
+            id         = (sensor_id)(-1);
+            timestamp  = 0;
             framestamp = 0;
-            _reserved = 0;
-            buffer = IntPtr.Zero;
+            _reserved  = 0;
+
+            buffer          = IntPtr.Zero;
             ab_depth_buffer = IntPtr.Zero;
-            sigma_buffer = IntPtr.Zero;
-            pose_buffer = IntPtr.Zero;
-            length = 0;
+            sigma_buffer    = IntPtr.Zero;
+            pose_buffer     = IntPtr.Zero;
+
+            length          = 0;
             ab_depth_length = 0;
-            sigma_length = 0;
-            pose_length = 0;
+            sigma_length    = 0;
+            pose_length     = 0;
+        }
+
+        public frame_buffer()
+        {
+            reset();
         }
 
         public void Destroy()
         {
             if (frame == IntPtr.Zero) { return; }
             Release_RM(frame);
-            frame = IntPtr.Zero;
+            reset();
         }
 
         ~frame_buffer()
@@ -247,8 +336,114 @@ public static class hl2da
         }
     };
 
+    public static void Print(string str)
+    {
+        DebugMessage(str);
+    }
 
-    
+    public static void InitializeComponents()
+    {
+        InitializeGlobal();
+    }
 
+    public static void InitializeStream(sensor_id id, int buffer_size)
+    {
+        Initialize((int)id, buffer_size);
+    }
 
+    public static void SetStreamEnable(sensor_id id, bool enable)
+    {
+        SetEnable((int)id, enable ? 1 : 0);
+    }
+
+    private static void Extract(frame_buffer fb)
+    {
+        switch (fb.id)
+        {
+        case sensor_id.RM_VLC_LEFTFRONT:     Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_VLC_LEFTLEFT:      Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_VLC_RIGHTFRONT:    Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_VLC_RIGHTRIGHT:    Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_DEPTH_AHAT:        Extract_RM_Depth_AHAT(fb.frame, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_DEPTH_LONGTHROW:   Extract_RM_Depth_Longthrow(fb.frame, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_IMU_ACCELEROMETER: Extract_RM_IMU_Accelerometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_IMU_GYROSCOPE:     Extract_RM_IMU_Gyroscope(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_IMU_MAGNETOMETER:  Extract_RM_IMU_Magnetometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        }
+    }
+
+    public static frame_buffer GetStreamFrame(sensor_id id, int framestamp)
+    {
+        frame_buffer fb = new frame_buffer();
+        fb.id = id;
+        fb.status = (get_status)GetByFramestamp((int)fb.id, framestamp, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
+        if (fb.frame != IntPtr.Zero) { Extract(fb); }
+        return fb;
+    }
+
+    public static frame_buffer GetStreamFrame(sensor_id id, ulong timestamp, search_preference time_preference, bool tiebreak_right)
+    {
+        frame_buffer fb = new frame_buffer();
+        fb.id = id;
+        fb.status = (get_status)GetByTimestamp((int)fb.id, timestamp, (int)time_preference, tiebreak_right ? 1 : 0, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
+        if (fb.frame != IntPtr.Zero) { Extract(fb); }
+        return fb;
+    }
+
+    public static void GetSensorExtrinsics(sensor_id id, float[,] extrinsics)
+    {
+        GetExtrinsics_RM((int)id, extrinsics);
+    }
+
+    public static void MapImagePointToCameraUnitPlane(sensor_id id, float[,] image_points, float[,] camera_points)
+    {
+        MapImagePointToCameraUnitPlane_RM((int)id, image_points, camera_points, image_points.GetLength(0));
+    }
+
+    public static void MapCameraSpaceToImagePoint(sensor_id id, float[,] camera_points, float[,] image_points)
+    {
+        MapCameraSpaceToImagePoint_RM((int)id, camera_points, image_points, image_points.GetLength(0));
+    }
+
+    public static void Unpack(IntPtr source, int length, out byte[] destination)
+    {
+        destination = new byte[length];
+        Unpack_U8(source, destination, length);
+    }
+
+    public static void Unpack(IntPtr source, int length, out ushort[] destination)
+    {
+        destination = new ushort[length];
+        Unpack_U16(source, destination, length);
+    }
+
+    public static void Unpack(IntPtr source, int length, out uint[] destination)
+    {
+        destination = new uint[length];
+        Unpack_U32(source, destination, length);
+    }
+
+    public static void Unpack(IntPtr source, int length, out ulong[] destination)
+    {
+        destination = new ulong[length];
+        Unpack_U64(source, destination, length);
+    }
+
+    public static void Unpack(IntPtr source, int length, out AccelDataStruct[] destination)
+    {
+        destination = new AccelDataStruct[length];
+        Unpack_RM_IMU_Accelerometer(source, destination, length);
+    }
+
+    public static void Unpack(IntPtr source, int length, out GyroDataStruct[] destination)
+    {
+        destination = new GyroDataStruct[length];
+        Unpack_RM_IMU_Gyroscope(source, destination, length);
+    }
+
+    public static void Unpack(IntPtr source, int length, out MagDataStruct[] destination)
+    {
+        destination = new MagDataStruct[length];
+        Unpack_RM_IMU_Magnetometer(source, destination, length);
+    }
 }
