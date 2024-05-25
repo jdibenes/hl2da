@@ -390,19 +390,27 @@ public static class hl2da
         return fb;
     }
 
-    public static void GetSensorExtrinsics(sensor_id id, float[,] extrinsics)
+    public static float[,] GetSensorExtrinsics(sensor_id id)
     {
+        float[,] extrinsics = new float[4, 4];
         GetExtrinsics_RM((int)id, extrinsics);
+        return extrinsics;
     }
 
-    public static void MapImagePointToCameraUnitPlane(sensor_id id, float[,] image_points, float[,] camera_points)
+    public static float[,] MapImagePointToCameraUnitPlane(sensor_id id, float[,] image_points)
     {
-        MapImagePointToCameraUnitPlane_RM((int)id, image_points, camera_points, image_points.GetLength(0));
+        int point_count = image_points.GetLength(0);
+        float[,] camera_points = new float[point_count, image_points.GetLength(1)];
+        MapImagePointToCameraUnitPlane_RM((int)id, image_points, camera_points, point_count);
+        return camera_points;
     }
 
-    public static void MapCameraSpaceToImagePoint(sensor_id id, float[,] camera_points, float[,] image_points)
+    public static float[,] MapCameraSpaceToImagePoint(sensor_id id, float[,] camera_points)
     {
-        MapCameraSpaceToImagePoint_RM((int)id, camera_points, image_points, image_points.GetLength(0));
+        int point_count = camera_points.GetLength(0);
+        float[,] image_points = new float[point_count, camera_points.GetLength(1)];
+        MapCameraSpaceToImagePoint_RM((int)id, camera_points, image_points, point_count);
+        return image_points;
     }
 
     public static void Unpack(IntPtr source, int length, out byte[] destination)
