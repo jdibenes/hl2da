@@ -17,7 +17,6 @@ void InitializeGlobal()
 {
     Locator_Initialize();
     ResearchMode_Initialize();
-
     RM_InitializeDepthLock();
 }
 
@@ -26,15 +25,22 @@ void Initialize(int id, int buffer_size)
 {
     switch (id)
     {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8: RM_Initialize(id, buffer_size); break;
+    case  0:
+    case  1:
+    case  2:
+    case  3:
+    case  4:
+    case  5:
+    case  6:
+    case  7:
+    case  8: RM_Initialize(id, buffer_size); break;
+    case  9: //
+    case 10: //
+    case 11: //
+    case 12: //
+    case 13: //
+    case 14: //
+        break;
     }
 }
 
@@ -43,15 +49,22 @@ void SetEnable(int id, int enable)
 {
     switch (id)
     {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8: RM_SetEnable(id, enable != 0); break;
+    case  0:
+    case  1:
+    case  2:
+    case  3:
+    case  4:
+    case  5:
+    case  6:
+    case  7:
+    case  8: RM_SetEnable(id, enable != 0); break;
+    case  9: //
+    case 10: //
+    case 11: //
+    case 12: //
+    case 13: //
+    case 14: //
+        break;
     }
 }
 
@@ -60,15 +73,22 @@ int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, in
 {
     switch (id)
     {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8: return RM_Get(id, stamp, *(rm_frame**)frame, *timestamp, *framestamp);
+    case  0:
+    case  1:
+    case  2:
+    case  3:
+    case  4:
+    case  5:
+    case  6:
+    case  7:
+    case  8: return RM_Get(id, stamp, *(rm_frame**)frame, *timestamp, *framestamp);
+    case  9: //
+    case 10: //
+    case 11: //
+    case 12: //
+    case 13: //
+    case 14: //
+        break;
     }
 
     return -1;
@@ -79,15 +99,22 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
 {
     switch (id)
     {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8: return RM_Get(id, stamp, time_preference, tiebreak_right != 0, *(rm_frame**)frame, *timestamp, *framestamp);
+    case  0:
+    case  1:
+    case  2:
+    case  3:
+    case  4:
+    case  5:
+    case  6:
+    case  7:
+    case  8: return RM_Get(id, stamp, time_preference, tiebreak_right != 0, *(rm_frame**)frame, *timestamp, *framestamp);
+    case  9: //
+    case 10: //
+    case 11: //
+    case 12: //
+    case 13: //
+    case 14: //
+        break;
     }
 
     return -1;
