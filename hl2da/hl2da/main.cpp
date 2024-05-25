@@ -58,45 +58,18 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 
         if (m_init) { return; }
 
-        Locator_Initialize();
-        ResearchMode_Initialize();
-        RM_Initialize(0, 30);
-        RM_SetEnable(0, true);
-
         m_init = true;
     }
 
     void Run()
     {
         CoreWindow window = CoreWindow::GetForCurrentThread();
-        rm_frame* f;
-        uint64_t t;
-        int32_t s;
-        int32_t index = 0;
 
         window.Activate();
 
         while (!m_windowClosed)
 		{
 		window.Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
-
-        memset(&f, 0, sizeof(f));
-        int v = RM_Get(0, index, f, t, s);
-        if (v == 0)
-        {
-            rm_data_vlc d;
-            d.buffer = 0;
-            d.length = 0;
-            RM_Extract(f->rmsf, d);
-
-            ULONG count = f->Release();
-            ShowMessage("RM_Get %d %lld, %d, (%d) %p", v, t, s, count, d.buffer);
-            index++;
-        }
-        else
-        {
-            //ShowMessage("RM_Get %d", v);
-        }
 		}
 
 		CoreApplication::Exit();
