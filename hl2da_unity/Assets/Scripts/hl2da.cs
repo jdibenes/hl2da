@@ -1,9 +1,12 @@
 
 using System;
 using System.Runtime.InteropServices;
+using UnityEngine;
 
 public static class hl2da
 {
+#region PLUGIN_INTERFACE
+
 #if WINDOWS_UWP
     [DllImport("hl2da")]
     private static extern void Copy(IntPtr source, IntPtr destination, int bytes);
@@ -13,6 +16,9 @@ public static class hl2da
 
     [DllImport("hl2da")]
     private static extern void InitializeGlobal();
+
+    [DllImport("hl2da")]
+    private static extern int OverrideWorldCoordinateSystem(IntPtr scs);
 
     [DllImport("hl2da")]
     private static extern void Initialize(int id, int buffer_size);
@@ -48,13 +54,13 @@ public static class hl2da
     private static extern void Extract_RM_IMU_Magnetometer(IntPtr frame, out IntPtr buffer, out int length, out IntPtr pose_buffer, out int pose_length);
 
     [DllImport("hl2da")]
-    private static extern void GetExtrinsics_RM(int id, float[,] extrinsics);
+    private static extern void GetExtrinsics_RM(int id, IntPtr extrinsics);
 
     [DllImport("hl2da")]
-    private static extern void MapImagePointToCameraUnitPlane_RM(int id, float[,] image_points, float[,] camera_points, int point_count);
+    private static extern void MapImagePointToCameraUnitPlane_RM(int id, IntPtr image_points, IntPtr camera_points, int point_count);
 
     [DllImport("hl2da")]
-    private static extern void MapCameraSpaceToImagePoint_RM(int id, float[,] camera_points, float[,] image_points, int point_count);
+    private static extern void MapCameraSpaceToImagePoint_RM(int id, IntPtr camera_points, IntPtr image_points, int point_count);
 #else
     private static void Copy(IntPtr source, IntPtr destination, int bytes)
     {
@@ -69,6 +75,11 @@ public static class hl2da
     private static void InitializeGlobal()
     {
 
+    }
+
+    private static int OverrideWorldCoordinateSystem(IntPtr scs)
+    {
+        return 0;
     }
 
     private static void Initialize(int id, int buffer_size)
@@ -150,21 +161,25 @@ public static class hl2da
         pose_length = 0;
     }
 
-    private static void GetExtrinsics_RM(int id, float[,] extrinsics)
+    private static void GetExtrinsics_RM(int id, IntPtr extrinsics)
     {
 
     }
 
-    private static void MapImagePointToCameraUnitPlane_RM(int id, float[,] image_points, float[,] camera_points, int point_count)
+    private static void MapImagePointToCameraUnitPlane_RM(int id, IntPtr image_points, IntPtr camera_points, int point_count)
     {
 
     }
 
-    private static void MapCameraSpaceToImagePoint_RM(int id, float[,] camera_points, float[,] image_points, int point_count)
+    private static void MapCameraSpaceToImagePoint_RM(int id, IntPtr camera_points, IntPtr image_points, int point_count)
     {
 
     }
 #endif
+
+#endregion PLUGIN_INTERFACE
+
+#region UNITY_LAYER
 
     public enum sensor_id
     {
@@ -183,7 +198,7 @@ public static class hl2da
     {
         DISCARDED = -1,
         OK = 0,
-        NOT_YET_ARRIVED = 1,
+        WAIT = 1,
     }
 
     public enum search_preference
@@ -293,27 +308,6 @@ public static class hl2da
         Copy(source, destination, length * Marshal.SizeOf(typeof(T)));
     }
 
-    public static void Copy<T>(IntPtr source, object destination, int length)
-    {
-        GCHandle h = GCHandle.Alloc(destination, GCHandleType.Pinned);
-        Copy<T>(source, h.AddrOfPinnedObject(), length);
-        h.Free();
-    }
-
-    public static T[] Unpack1D<T>(IntPtr source, int length)
-    {
-        T[] destination = new T[length];
-        Copy<T>(source, destination, destination.Length);
-        return destination;
-    }
-
-    public static T[,] Unpack2D<T>(IntPtr source, int d0, int d1)
-    {
-        T[,] destination = new T[d0, d1];
-        Copy<T>(source, destination, destination.Length);
-        return destination;
-    }
-
     public static void Print(string str)
     {
         DebugMessage(str);
@@ -322,6 +316,16 @@ public static class hl2da
     public static void InitializeComponents()
     {
         InitializeGlobal();
+    }
+
+    public static bool UpdateCoordinateSystem()
+    {
+        var scs = Microsoft.MixedReality.OpenXR.PerceptionInterop.GetSceneCoordinateSystem(Pose.identity);
+        if (scs == null) { return false; }
+        var unk = Marshal.GetIUnknownForObject(scs);
+        bool ret = OverrideWorldCoordinateSystem(unk) != 0;
+        Marshal.Release(unk);
+        return ret;
     }
 
     public static void InitializeStream(sensor_id id, int buffer_size)
@@ -368,161 +372,99 @@ public static class hl2da
         return fb;
     }
 
+    public static void GetSensorExtrinsics(sensor_id id, IntPtr extrinsics)
+    {
+        GetExtrinsics_RM((int)id, extrinsics);
+    }
 
+    public static void MapImagePointToCameraUnitPlane(sensor_id id, IntPtr image_points, IntPtr camera_points, int point_count)
+    {
+        MapImagePointToCameraUnitPlane_RM((int)id, image_points, camera_points, point_count);
+    }
 
+    public static void MapCameraSpaceToImagePoint(sensor_id id, IntPtr camera_points, IntPtr image_points, int point_count)
+    {
+        MapCameraSpaceToImagePoint_RM((int)id, camera_points, image_points, point_count);
+    }
 
+#endregion UNITY_LAYER
+
+#region UNITY_LAYER_UTILITIES
+    
+    public const int RM_VLC_WIDTH  = 640;
+    public const int RM_VLC_HEIGHT = 480;
+    public const int RM_VLC_FPS    = 30;
+
+    public const int RM_DEPTH_AHAT_WIDTH  = 512;
+    public const int RM_DEPTH_AHAT_HEIGHT = 512;
+    public const int RM_DEPTH_AHAT_FPS    = 45;
+
+    public const int RM_DEPTH_LONGTHROW_WIDTH  = 320;
+    public const int RM_DEPTH_LONGTHROW_HEIGHT = 288;
+    public const int RM_DEPTH_LONGTHROW_FPS    = 5;
+
+    public const int POSE_ROWS = 4;
+    public const int POSE_COLS = 4;
+
+    public static void Copy<T>(IntPtr source, object destination, int length)
+    {
+        GCHandle h = GCHandle.Alloc(destination, GCHandleType.Pinned);
+        Copy<T>(source, h.AddrOfPinnedObject(), length);
+        h.Free();
+    }
+
+    public static T[] Unpack1D<T>(IntPtr source, int length)
+    {
+        T[] destination = new T[length];
+        Copy<T>(source, destination, destination.Length);
+        return destination;
+    }
+
+    public static T[,] Unpack2D<T>(IntPtr source, int length_0, int length_1)
+    {
+        T[,] destination = new T[length_0, length_1];
+        Copy<T>(source, destination, destination.Length);
+        return destination;
+    }
 
     public static float[,] GetSensorExtrinsics(sensor_id id)
     {
-        float[,] extrinsics = new float[4, 4];
-        GetExtrinsics_RM((int)id, extrinsics);
+        float[,] extrinsics = new float[POSE_ROWS, POSE_COLS];
+        GCHandle h = GCHandle.Alloc(extrinsics, GCHandleType.Pinned);
+        GetSensorExtrinsics(id, h.AddrOfPinnedObject());
+        h.Free();
         return extrinsics;
     }
 
     public static float[,] MapImagePointToCameraUnitPlane(sensor_id id, float[,] image_points)
     {
-        int point_count = image_points.GetLength(0);
-        float[,] camera_points = new float[point_count, image_points.GetLength(1)];
-        MapImagePointToCameraUnitPlane_RM((int)id, image_points, camera_points, point_count);
+        float[,] camera_points = new float[image_points.GetLength(0), image_points.GetLength(1)];
+
+        GCHandle hi = GCHandle.Alloc(image_points,  GCHandleType.Pinned);
+        GCHandle ho = GCHandle.Alloc(camera_points, GCHandleType.Pinned);
+
+        MapImagePointToCameraUnitPlane(id, hi.AddrOfPinnedObject(), ho.AddrOfPinnedObject(), image_points.Length / 2);
+
+        hi.Free();
+        ho.Free();
+
         return camera_points;
     }
 
     public static float[,] MapCameraSpaceToImagePoint(sensor_id id, float[,] camera_points)
     {
-        int point_count = camera_points.GetLength(0);
-        float[,] image_points = new float[point_count, camera_points.GetLength(1)];
-        MapCameraSpaceToImagePoint_RM((int)id, camera_points, image_points, point_count);
+        float[,] image_points = new float[camera_points.GetLength(0), camera_points.GetLength(1)];
+
+        GCHandle hi = GCHandle.Alloc(camera_points, GCHandleType.Pinned);
+        GCHandle ho = GCHandle.Alloc(image_points,  GCHandleType.Pinned);        
+
+        MapCameraSpaceToImagePoint(id, hi.AddrOfPinnedObject(), ho.AddrOfPinnedObject(), camera_points.Length / 2);
+
+        hi.Free();
+        ho.Free();
+
         return image_points;
     }
+
+#endregion
 }
-
-
-
-
-
-/*
-public static void UnpackPose(IntPtr source, out float[] pose)
-{
-    Unpack(source, 16, out pose);
-}
-*/
-/*
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_U8(IntPtr source, byte[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_U16(IntPtr source, ushort[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_U32(IntPtr source, uint[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_U64(IntPtr source, ulong[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_RM_IMU_Accelerometer(IntPtr source, AccelDataStruct[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_RM_IMU_Gyroscope(IntPtr source, GyroDataStruct[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements);
-
-    [DllImport("hl2da")]
-    private static extern void Unpack_F32(IntPtr source, float[] destination, int elements);
-
-    private static void Unpack_U8(IntPtr source, byte[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_U16(IntPtr source, ushort[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_U32(IntPtr source, uint[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_U64(IntPtr source, ulong[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_RM_IMU_Accelerometer(IntPtr source, AccelDataStruct[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_RM_IMU_Gyroscope(IntPtr source, GyroDataStruct[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_RM_IMU_Magnetometer(IntPtr source, MagDataStruct[] destination, int elements)
-    {
-
-    }
-
-    private static void Unpack_F32(IntPtr source, float[] destination, int elements)
-    {
-
-    }
-
-        /*
-    public static void Unpack(IntPtr source, int length, out GyroDataStruct[] destination)
-    {
-        destination = new GyroDataStruct[length];
-        Unpack_RM_IMU_Gyroscope(source, destination, length);
-    }
-
-    public static void Unpack(IntPtr source, int length, out MagDataStruct[] destination)
-    {
-        destination = new MagDataStruct[length];
-        Unpack_RM_IMU_Magnetometer(source, destination, length);
-    }
-
-
-    public static void Unpack(IntPtr source, int length, out float[] destination)
-    {
-        destination = new float[length];
-        Unpack_F32(source, destination, length);
-    }
-    */
-/*
-    public static void Unpack(IntPtr source, int length, out byte[] destination)
-    {
-        destination = new byte[length];
-        Unpack_U8(source, destination, length);
-    }
-
-    public static void Unpack(IntPtr source, int length, out ushort[] destination)
-    {
-        destination = new ushort[length];
-        Unpack_U16(source, destination, length);
-    }
-
-    public static void Unpack(IntPtr source, int length, out uint[] destination)
-    {
-        destination = new uint[length];
-        Unpack_U32(source, destination, length);
-    }
-
-    public static void Unpack(IntPtr source, int length, out ulong[] destination)
-    {
-        destination = new ulong[length];
-        Unpack_U64(source, destination, length);
-    }
-
-    public static void Unpack(IntPtr source, int length, out AccelDataStruct[] destination)
-    {
-        destination = new AccelDataStruct[length];
-        GCHandle h = GCHandle.Alloc(destination, GCHandleType.Pinned);
-        Copy(source, h.AddrOfPinnedObject(), length * Marshal.SizeOf(typeof(AccelDataStruct)));
-        //Unpack_RM_IMU_Accelerometer(source, destination, length);
-        h.Free();
-    }
-    */
