@@ -14,7 +14,7 @@ public:
     IResearchModeSensorFrame* rmsf;
     winrt::Windows::Foundation::Numerics::float4x4 pose;
 
-    rm_frame(IResearchModeSensorFrame* f, winrt::Windows::Foundation::Numerics::float4x4 p);
+    rm_frame(IResearchModeSensorFrame* f, winrt::Windows::Foundation::Numerics::float4x4 const& p);
 
     ULONG AddRef();
     ULONG Release();
