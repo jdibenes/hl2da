@@ -121,13 +121,21 @@
     <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="custom_video_effect.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="locator.cpp" />
     <ClCompile Include="lock.cpp" />
     <ClCompile Include="log.cpp" />
+    <ClCompile Include="nfo.cpp" />
+    <ClCompile Include="personal_video.cpp" />
     <ClCompile Include="research_mode.cpp" />
+    <ClInclude Include="custom_video_effect.h" />
+    <ClInclude Include="nfo.h" />
+    <ClInclude Include="personal_video.h" />
     <ClInclude Include="ring_buffer.h" />
+    <ClInclude Include="stream_pv.h" />
     <ClInclude Include="stream_rm.h" />
+    <ClCompile Include="stream_pv.cpp" />
     <ClCompile Include="stream_rm.cpp" />
     <ClCompile Include="timestamps.cpp" />
   </ItemGroup>

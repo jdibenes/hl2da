@@ -1,7 +1,9 @@
 ﻿
 #include "../hl2da/locator.h"
 #include "../hl2da/research_mode.h"
+#include "../hl2da/personal_video.h"
 #include "../hl2da/stream_rm.h"
+#include "../hl2da/stream_pv.h"
 #include "../hl2da/log.h"
 
 #define PLUGIN_EXPORT extern "C" __declspec(dllexport)
@@ -23,6 +25,8 @@ void InitializeGlobal()
 {
     Locator_Initialize();
     ResearchMode_Initialize();
+    PersonalVideo_Initialize();
+
     RM_InitializeDepthLock();
 }
 
@@ -54,7 +58,7 @@ void Initialize(int id, int buffer_size)
     case  6:
     case  7:
     case  8: RM_Initialize(id, buffer_size); break;
-    case  9: //
+    case  9: PV_Initialize(    buffer_size); break;
     case 10: //
     case 11: //
     case 12: //
@@ -78,7 +82,7 @@ void SetEnable(int id, int enable)
     case  6:
     case  7:
     case  8: RM_SetEnable(id, enable != 0); break;
-    case  9: //
+    case  9: PV_SetEnable(    enable != 0); break;
     case 10: //
     case 11: //
     case 12: //
@@ -102,7 +106,7 @@ int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, in
     case  6:
     case  7:
     case  8: return RM_Get(id, stamp, *(rm_frame**)frame, *timestamp, *framestamp);
-    case  9: //
+    case  9: return PV_Get(    stamp, *(pv_frame**)frame, *timestamp, *framestamp);
     case 10: //
     case 11: //
     case 12: //
@@ -128,7 +132,7 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
     case  6:
     case  7:
     case  8: return RM_Get(id, stamp, time_preference, tiebreak_right != 0, *(rm_frame**)frame, *timestamp, *framestamp);
-    case  9: //
+    case  9: return PV_Get(    stamp, time_preference, tiebreak_right != 0, *(pv_frame**)frame, *timestamp, *framestamp);
     case 10: //
     case 11: //
     case 12: //
@@ -141,9 +145,27 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
 }
 
 PLUGIN_EXPORT
-void Release_RM(void* frame)
+void Release(int id, void* frame)
 {
-    ((rm_frame*)frame)->Release();
+    switch (id)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7:
+    case 8: ((rm_frame*)frame)->Release(); break;
+    case 9: ((pv_frame*)frame)->Release(); break;
+    case 10: //
+    case 11: //
+    case 12: //
+    case 13: //
+    case 14: //
+        break;
+    }    
 }
 
 PLUGIN_EXPORT
@@ -225,6 +247,20 @@ void Extract_RM_IMU_Magnetometer(void* frame, void const** buffer, int32_t* leng
 }
 
 PLUGIN_EXPORT
+void Extract_PV(void* frame, void const** buffer, int32_t* length, void const** intrinsics_buffer, int32_t* intrinsics_length, void const** pose_buffer, int32_t* pose_length)
+{
+    pv_frame* f = (pv_frame*)frame;
+    pv_data d;
+    PV_Extract(f->mfr, d);
+    *buffer = d.buffer;
+    *length = (int32_t)d.length;
+    *intrinsics_buffer = &f->intrinsics;
+    *intrinsics_length = sizeof(pv_frame::intrinsics) / sizeof(float);
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(pv_frame::pose) / sizeof(float);
+}
+
+PLUGIN_EXPORT
 void GetExtrinsics_RM(int id, float* out)
 {
     RM_GetExtrinsics(id, out);
@@ -240,4 +276,10 @@ PLUGIN_EXPORT
 void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int point_count)
 {
     RM_MapCameraSpaceToImagePoint(id, in, out, point_count);
+}
+
+PLUGIN_EXPORT
+void SetFormat_PV(pv_captureformat const* cf)
+{
+    PV_SetFormat(*cf);
 }

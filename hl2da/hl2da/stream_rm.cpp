@@ -37,7 +37,7 @@ static HANDLE g_thread[SENSOR_COUNT]; // CloseHandle
 //-----------------------------------------------------------------------------
 
 // OK
-rm_frame::rm_frame(IResearchModeSensorFrame* f, float4x4 p) : rmsf(f), pose(p), m_count(1)
+rm_frame::rm_frame(IResearchModeSensorFrame* f, float4x4 const& p) : rmsf(f), pose(p), m_count(1)
 {
 }
 
@@ -58,7 +58,7 @@ ULONG rm_frame::Release()
 }
 
 // OK
-static void RM_Insert(int id, IResearchModeSensorFrame* pSensorFrame, float4x4 pose, uint64_t timestamp)
+static void RM_Insert(int id, IResearchModeSensorFrame* pSensorFrame, float4x4 const& pose, uint64_t timestamp)
 {
     rm_frame* f;
     SRWLock srw(&g_lock[id], true);
