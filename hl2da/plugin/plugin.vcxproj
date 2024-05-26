@@ -214,7 +214,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <CompileAsWinRT>false</CompileAsWinRT>
-      <AdditionalIncludeDirectories>$(SolutionDir)hl2ss\Generated Files;$(SolutionDir)..\3rdparty\HoloLens2ForCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)hl2da\Generated Files;$(SolutionDir)..\3rdparty\HoloLens2ForCV;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -246,21 +246,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\hl2da\custom_video_effect.h" />
     <ClInclude Include="..\hl2da\locator.h" />
     <ClInclude Include="..\hl2da\lock.h" />
     <ClInclude Include="..\hl2da\log.h" />
+    <ClInclude Include="..\hl2da\nfo.h" />
+    <ClInclude Include="..\hl2da\personal_video.h" />
     <ClInclude Include="..\hl2da\research_mode.h" />
     <ClInclude Include="..\hl2da\ring_buffer.h" />
+    <ClInclude Include="..\hl2da\stream_pv.h" />
     <ClInclude Include="..\hl2da\stream_rm.h" />
     <ClInclude Include="..\hl2da\timestamps.h" />
     <ClInclude Include="..\hl2da\types.h" />
     <ClInclude Include="hl2da.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\hl2da\custom_video_effect.cpp" />
     <ClCompile Include="..\hl2da\locator.cpp" />
     <ClCompile Include="..\hl2da\lock.cpp" />
     <ClCompile Include="..\hl2da\log.cpp" />
+    <ClCompile Include="..\hl2da\nfo.cpp" />
+    <ClCompile Include="..\hl2da\personal_video.cpp" />
     <ClCompile Include="..\hl2da\research_mode.cpp" />
+    <ClCompile Include="..\hl2da\stream_pv.cpp" />
     <ClCompile Include="..\hl2da\stream_rm.cpp" />
     <ClCompile Include="..\hl2da\timestamps.cpp" />
     <ClCompile Include="plugin.cpp" />

@@ -33,6 +33,18 @@
     <ClCompile Include="..\hl2da\timestamps.cpp">
       <Filter>Libraries</Filter>
     </ClCompile>
+    <ClCompile Include="..\hl2da\custom_video_effect.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\nfo.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\personal_video.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_pv.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hl2da.h">
@@ -60,6 +72,18 @@
       <Filter>Libraries</Filter>
     </ClInclude>
     <ClInclude Include="..\hl2da\types.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\custom_video_effect.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\nfo.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\personal_video.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_pv.h">
       <Filter>Libraries</Filter>
     </ClInclude>
   </ItemGroup>
