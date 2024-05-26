@@ -33,7 +33,7 @@ public static class hl2da
     private static extern int GetByTimestamp(int id, ulong stamp, int time_preference, int tiebreak_right, ref IntPtr frame, ref ulong timestamp, ref int framestamp);
 
     [DllImport("hl2da")]
-    private static extern void Release_RM(IntPtr frame);
+    private static extern void Release(int id, IntPtr frame);
 
     [DllImport("hl2da")]
     private static extern void Extract_RM_VLC(IntPtr frame, out IntPtr buffer, out int length, out IntPtr pose_buffer, out int pose_length);
@@ -54,6 +54,9 @@ public static class hl2da
     private static extern void Extract_RM_IMU_Magnetometer(IntPtr frame, out IntPtr buffer, out int length, out IntPtr pose_buffer, out int pose_length);
 
     [DllImport("hl2da")]
+    private static extern void Extract_PV(IntPtr frame, out IntPtr buffer, out int length, out IntPtr intrinsics_buffer, out int intrinsics_length, out IntPtr pose_buffer, out int pose_length); 
+
+    [DllImport("hl2da")]
     private static extern void GetExtrinsics_RM(int id, IntPtr extrinsics);
 
     [DllImport("hl2da")]
@@ -61,6 +64,9 @@ public static class hl2da
 
     [DllImport("hl2da")]
     private static extern void MapCameraSpaceToImagePoint_RM(int id, IntPtr camera_points, IntPtr image_points, int point_count);
+
+    [DllImport("hl2da")]
+    private static extern void SetFormat_PV(ref pv_captureformat cf);
 #else
     private static void Copy(IntPtr source, IntPtr destination, int bytes)
     {
@@ -102,7 +108,7 @@ public static class hl2da
         return -1;
     }
 
-    private static void Release_RM(IntPtr frame)
+    private static void Release(int id, IntPtr frame)
     {
 
     }
@@ -161,6 +167,16 @@ public static class hl2da
         pose_length = 0;
     }
 
+    private static void Extract_PV(IntPtr frame, out IntPtr buffer, out int length, out IntPtr intrinsics_buffer, out int intrinsics_length, out IntPtr pose_buffer, out int pose_length)
+    {
+        buffer = IntPtr.Zero;
+        length = 0;
+        intrinsics_buffer = IntPtr.Zero;
+        intrinsics_length = 0;
+        pose_buffer = IntPtr.Zero;
+        pose_length = 0;
+    }
+
     private static void GetExtrinsics_RM(int id, IntPtr extrinsics)
     {
 
@@ -172,6 +188,11 @@ public static class hl2da
     }
 
     private static void MapCameraSpaceToImagePoint_RM(int id, IntPtr camera_points, IntPtr image_points, int point_count)
+    {
+
+    }
+
+    private static void SetFormat_PV(ref pv_captureformat cf)
     {
 
     }
@@ -191,7 +212,8 @@ public static class hl2da
         RM_DEPTH_LONGTHROW,
         RM_IMU_ACCELEROMETER,
         RM_IMU_GYROSCOPE,
-        RM_IMU_MAGNETOMETER
+        RM_IMU_MAGNETOMETER,
+        PV,
     };
 
     public enum get_status
@@ -244,6 +266,30 @@ public static class hl2da
         // 32
     };
 
+    [StructLayout(LayoutKind.Explicit)]
+    public struct pv_captureformat
+    {
+        [FieldOffset( 0)] public byte enable;
+        [FieldOffset( 1)] public byte hologram_composition;
+        [FieldOffset( 2)] public byte recording_indicator;
+        [FieldOffset( 3)] public byte video_stabilization;
+        [FieldOffset( 4)] public byte blank_protected;
+        [FieldOffset( 5)] public byte show_mesh;
+        [FieldOffset( 6)] public byte shared;
+        [FieldOffset( 7)] private byte _reserved_0;
+        [FieldOffset( 8)] public float global_opacity;
+        [FieldOffset(12)] public float output_width;
+        [FieldOffset(16)] public float output_height;
+        [FieldOffset(20)] public uint video_stabilization_length;
+        [FieldOffset(24)] public uint hologram_perspective;
+        [FieldOffset(28)] public ushort width;
+        [FieldOffset(30)] public ushort height;
+        [FieldOffset(32)] public byte framerate;
+        [FieldOffset(33)] private byte _pad_0;
+        [FieldOffset(34)] private ushort _reserved_1;
+        // 36
+    }
+
     public class frame_buffer
     {
         public IntPtr frame;
@@ -293,7 +339,7 @@ public static class hl2da
         public void Destroy()
         {
             if (frame == IntPtr.Zero) { return; }
-            Release_RM(frame);
+            Release((int)id, frame);
             reset();
         }
 
@@ -351,6 +397,7 @@ public static class hl2da
         case sensor_id.RM_IMU_ACCELEROMETER: Extract_RM_IMU_Accelerometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
         case sensor_id.RM_IMU_GYROSCOPE:     Extract_RM_IMU_Gyroscope(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
         case sensor_id.RM_IMU_MAGNETOMETER:  Extract_RM_IMU_Magnetometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.PV:                   Extract_PV(fb.frame, out fb.buffer, out fb.length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
         }
     }
 
@@ -385,6 +432,11 @@ public static class hl2da
     public static void MapCameraSpaceToImagePoint(sensor_id id, IntPtr camera_points, IntPtr image_points, int point_count)
     {
         MapCameraSpaceToImagePoint_RM((int)id, camera_points, image_points, point_count);
+    }
+
+    public static void SetStreamFormat_PV(pv_captureformat cf)
+    {
+        SetFormat_PV(ref cf);
     }
 
 #endregion UNITY_LAYER
@@ -464,6 +516,29 @@ public static class hl2da
         ho.Free();
 
         return image_points;
+    }
+
+    public static pv_captureformat CreateFormat_PV(ushort width, ushort height, byte framerate, bool enable_mrc, bool shared)
+    {
+        pv_captureformat cf = new pv_captureformat();
+
+        cf.enable = enable_mrc ? (byte)1 : (byte)0;
+        cf.hologram_composition = 1;
+        cf.recording_indicator = 0;
+        cf.video_stabilization = 0;
+        cf.blank_protected = 0;
+        cf.show_mesh = 0;
+        cf.shared = shared ? (byte)1 : (byte)0;
+        cf.global_opacity = 0.9f;
+        cf.output_width = 0.0f;
+        cf.output_height = 0.0f;
+        cf.video_stabilization_length = 0;
+        cf.hologram_perspective = 1;
+        cf.width = width;
+        cf.height = height;
+        cf.framerate = framerate;
+
+        return cf;
     }
 
 #endregion
