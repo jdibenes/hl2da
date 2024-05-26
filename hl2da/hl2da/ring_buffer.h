@@ -19,24 +19,25 @@ private:
     int32_t m_write;
     int32_t m_count;
 
-    search_interval search(uint64_t timestamp, int32_t l, int32_t r) const
+    search_interval search(uint64_t timestamp, int32_t l, int32_t r, int32_t size) const
     {
-        if ((r - l) <= 1) { return { l, r }; }
+        if ((r - l) <= 1) { return { l % size, r % size }; }
 
         int32_t m = (r + l) / 2;
-        uint64_t t = m_timestamps[m];
+        int32_t m_index = m % size;
+        uint64_t t = m_timestamps[m_index];
 
-        if (t > timestamp) { return search(timestamp, l, m); }
-        if (t < timestamp) { return search(timestamp, m, r); }
+        if (t > timestamp) { return search(timestamp, l, m, size); }
+        if (t < timestamp) { return search(timestamp, m, r, size); }
 
-        return { m, m };
+        return { m_index, m_index };
     }
 
-    int32_t find_index(uint64_t timestamp, int time_preference, bool tiebreak_right) const
+    int32_t find_index(uint64_t timestamp, int time_preference, bool tiebreak_right, int32_t size) const
     {
-        if (m_count <= 0) { return -1; }
+        if (size <= 0) { return -1; }
 
-        search_interval si = search(timestamp, 0, size() - 1);
+        search_interval si = search(timestamp, m_write, m_write + size - 1, size);
 
         if (si.l == si.r) { return si.l; }
 
@@ -124,11 +125,10 @@ public:
 
     int get(uint64_t timestamp, int time_preference, bool tiebreak_right, T& out, uint64_t& t, int32_t& s) const
     {
-        int32_t index = find_index(timestamp, time_preference, tiebreak_right);
+        int32_t base = size();
+        int32_t index = find_index(timestamp, time_preference, tiebreak_right, base);
 
         if (index < 0) { return 1; }
-
-        int32_t base = size();
 
         out = m_frames[index];
         t = m_timestamps[index];
