@@ -16,6 +16,7 @@ Unified HoloLens 2 plugin for acquiring sensor data.
   - Accelerometer
   - Gyroscope
   - Magnetometer
+- Front Camera
 
 ## References
 
