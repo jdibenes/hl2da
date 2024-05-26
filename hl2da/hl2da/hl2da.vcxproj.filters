@@ -54,6 +54,12 @@
     <Filter Include="Source Files\utilities">
       <UniqueIdentifier>{a69cc2ff-51ea-44f3-9d2a-3dd49894fb6c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sink">
+      <UniqueIdentifier>{ce623bec-f852-403e-bfbd-2491097dc9d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sink">
+      <UniqueIdentifier>{bc0c34be-b5d6-4019-9176-dddd7af36296}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
@@ -85,6 +91,18 @@
     <ClCompile Include="log.cpp">
       <Filter>Source Files\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="personal_video.cpp">
+      <Filter>Source Files\devices</Filter>
+    </ClCompile>
+    <ClCompile Include="nfo.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="custom_video_effect.cpp">
+      <Filter>Source Files\sink</Filter>
+    </ClCompile>
+    <ClCompile Include="stream_pv.cpp">
+      <Filter>Source Files\interfaces</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
@@ -110,6 +128,18 @@
     </ClInclude>
     <ClInclude Include="ring_buffer.h">
       <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="nfo.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="custom_video_effect.h">
+      <Filter>Header Files\sink</Filter>
+    </ClInclude>
+    <ClInclude Include="personal_video.h">
+      <Filter>Header Files\devices</Filter>
+    </ClInclude>
+    <ClInclude Include="stream_pv.h">
+      <Filter>Header Files\interfaces</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
