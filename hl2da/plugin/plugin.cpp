@@ -4,6 +4,7 @@
 #include "../hl2da/personal_video.h"
 #include "../hl2da/stream_rm.h"
 #include "../hl2da/stream_pv.h"
+#include "../hl2da/stream_mc.h"
 #include "../hl2da/log.h"
 
 #define PLUGIN_EXPORT extern "C" __declspec(dllexport)
@@ -59,7 +60,7 @@ void Initialize(int id, int buffer_size)
     case  7:
     case  8: RM_Initialize(id, buffer_size); break;
     case  9: PV_Initialize(    buffer_size); break;
-    case 10: //
+    case 10: MC_Initialize(    buffer_size); break;
     case 11: //
     case 12: //
     case 13: //
@@ -83,7 +84,7 @@ void SetEnable(int id, int enable)
     case  7:
     case  8: RM_SetEnable(id, enable != 0); break;
     case  9: PV_SetEnable(    enable != 0); break;
-    case 10: //
+    case 10: MC_SetEnable(    enable != 0); break;
     case 11: //
     case 12: //
     case 13: //
@@ -107,7 +108,7 @@ int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, in
     case  7:
     case  8: return RM_Get(id, stamp, *(rm_frame**)frame, *timestamp, *framestamp);
     case  9: return PV_Get(    stamp, *(pv_frame**)frame, *timestamp, *framestamp);
-    case 10: //
+    case 10: return MC_Get(    stamp, *(mc_frame**)frame, *timestamp, *framestamp);
     case 11: //
     case 12: //
     case 13: //
@@ -133,7 +134,7 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
     case  7:
     case  8: return RM_Get(id, stamp, time_preference, tiebreak_right != 0, *(rm_frame**)frame, *timestamp, *framestamp);
     case  9: return PV_Get(    stamp, time_preference, tiebreak_right != 0, *(pv_frame**)frame, *timestamp, *framestamp);
-    case 10: //
+    case 10: return MC_Get(    stamp, time_preference, tiebreak_right != 0, *(mc_frame**)frame, *timestamp, *framestamp);
     case 11: //
     case 12: //
     case 13: //
@@ -149,17 +150,17 @@ void Release(int id, void* frame)
 {
     switch (id)
     {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8: ((rm_frame*)frame)->Release(); break;
-    case 9: ((pv_frame*)frame)->Release(); break;
-    case 10: //
+    case  0:
+    case  1:
+    case  2:
+    case  3:
+    case  4:
+    case  5:
+    case  6:
+    case  7:
+    case  8: ((rm_frame*)frame)->Release(); break;
+    case  9: ((pv_frame*)frame)->Release(); break;
+    case 10: ((mc_frame*)frame)->Release(); break;
     case 11: //
     case 12: //
     case 13: //
@@ -261,6 +262,14 @@ void Extract_PV(void* frame, void const** buffer, int32_t* length, void const** 
 }
 
 PLUGIN_EXPORT
+void Extract_MC(void* frame, void const** buffer, int32_t* length)
+{
+    mc_frame* f = (mc_frame*)frame;
+    *buffer = f->buffer;
+    *length = (int32_t)f->length;
+}
+
+PLUGIN_EXPORT
 void GetExtrinsics_RM(int id, float* out)
 {
     RM_GetExtrinsics(id, out);
@@ -282,4 +291,10 @@ PLUGIN_EXPORT
 void SetFormat_PV(pv_captureformat const* cf)
 {
     PV_SetFormat(*cf);
+}
+
+PLUGIN_EXPORT
+void SetFormat_MC(int raw)
+{
+    MC_SetFormat(raw != 0);
 }

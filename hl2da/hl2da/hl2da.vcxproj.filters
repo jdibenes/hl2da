@@ -103,6 +103,15 @@
     <ClCompile Include="stream_pv.cpp">
       <Filter>Source Files\interfaces</Filter>
     </ClCompile>
+    <ClCompile Include="microphone_capture.cpp">
+      <Filter>Source Files\devices</Filter>
+    </ClCompile>
+    <ClCompile Include="neon.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="stream_mc.cpp">
+      <Filter>Source Files\interfaces</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
@@ -139,6 +148,15 @@
       <Filter>Header Files\devices</Filter>
     </ClInclude>
     <ClInclude Include="stream_pv.h">
+      <Filter>Header Files\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="microphone_capture.h">
+      <Filter>Header Files\devices</Filter>
+    </ClInclude>
+    <ClInclude Include="neon.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="stream_mc.h">
       <Filter>Header Files\interfaces</Filter>
     </ClInclude>
   </ItemGroup>

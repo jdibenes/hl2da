@@ -19,6 +19,7 @@ public class HoloLens2DA : MonoBehaviour
     public GameObject tmp_gyr;
     public GameObject tmp_mag;
     public GameObject quad_pv;
+    public GameObject tmp_mic;
 
     private Texture2D tex_lf;
     private Texture2D tex_ll;
@@ -30,6 +31,8 @@ public class HoloLens2DA : MonoBehaviour
     private Texture2D tex_lt_ab;
     private Texture2D tex_lt_sigma;
     private Texture2D tex_pv;
+
+    private Dictionary<int, int> last_framestamp = new Dictionary<int, int>();
 
     // Start is called before the first frame update
     void Start()
@@ -72,9 +75,12 @@ public class HoloLens2DA : MonoBehaviour
         hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_GYROSCOPE,     24);
         hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_MAGNETOMETER,   5);
         hl2da.InitializeStream(hl2da.sensor_id.PV,                   30);
+        hl2da.InitializeStream(hl2da.sensor_id.MICROPHONE,           20); // internal copy, can hold frames "indefinitely"
 
         hl2da.pv_captureformat pvcf = hl2da.CreateFormat_PV(640, 360, 30, false, false);
         hl2da.SetStreamFormat_PV(pvcf);
+
+        hl2da.SetStreamFormat_Microphone(false);
 
         hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_LEFTFRONT,     true);
         hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_LEFTLEFT,      true);
@@ -86,6 +92,7 @@ public class HoloLens2DA : MonoBehaviour
         hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_GYROSCOPE,     true);
         hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_MAGNETOMETER,  true);
         hl2da.SetStreamEnable(hl2da.sensor_id.PV,                   true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.MICROPHONE,           true);
 
         tex_lf       = new Texture2D(640, 480, TextureFormat.R8,  false);
         tex_ll       = new Texture2D(640, 480, TextureFormat.R8,  false);
@@ -97,6 +104,11 @@ public class HoloLens2DA : MonoBehaviour
         tex_lt_ab    = new Texture2D(320, 288, TextureFormat.R16, false);
         tex_lt_sigma = new Texture2D(320, 288, TextureFormat.R8,  false);
         tex_pv       = new Texture2D(640, 360, TextureFormat.R8,  false);
+
+        for (int i = 0; i < 16; ++i)
+        {
+            last_framestamp[i] = -1;
+        }
     }
 
     // Update is called once per frame
@@ -112,6 +124,7 @@ public class HoloLens2DA : MonoBehaviour
         Update_RM_IMU_Gyroscope();
         Update_RM_IMU_Magnetometer();
         Update_PV();
+        Update_Microphone();
     }
 
     void Update_RM_VLC(hl2da.sensor_id id, Texture2D tex, GameObject quad)
@@ -119,6 +132,10 @@ public class HoloLens2DA : MonoBehaviour
         // Get most recent frame
         hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
         float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, hl2da.POSE_ROWS, hl2da.POSE_COLS);
 
         // Load frame data into textures
@@ -131,9 +148,15 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_Depth_AHAT()
     {
+        hl2da.sensor_id id = hl2da.sensor_id.RM_DEPTH_AHAT;
+
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_DEPTH_AHAT, -1);
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
         float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, hl2da.POSE_ROWS, hl2da.POSE_COLS);
 
         // Load frame data into textures
@@ -149,9 +172,15 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_Depth_Longthrow()
     {
+        hl2da.sensor_id id = hl2da.sensor_id.RM_DEPTH_LONGTHROW;
+
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_DEPTH_LONGTHROW, -1);
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
         float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, hl2da.POSE_ROWS, hl2da.POSE_COLS);
 
         // Load frame data into textures
@@ -170,9 +199,15 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_IMU_Accelerometer()
     {
+        hl2da.sensor_id id = hl2da.sensor_id.RM_IMU_ACCELEROMETER;
+
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_IMU_ACCELEROMETER, -1);
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
         hl2da.AccelDataStruct[] samples = hl2da.Unpack1D<hl2da.AccelDataStruct>(fb.buffer, fb.length);
         float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, hl2da.POSE_ROWS, hl2da.POSE_COLS);
 
@@ -183,9 +218,15 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_IMU_Gyroscope()
     {
+        hl2da.sensor_id id = hl2da.sensor_id.RM_IMU_GYROSCOPE;
+
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_IMU_GYROSCOPE, -1);
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
         hl2da.GyroDataStruct[] samples = hl2da.Unpack1D<hl2da.GyroDataStruct>(fb.buffer, fb.length);
         float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, hl2da.POSE_ROWS, hl2da.POSE_COLS);
 
@@ -196,9 +237,15 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_IMU_Magnetometer()
     {
+        hl2da.sensor_id id = hl2da.sensor_id.RM_IMU_MAGNETOMETER;
+
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.RM_IMU_MAGNETOMETER, -1);
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
         hl2da.MagDataStruct[] samples = hl2da.Unpack1D<hl2da.MagDataStruct>(fb.buffer, fb.length);
         float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, hl2da.POSE_ROWS, hl2da.POSE_COLS);
 
@@ -209,9 +256,15 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_PV()
     {
+        hl2da.sensor_id id = hl2da.sensor_id.PV;
+
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(hl2da.sensor_id.PV, -1);
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
         if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
         float[] intrinsics = hl2da.Unpack1D<float>(fb.sigma_buffer, fb.sigma_length);
         float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, hl2da.POSE_ROWS, hl2da.POSE_COLS);
 
@@ -221,5 +274,21 @@ public class HoloLens2DA : MonoBehaviour
 
         // Display frame
         quad_pv.GetComponent<Renderer>().material.mainTexture = tex_pv;
+    }
+
+    void Update_Microphone()
+    {
+        hl2da.sensor_id id = hl2da.sensor_id.MICROPHONE;
+
+        // Get most recent frame
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
+        if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
+        float[] samples = hl2da.Unpack1D<float>(fb.buffer, fb.length);
+
+        tmp_mic.GetComponent<TextMeshPro>().text = string.Format("Microphone <{0}, {1}, {2}, {3}, {4}>", samples[0], samples[1], samples[2], samples[3], samples[4]);
     }
 }

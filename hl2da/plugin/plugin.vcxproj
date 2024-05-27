@@ -250,10 +250,13 @@
     <ClInclude Include="..\hl2da\locator.h" />
     <ClInclude Include="..\hl2da\lock.h" />
     <ClInclude Include="..\hl2da\log.h" />
+    <ClInclude Include="..\hl2da\microphone_capture.h" />
+    <ClInclude Include="..\hl2da\neon.h" />
     <ClInclude Include="..\hl2da\nfo.h" />
     <ClInclude Include="..\hl2da\personal_video.h" />
     <ClInclude Include="..\hl2da\research_mode.h" />
     <ClInclude Include="..\hl2da\ring_buffer.h" />
+    <ClInclude Include="..\hl2da\stream_mc.h" />
     <ClInclude Include="..\hl2da\stream_pv.h" />
     <ClInclude Include="..\hl2da\stream_rm.h" />
     <ClInclude Include="..\hl2da\timestamps.h" />
@@ -265,9 +268,12 @@
     <ClCompile Include="..\hl2da\locator.cpp" />
     <ClCompile Include="..\hl2da\lock.cpp" />
     <ClCompile Include="..\hl2da\log.cpp" />
+    <ClCompile Include="..\hl2da\microphone_capture.cpp" />
+    <ClCompile Include="..\hl2da\neon.cpp" />
     <ClCompile Include="..\hl2da\nfo.cpp" />
     <ClCompile Include="..\hl2da\personal_video.cpp" />
     <ClCompile Include="..\hl2da\research_mode.cpp" />
+    <ClCompile Include="..\hl2da\stream_mc.cpp" />
     <ClCompile Include="..\hl2da\stream_pv.cpp" />
     <ClCompile Include="..\hl2da\stream_rm.cpp" />
     <ClCompile Include="..\hl2da\timestamps.cpp" />

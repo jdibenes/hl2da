@@ -45,6 +45,15 @@
     <ClCompile Include="..\hl2da\stream_pv.cpp">
       <Filter>Libraries</Filter>
     </ClCompile>
+    <ClCompile Include="..\hl2da\microphone_capture.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\neon.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_mc.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hl2da.h">
@@ -84,6 +93,15 @@
       <Filter>Libraries</Filter>
     </ClInclude>
     <ClInclude Include="..\hl2da\stream_pv.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\microphone_capture.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\neon.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_mc.h">
       <Filter>Libraries</Filter>
     </ClInclude>
   </ItemGroup>

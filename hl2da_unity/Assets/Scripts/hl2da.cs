@@ -57,6 +57,9 @@ public static class hl2da
     private static extern void Extract_PV(IntPtr frame, out IntPtr buffer, out int length, out IntPtr intrinsics_buffer, out int intrinsics_length, out IntPtr pose_buffer, out int pose_length); 
 
     [DllImport("hl2da")]
+    private static extern void Extract_MC(IntPtr frame, out IntPtr buffer, out int length);
+
+    [DllImport("hl2da")]
     private static extern void GetExtrinsics_RM(int id, IntPtr extrinsics);
 
     [DllImport("hl2da")]
@@ -67,6 +70,9 @@ public static class hl2da
 
     [DllImport("hl2da")]
     private static extern void SetFormat_PV(ref pv_captureformat cf);
+
+    [DllImport("hl2da")]
+    private static extern void SetFormat_MC(int raw);
 #else
     private static void Copy(IntPtr source, IntPtr destination, int bytes)
     {
@@ -177,6 +183,12 @@ public static class hl2da
         pose_length = 0;
     }
 
+    private static void Extract_MC(IntPtr frame, out IntPtr buffer, out int length)
+    {
+        buffer = IntPtr.Zero;
+        length = 0;
+    }
+
     private static void GetExtrinsics_RM(int id, IntPtr extrinsics)
     {
 
@@ -196,6 +208,12 @@ public static class hl2da
     {
 
     }
+
+    private static void SetFormat_MC(int raw)
+    {
+
+    }
+
 #endif
 
 #endregion PLUGIN_INTERFACE
@@ -214,6 +232,7 @@ public static class hl2da
         RM_IMU_GYROSCOPE,
         RM_IMU_MAGNETOMETER,
         PV,
+        MICROPHONE,
     };
 
     public enum get_status
@@ -227,7 +246,7 @@ public static class hl2da
     {
         PAST = -1,
         NEAREST = 0,
-        FUTURE = 1
+        FUTURE = 1,
     }
 
     [StructLayout(LayoutKind.Explicit)]
@@ -398,6 +417,7 @@ public static class hl2da
         case sensor_id.RM_IMU_GYROSCOPE:     Extract_RM_IMU_Gyroscope(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
         case sensor_id.RM_IMU_MAGNETOMETER:  Extract_RM_IMU_Magnetometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
         case sensor_id.PV:                   Extract_PV(fb.frame, out fb.buffer, out fb.length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.MICROPHONE:           Extract_MC(fb.frame, out fb.buffer, out fb.length); break;
         }
     }
 
@@ -437,6 +457,11 @@ public static class hl2da
     public static void SetStreamFormat_PV(pv_captureformat cf)
     {
         SetFormat_PV(ref cf);
+    }
+
+    public static void SetStreamFormat_Microphone(bool raw)
+    {
+        SetFormat_MC(raw ? 1 : 0);
     }
 
 #endregion UNITY_LAYER
