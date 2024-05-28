@@ -60,6 +60,12 @@
     <ClCompile Include="..\hl2da\stream_si.cpp">
       <Filter>Libraries</Filter>
     </ClCompile>
+    <ClCompile Include="..\hl2da\extended_eye_tracking.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_ee.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hl2da.h">
@@ -114,6 +120,12 @@
       <Filter>Libraries</Filter>
     </ClInclude>
     <ClInclude Include="..\hl2da\stream_si.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\extended_eye_tracking.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_ee.h">
       <Filter>Libraries</Filter>
     </ClInclude>
   </ItemGroup>

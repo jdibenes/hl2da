@@ -6,6 +6,7 @@
 #include "../hl2da/stream_pv.h"
 #include "../hl2da/stream_mc.h"
 #include "../hl2da/stream_si.h"
+#include "../hl2da/stream_ee.h"
 #include "../hl2da/log.h"
 
 #include <winrt/Windows.Foundation.Collections.h>
@@ -80,10 +81,7 @@ void Initialize(int id, int buffer_size)
     case  9: PV_Initialize(    buffer_size); break;
     case 10: MC_Initialize(    buffer_size); break;
     case 11: SI_Initialize(    buffer_size); break;
-    case 12: //
-    case 13: //
-    case 14: //
-        break;
+    case 12: EE_Initialize(    buffer_size); break;
     }
 }
 
@@ -104,10 +102,7 @@ void SetEnable(int id, int enable)
     case  9: PV_SetEnable(    enable != 0); break;
     case 10: MC_SetEnable(    enable != 0); break;
     case 11: SI_SetEnable(    enable != 0); break;
-    case 12: //
-    case 13: //
-    case 14: //
-        break;
+    case 12: EE_SetEnable(    enable != 0); break;
     }
 }
 
@@ -128,10 +123,7 @@ int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, in
     case  9: return PV_Get(    stamp, *(pv_frame**)frame, *timestamp, *framestamp);
     case 10: return MC_Get(    stamp, *(mc_frame**)frame, *timestamp, *framestamp);
     case 11: return SI_Get(    stamp, *(si_frame**)frame, *timestamp, *framestamp);
-    case 12: //
-    case 13: //
-    case 14: //
-        break;
+    case 12: return EE_Get(    stamp, *(ee_frame**)frame, *timestamp, *framestamp);
     }
 
     return -1;
@@ -154,10 +146,7 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
     case  9: return PV_Get(    stamp, time_preference, tiebreak_right != 0, *(pv_frame**)frame, *timestamp, *framestamp);
     case 10: return MC_Get(    stamp, time_preference, tiebreak_right != 0, *(mc_frame**)frame, *timestamp, *framestamp);
     case 11: return SI_Get(    stamp, time_preference, tiebreak_right != 0, *(si_frame**)frame, *timestamp, *framestamp);
-    case 12: //
-    case 13: //
-    case 14: //
-        break;
+    case 12: return EE_Get(    stamp, time_preference, tiebreak_right != 0, *(ee_frame**)frame, *timestamp, *framestamp);
     }
 
     return -1;
@@ -180,10 +169,7 @@ void Release(int id, void* frame)
     case  9: ((pv_frame*)frame)->Release(); break;
     case 10: ((mc_frame*)frame)->Release(); break;
     case 11: ((si_frame*)frame)->Release(); break;
-    case 12: //
-    case 13: //
-    case 14: //
-        break;
+    case 12: ((ee_frame*)frame)->Release(); break;
     }    
 }
 
@@ -303,6 +289,17 @@ void Extract_SI(void* frame, int32_t* valid, void const** head_buffer, int32_t* 
 }
 
 PLUGIN_EXPORT
+void Extract_EE(void* frame, int32_t* valid, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
+{
+    ee_frame* f = (ee_frame*)frame;
+    *valid = f->valid;
+    *buffer = &f->frame;
+    *length = sizeof(ee_frame::frame) / sizeof(float);
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(ee_frame::pose) / sizeof(float);
+}
+
+PLUGIN_EXPORT
 void GetExtrinsics_RM(int id, float* out)
 {
     RM_GetExtrinsics(id, out);
@@ -330,4 +327,10 @@ PLUGIN_EXPORT
 void SetFormat_MC(int raw)
 {
     MC_SetFormat(raw != 0);
+}
+
+PLUGIN_EXPORT
+void SetFormat_EE(int fps_index)
+{
+    EE_SetFPS(fps_index);
 }
