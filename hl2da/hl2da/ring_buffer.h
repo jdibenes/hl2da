@@ -21,16 +21,15 @@ private:
 
     search_interval search(uint64_t timestamp, int32_t l, int32_t r, int32_t size) const
     {
-        if ((r - l) <= 1) { return { l % size, r % size }; }
+        while ((r - l) > 1)
+        {
+            int32_t m = (r + l) / 2;
+            int32_t m_index = m % size;
+            uint64_t t = m_timestamps[m_index];
+            if (t > timestamp) { r = m; } else if (t < timestamp) { l = m; } else { return { m_index, m_index }; }
+        }
 
-        int32_t m = (r + l) / 2;
-        int32_t m_index = m % size;
-        uint64_t t = m_timestamps[m_index];
-
-        if (t > timestamp) { return search(timestamp, l, m, size); }
-        if (t < timestamp) { return search(timestamp, m, r, size); }
-
-        return { m_index, m_index };
+        return { l % size, r % size };
     }
 
     int32_t find_index(uint64_t timestamp, int time_preference, bool tiebreak_right, int32_t size) const
@@ -72,8 +71,11 @@ public:
 
     void reset()
     {
-        memset(m_frames.data(), 0, m_size * sizeof(T));
-        memset(m_timestamps.data(), 0, m_size * sizeof(uint64_t));
+        m_frames.clear();
+        m_timestamps.clear();
+
+        m_frames.resize(m_size);
+        m_timestamps.resize(m_size);
 
         m_write = 0;
         m_count = 0;
@@ -82,10 +84,6 @@ public:
     void reset(int size)
     {
         m_size = (size <= 0) ? 1 : size;
-
-        m_frames.resize(m_size);
-        m_timestamps.resize(m_size);
-
         reset();
     }
 
