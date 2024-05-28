@@ -5,7 +5,15 @@
 #include "../hl2da/stream_rm.h"
 #include "../hl2da/stream_pv.h"
 #include "../hl2da/stream_mc.h"
+#include "../hl2da/stream_si.h"
 #include "../hl2da/log.h"
+
+#include <winrt/Windows.Foundation.Collections.h>
+#include <winrt/Windows.UI.Core.h>
+#include <winrt/Windows.ApplicationModel.Core.h>
+
+using namespace winrt::Windows::UI::Core;
+using namespace winrt::Windows::ApplicationModel::Core;
 
 #define PLUGIN_EXPORT extern "C" __declspec(dllexport)
 
@@ -22,13 +30,23 @@ void DebugMessage(char const* str)
 }
 
 PLUGIN_EXPORT
-void InitializeGlobal()
+void InitializeComponents()
 {
     Locator_Initialize();
     ResearchMode_Initialize();
     PersonalVideo_Initialize();
+    SpatialInput_Initialize();
 
     RM_InitializeDepthLock();
+}
+
+PLUGIN_EXPORT
+void InitializeGlobal()
+{
+    HANDLE event_done = CreateEvent(NULL, TRUE, FALSE, NULL);
+    CoreApplication::Views().GetAt(0).Dispatcher().RunAsync(CoreDispatcherPriority::High, [=]() { InitializeComponents(); SetEvent(event_done); }).get();
+    WaitForSingleObject(event_done, INFINITE);
+    CloseHandle(event_done);
 }
 
 PLUGIN_EXPORT
@@ -61,7 +79,7 @@ void Initialize(int id, int buffer_size)
     case  8: RM_Initialize(id, buffer_size); break;
     case  9: PV_Initialize(    buffer_size); break;
     case 10: MC_Initialize(    buffer_size); break;
-    case 11: //
+    case 11: SI_Initialize(    buffer_size); break;
     case 12: //
     case 13: //
     case 14: //
@@ -85,7 +103,7 @@ void SetEnable(int id, int enable)
     case  8: RM_SetEnable(id, enable != 0); break;
     case  9: PV_SetEnable(    enable != 0); break;
     case 10: MC_SetEnable(    enable != 0); break;
-    case 11: //
+    case 11: SI_SetEnable(    enable != 0); break;
     case 12: //
     case 13: //
     case 14: //
@@ -109,7 +127,7 @@ int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, in
     case  8: return RM_Get(id, stamp, *(rm_frame**)frame, *timestamp, *framestamp);
     case  9: return PV_Get(    stamp, *(pv_frame**)frame, *timestamp, *framestamp);
     case 10: return MC_Get(    stamp, *(mc_frame**)frame, *timestamp, *framestamp);
-    case 11: //
+    case 11: return SI_Get(    stamp, *(si_frame**)frame, *timestamp, *framestamp);
     case 12: //
     case 13: //
     case 14: //
@@ -135,7 +153,7 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
     case  8: return RM_Get(id, stamp, time_preference, tiebreak_right != 0, *(rm_frame**)frame, *timestamp, *framestamp);
     case  9: return PV_Get(    stamp, time_preference, tiebreak_right != 0, *(pv_frame**)frame, *timestamp, *framestamp);
     case 10: return MC_Get(    stamp, time_preference, tiebreak_right != 0, *(mc_frame**)frame, *timestamp, *framestamp);
-    case 11: //
+    case 11: return SI_Get(    stamp, time_preference, tiebreak_right != 0, *(si_frame**)frame, *timestamp, *framestamp);
     case 12: //
     case 13: //
     case 14: //
@@ -161,7 +179,7 @@ void Release(int id, void* frame)
     case  8: ((rm_frame*)frame)->Release(); break;
     case  9: ((pv_frame*)frame)->Release(); break;
     case 10: ((mc_frame*)frame)->Release(); break;
-    case 11: //
+    case 11: ((si_frame*)frame)->Release(); break;
     case 12: //
     case 13: //
     case 14: //
@@ -267,6 +285,21 @@ void Extract_MC(void* frame, void const** buffer, int32_t* length)
     mc_frame* f = (mc_frame*)frame;
     *buffer = f->buffer;
     *length = (int32_t)f->length;
+}
+
+PLUGIN_EXPORT
+void Extract_SI(void* frame, int32_t* valid, void const** head_buffer, int32_t* head_length, void const** eye_buffer, int32_t* eye_length, void const** left_buffer, int32_t* left_length, void const** right_buffer, int32_t* right_length)
+{
+    si_frame* f = (si_frame*)frame;
+    *valid = f->valid;
+    *head_buffer = &f->head_pose;
+    *head_length = sizeof(si_frame::head_pose) / sizeof(float);
+    *eye_buffer = &f->eye_ray;
+    *eye_length = sizeof(si_frame::eye_ray) / sizeof(float);
+    *left_buffer = f->left_hand;
+    *left_length = HAND_JOINTS;
+    *right_buffer = f->right_hand;
+    *right_length = HAND_JOINTS;
 }
 
 PLUGIN_EXPORT
