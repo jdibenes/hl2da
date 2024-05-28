@@ -18,6 +18,10 @@ Unified HoloLens 2 plugin for acquiring sensor data.
   - Magnetometer
 - Front Camera
 - Microphone (2 or 5 channels)
+- Spatial Input (30 Hz)
+  - Head Tracking
+  - Eye Tracking
+  - Hand Tracking
 
 ## References
 
