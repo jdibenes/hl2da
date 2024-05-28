@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class hl2da
 {
-#region PLUGIN_INTERFACE
+    #region PLUGIN_INTERFACE
 
 #if WINDOWS_UWP
     [DllImport("hl2da")]
@@ -58,6 +58,9 @@ public static class hl2da
 
     [DllImport("hl2da")]
     private static extern void Extract_MC(IntPtr frame, out IntPtr buffer, out int length);
+
+    [DllImport("hl2da")]
+    private static extern void Extract_SI(IntPtr frame, out int valid, out IntPtr head_buffer, out int head_length, out IntPtr eye_buffer, out int eye_length, out IntPtr left_buffer, out int left_length, out IntPtr right_buffer, out int right_length);
 
     [DllImport("hl2da")]
     private static extern void GetExtrinsics_RM(int id, IntPtr extrinsics);
@@ -189,6 +192,19 @@ public static class hl2da
         length = 0;
     }
 
+    private static void Extract_SI(IntPtr frame, out int valid, out IntPtr head_buffer, out int head_length, out IntPtr eye_buffer, out int eye_length, out IntPtr left_buffer, out int left_length, out IntPtr right_buffer, out int right_length)
+    {
+        valid = 0;
+        head_buffer = IntPtr.Zero;
+        head_length = 0;
+        eye_buffer = IntPtr.Zero;
+        eye_length = 0;
+        left_buffer = IntPtr.Zero;
+        left_length = 0;
+        right_buffer = IntPtr.Zero;
+        right_length = 0;
+    }
+
     private static void GetExtrinsics_RM(int id, IntPtr extrinsics)
     {
 
@@ -233,6 +249,7 @@ public static class hl2da
         RM_IMU_MAGNETOMETER,
         PV,
         MICROPHONE,
+        SPATIAL_INPUT,
     };
 
     public enum get_status
@@ -309,6 +326,21 @@ public static class hl2da
         // 36
     }
 
+    [StructLayout(LayoutKind.Explicit)]
+    public struct JointPose
+    {
+        [FieldOffset( 0)] public float rx;
+        [FieldOffset( 4)] public float ry;
+        [FieldOffset( 8)] public float rz;
+        [FieldOffset(12)] public float rw;
+        [FieldOffset(16)] public float tx;
+        [FieldOffset(20)] public float ty;
+        [FieldOffset(24)] public float tz;
+        [FieldOffset(28)] public float radius;
+        [FieldOffset(32)] public int accuracy;
+        // 36
+    }
+
     public class frame_buffer
     {
         public IntPtr frame;
@@ -317,7 +349,7 @@ public static class hl2da
         public sensor_id id;
         public ulong timestamp;
         public int framestamp;
-        private int _reserved;
+        public int valid;
 
         public IntPtr buffer;
         public IntPtr ab_depth_buffer;
@@ -337,7 +369,7 @@ public static class hl2da
             id         = (sensor_id)(-1);
             timestamp  = 0;
             framestamp = 0;
-            _reserved  = 0;
+            valid  = 0;
 
             buffer          = IntPtr.Zero;
             ab_depth_buffer = IntPtr.Zero;
@@ -418,6 +450,7 @@ public static class hl2da
         case sensor_id.RM_IMU_MAGNETOMETER:  Extract_RM_IMU_Magnetometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
         case sensor_id.PV:                   Extract_PV(fb.frame, out fb.buffer, out fb.length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
         case sensor_id.MICROPHONE:           Extract_MC(fb.frame, out fb.buffer, out fb.length); break;
+        case sensor_id.SPATIAL_INPUT:        Extract_SI(fb.frame, out fb.valid, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
         }
     }
 
@@ -479,6 +512,10 @@ public static class hl2da
     public const int RM_DEPTH_LONGTHROW_WIDTH  = 320;
     public const int RM_DEPTH_LONGTHROW_HEIGHT = 288;
     public const int RM_DEPTH_LONGTHROW_FPS    = 5;
+
+    public const int SI_HEAD_FLOATS = 9;
+    public const int SI_EYE_FLOATS = 6;
+    public const int SI_HAND_JOINTS = 26;
 
     public const int POSE_ROWS = 4;
     public const int POSE_COLS = 4;

@@ -20,6 +20,7 @@ public class HoloLens2DA : MonoBehaviour
     public GameObject tmp_mag;
     public GameObject quad_pv;
     public GameObject tmp_mic;
+    public GameObject tmp_si;
 
     private Texture2D tex_lf;
     private Texture2D tex_ll;
@@ -76,6 +77,7 @@ public class HoloLens2DA : MonoBehaviour
         hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_MAGNETOMETER,   5);
         hl2da.InitializeStream(hl2da.sensor_id.PV,                   30);
         hl2da.InitializeStream(hl2da.sensor_id.MICROPHONE,           20); // internal copy, can hold frames "indefinitely"
+        hl2da.InitializeStream(hl2da.sensor_id.SPATIAL_INPUT,        30);
 
         hl2da.pv_captureformat pvcf = hl2da.CreateFormat_PV(640, 360, 30, false, false);
         hl2da.SetStreamFormat_PV(pvcf);
@@ -93,6 +95,7 @@ public class HoloLens2DA : MonoBehaviour
         hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_MAGNETOMETER,  true);
         hl2da.SetStreamEnable(hl2da.sensor_id.PV,                   true);
         hl2da.SetStreamEnable(hl2da.sensor_id.MICROPHONE,           true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.SPATIAL_INPUT,        true);
 
         tex_lf       = new Texture2D(640, 480, TextureFormat.R8,  false);
         tex_ll       = new Texture2D(640, 480, TextureFormat.R8,  false);
@@ -125,6 +128,7 @@ public class HoloLens2DA : MonoBehaviour
         Update_RM_IMU_Magnetometer();
         Update_PV();
         Update_Microphone();
+        Update_SpatialInput();
     }
 
     void Update_RM_VLC(hl2da.sensor_id id, Texture2D tex, GameObject quad)
@@ -290,5 +294,24 @@ public class HoloLens2DA : MonoBehaviour
         float[] samples = hl2da.Unpack1D<float>(fb.buffer, fb.length);
 
         tmp_mic.GetComponent<TextMeshPro>().text = string.Format("Microphone <{0}, {1}, {2}, {3}, {4}>", samples[0], samples[1], samples[2], samples[3], samples[4]);
+    }
+
+    void Update_SpatialInput()
+    {
+        hl2da.sensor_id id = hl2da.sensor_id.SPATIAL_INPUT;
+
+        // Get most recent frame
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
+        if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
+        float[] head_pose = hl2da.Unpack1D<float>(fb.buffer, fb.length);
+        float[] eye_ray = hl2da.Unpack1D<float>(fb.ab_depth_buffer, fb.ab_depth_length);
+        hl2da.JointPose[] left_hand = hl2da.Unpack1D<hl2da.JointPose>(fb.sigma_buffer, fb.sigma_length);
+        hl2da.JointPose[] right_hand = hl2da.Unpack1D<hl2da.JointPose>(fb.pose_buffer, fb.pose_length);
+
+        tmp_si.GetComponent<TextMeshPro>().text = string.Format("Spatial Input <{0}, {1}, {2}>", head_pose[0], head_pose[1], head_pose[2]);
     }
 }

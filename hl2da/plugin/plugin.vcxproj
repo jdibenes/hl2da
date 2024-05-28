@@ -256,9 +256,11 @@
     <ClInclude Include="..\hl2da\personal_video.h" />
     <ClInclude Include="..\hl2da\research_mode.h" />
     <ClInclude Include="..\hl2da\ring_buffer.h" />
+    <ClInclude Include="..\hl2da\spatial_input.h" />
     <ClInclude Include="..\hl2da\stream_mc.h" />
     <ClInclude Include="..\hl2da\stream_pv.h" />
     <ClInclude Include="..\hl2da\stream_rm.h" />
+    <ClInclude Include="..\hl2da\stream_si.h" />
     <ClInclude Include="..\hl2da\timestamps.h" />
     <ClInclude Include="..\hl2da\types.h" />
     <ClInclude Include="hl2da.h" />
@@ -273,9 +275,11 @@
     <ClCompile Include="..\hl2da\nfo.cpp" />
     <ClCompile Include="..\hl2da\personal_video.cpp" />
     <ClCompile Include="..\hl2da\research_mode.cpp" />
+    <ClCompile Include="..\hl2da\spatial_input.cpp" />
     <ClCompile Include="..\hl2da\stream_mc.cpp" />
     <ClCompile Include="..\hl2da\stream_pv.cpp" />
     <ClCompile Include="..\hl2da\stream_rm.cpp" />
+    <ClCompile Include="..\hl2da\stream_si.cpp" />
     <ClCompile Include="..\hl2da\timestamps.cpp" />
     <ClCompile Include="plugin.cpp" />
   </ItemGroup>

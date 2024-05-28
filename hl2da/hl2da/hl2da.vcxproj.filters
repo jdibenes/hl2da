@@ -112,6 +112,12 @@
     <ClCompile Include="stream_mc.cpp">
       <Filter>Source Files\interfaces</Filter>
     </ClCompile>
+    <ClCompile Include="spatial_input.cpp">
+      <Filter>Source Files\devices</Filter>
+    </ClCompile>
+    <ClCompile Include="stream_si.cpp">
+      <Filter>Source Files\interfaces</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
@@ -157,6 +163,12 @@
       <Filter>Header Files\utilities</Filter>
     </ClInclude>
     <ClInclude Include="stream_mc.h">
+      <Filter>Header Files\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="spatial_input.h">
+      <Filter>Header Files\devices</Filter>
+    </ClInclude>
+    <ClInclude Include="stream_si.h">
       <Filter>Header Files\interfaces</Filter>
     </ClInclude>
   </ItemGroup>

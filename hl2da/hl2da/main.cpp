@@ -6,6 +6,7 @@
 #include "stream_rm.h"
 #include "stream_pv.h"
 #include "stream_mc.h"
+#include "stream_si.h"
 #include "log.h"
 
 #include <winrt/Windows.Foundation.h>
@@ -64,6 +65,7 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
         Locator_Initialize();
         ResearchMode_Initialize();
         PersonalVideo_Initialize();
+        SpatialInput_Initialize();
 
         RM_InitializeDepthLock();
 
@@ -76,11 +78,10 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 
         window.Activate();
 
-        MC_Initialize(20);
-        MC_SetFormat(false);
-        MC_SetEnable(true);
+        SI_Initialize(20);
+        SI_SetEnable(true);
 
-        mc_frame* f;
+        si_frame* f;
         uint64_t t;
         int32_t s;
         int32_t ps = -1;
@@ -89,13 +90,13 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 		{
 		window.Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 
-        int v = MC_Get(-1, f, t, s);
+        int v = SI_Get(-1, f, t, s);
         if (v == 0)
         {
             if (ps < s)
             { 
                 ps = s;
-                ShowMessage("GOT MC FRAME %lld %p %d %d", t, f->buffer, f->length, s);
+                ShowMessage("GOT MC FRAME %lld %d", t, s);
             }
             
             f->Release();
