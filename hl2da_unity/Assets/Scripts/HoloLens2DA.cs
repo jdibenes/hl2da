@@ -21,6 +21,7 @@ public class HoloLens2DA : MonoBehaviour
     public GameObject quad_pv;
     public GameObject tmp_mic;
     public GameObject tmp_si;
+    public GameObject tmp_ee;
 
     private Texture2D tex_lf;
     private Texture2D tex_ll;
@@ -66,36 +67,40 @@ public class HoloLens2DA : MonoBehaviour
 
 
 
-        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_LEFTFRONT,     30);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_LEFTLEFT,      30);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_RIGHTFRONT,    30);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_RIGHTRIGHT,    30);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_DEPTH_AHAT,        45);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_DEPTH_LONGTHROW,    5); // must be small, don't hold too many frames for too long
-        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_ACCELEROMETER, 12);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_GYROSCOPE,     24);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_MAGNETOMETER,   5);
-        hl2da.InitializeStream(hl2da.sensor_id.PV,                   30);
-        hl2da.InitializeStream(hl2da.sensor_id.MICROPHONE,           20); // internal copy, can hold frames "indefinitely"
-        hl2da.InitializeStream(hl2da.sensor_id.SPATIAL_INPUT,        30);
+        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_LEFTFRONT,      30);
+        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_LEFTLEFT,       30);
+        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_RIGHTFRONT,     30);
+        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_RIGHTRIGHT,     30);
+        hl2da.InitializeStream(hl2da.sensor_id.RM_DEPTH_AHAT,         45);
+        hl2da.InitializeStream(hl2da.sensor_id.RM_DEPTH_LONGTHROW,     5); // must be small, don't hold too many frames for too long
+        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_ACCELEROMETER,  12);
+        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_GYROSCOPE,      24);
+        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_MAGNETOMETER,    5);
+        hl2da.InitializeStream(hl2da.sensor_id.PV,                    30);
+        hl2da.InitializeStream(hl2da.sensor_id.MICROPHONE,            20); // internal copy, can hold frames "indefinitely"
+        hl2da.InitializeStream(hl2da.sensor_id.SPATIAL_INPUT,         30);
+        hl2da.InitializeStream(hl2da.sensor_id.EXTENDED_EYE_TRACKING, 30);
 
         hl2da.pv_captureformat pvcf = hl2da.CreateFormat_PV(640, 360, 30, false, false);
         hl2da.SetStreamFormat_PV(pvcf);
 
         hl2da.SetStreamFormat_Microphone(false);
 
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_LEFTFRONT,     true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_LEFTLEFT,      true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_RIGHTFRONT,    true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_RIGHTRIGHT,    true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_DEPTH_AHAT,        true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_DEPTH_LONGTHROW,   true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_ACCELEROMETER, true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_GYROSCOPE,     true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_MAGNETOMETER,  true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.PV,                   true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.MICROPHONE,           true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.SPATIAL_INPUT,        true);
+        hl2da.SetStreamFormat_ExtendedEyeTracking(2);
+
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_LEFTFRONT,      true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_LEFTLEFT,       true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_RIGHTFRONT,     true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_RIGHTRIGHT,     true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_DEPTH_AHAT,         true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_DEPTH_LONGTHROW,    true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_ACCELEROMETER,  true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_GYROSCOPE,      true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_MAGNETOMETER,   true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.PV,                    true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.MICROPHONE,            true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.SPATIAL_INPUT,         true);
+        hl2da.SetStreamEnable(hl2da.sensor_id.EXTENDED_EYE_TRACKING, true);
 
         tex_lf       = new Texture2D(640, 480, TextureFormat.R8,  false);
         tex_ll       = new Texture2D(640, 480, TextureFormat.R8,  false);
@@ -129,6 +134,7 @@ public class HoloLens2DA : MonoBehaviour
         Update_PV();
         Update_Microphone();
         Update_SpatialInput();
+        Update_ExtendedEyeTracking();
     }
 
     void Update_RM_VLC(hl2da.sensor_id id, Texture2D tex, GameObject quad)
@@ -313,5 +319,22 @@ public class HoloLens2DA : MonoBehaviour
         hl2da.JointPose[] right_hand = hl2da.Unpack1D<hl2da.JointPose>(fb.pose_buffer, fb.pose_length);
 
         tmp_si.GetComponent<TextMeshPro>().text = string.Format("Spatial Input <{0}, {1}, {2}>", head_pose[0], head_pose[1], head_pose[2]);
+    }
+
+    void Update_ExtendedEyeTracking()
+    {
+        hl2da.sensor_id id = hl2da.sensor_id.EXTENDED_EYE_TRACKING;
+
+        // Get most recent frame
+        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
+        if (fb.status != hl2da.get_status.OK) { return; }
+
+        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
+        last_framestamp[(int)id] = fb.framestamp;
+
+        float[] eye_data = hl2da.Unpack1D<float>(fb.buffer, fb.length);
+        float[,] pose = hl2da.Unpack2D<float>(fb.pose_buffer, hl2da.POSE_ROWS, hl2da.POSE_COLS);
+
+        tmp_ee.GetComponent<TextMeshPro>().text = string.Format("EE <{0}, {1}, {2}>", eye_data[0], eye_data[1], eye_data[2]);
     }
 }

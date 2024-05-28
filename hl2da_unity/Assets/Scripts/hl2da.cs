@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class hl2da
 {
-    #region PLUGIN_INTERFACE
+#region PLUGIN_INTERFACE
 
 #if WINDOWS_UWP
     [DllImport("hl2da")]
@@ -63,6 +63,9 @@ public static class hl2da
     private static extern void Extract_SI(IntPtr frame, out int valid, out IntPtr head_buffer, out int head_length, out IntPtr eye_buffer, out int eye_length, out IntPtr left_buffer, out int left_length, out IntPtr right_buffer, out int right_length);
 
     [DllImport("hl2da")]
+    private static extern void Extract_EE(IntPtr frame, out int valid, out IntPtr buffer, out int length, out IntPtr pose_buffer, out int pose_length);
+
+    [DllImport("hl2da")]
     private static extern void GetExtrinsics_RM(int id, IntPtr extrinsics);
 
     [DllImport("hl2da")]
@@ -76,6 +79,9 @@ public static class hl2da
 
     [DllImport("hl2da")]
     private static extern void SetFormat_MC(int raw);
+
+    [DllImport("hl2da")]
+    private static extern void SetFormat_EE(int fps_index);
 #else
     private static void Copy(IntPtr source, IntPtr destination, int bytes)
     {
@@ -205,6 +211,15 @@ public static class hl2da
         right_length = 0;
     }
 
+    private static void Extract_EE(IntPtr frame, out int valid, out IntPtr buffer, out int length, out IntPtr pose_buffer, out int pose_length)
+    {
+        valid = 0;
+        buffer = IntPtr.Zero;
+        length = 0;
+        pose_buffer = IntPtr.Zero;
+        pose_length = 0;
+    }
+
     private static void GetExtrinsics_RM(int id, IntPtr extrinsics)
     {
 
@@ -230,6 +245,11 @@ public static class hl2da
 
     }
 
+    private static void SetFormat_EE(int fps_index)
+    {
+
+    }
+
 #endif
 
 #endregion PLUGIN_INTERFACE
@@ -250,6 +270,7 @@ public static class hl2da
         PV,
         MICROPHONE,
         SPATIAL_INPUT,
+        EXTENDED_EYE_TRACKING,
     };
 
     public enum get_status
@@ -439,18 +460,19 @@ public static class hl2da
     {
         switch (fb.id)
         {
-        case sensor_id.RM_VLC_LEFTFRONT:     Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.RM_VLC_LEFTLEFT:      Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.RM_VLC_RIGHTFRONT:    Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.RM_VLC_RIGHTRIGHT:    Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.RM_DEPTH_AHAT:        Extract_RM_Depth_AHAT(fb.frame, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.RM_DEPTH_LONGTHROW:   Extract_RM_Depth_Longthrow(fb.frame, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.RM_IMU_ACCELEROMETER: Extract_RM_IMU_Accelerometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.RM_IMU_GYROSCOPE:     Extract_RM_IMU_Gyroscope(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.RM_IMU_MAGNETOMETER:  Extract_RM_IMU_Magnetometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.PV:                   Extract_PV(fb.frame, out fb.buffer, out fb.length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
-        case sensor_id.MICROPHONE:           Extract_MC(fb.frame, out fb.buffer, out fb.length); break;
-        case sensor_id.SPATIAL_INPUT:        Extract_SI(fb.frame, out fb.valid, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_VLC_LEFTFRONT:      Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_VLC_LEFTLEFT:       Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_VLC_RIGHTFRONT:     Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_VLC_RIGHTRIGHT:     Extract_RM_VLC(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_DEPTH_AHAT:         Extract_RM_Depth_AHAT(fb.frame, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_DEPTH_LONGTHROW:    Extract_RM_Depth_Longthrow(fb.frame, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_IMU_ACCELEROMETER:  Extract_RM_IMU_Accelerometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_IMU_GYROSCOPE:      Extract_RM_IMU_Gyroscope(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.RM_IMU_MAGNETOMETER:   Extract_RM_IMU_Magnetometer(fb.frame, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.PV:                    Extract_PV(fb.frame, out fb.buffer, out fb.length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.MICROPHONE:            Extract_MC(fb.frame, out fb.buffer, out fb.length); break;
+        case sensor_id.SPATIAL_INPUT:         Extract_SI(fb.frame, out fb.valid, out fb.buffer, out fb.length, out fb.ab_depth_buffer, out fb.ab_depth_length, out fb.sigma_buffer, out fb.sigma_length, out fb.pose_buffer, out fb.pose_length); break;
+        case sensor_id.EXTENDED_EYE_TRACKING: Extract_EE(fb.frame, out fb.valid, out fb.buffer, out fb.length, out fb.pose_buffer, out fb.pose_length); break;
         }
     }
 
@@ -495,6 +517,11 @@ public static class hl2da
     public static void SetStreamFormat_Microphone(bool raw)
     {
         SetFormat_MC(raw ? 1 : 0);
+    }
+
+    public static void SetStreamFormat_ExtendedEyeTracking(int fps_index)
+    {
+        SetFormat_EE(fps_index);
     }
 
 #endregion UNITY_LAYER

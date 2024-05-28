@@ -7,6 +7,7 @@
 #include "stream_pv.h"
 #include "stream_mc.h"
 #include "stream_si.h"
+#include "stream_ee.h"
 #include "log.h"
 
 #include <winrt/Windows.Foundation.h>
@@ -78,10 +79,11 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 
         window.Activate();
 
-        SI_Initialize(20);
-        SI_SetEnable(true);
+        EE_SetFPS(2);
+        EE_Initialize(20);
+        EE_SetEnable(true);
 
-        si_frame* f;
+        ee_frame* f;
         uint64_t t;
         int32_t s;
         int32_t ps = -1;
@@ -90,13 +92,13 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 		{
 		window.Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 
-        int v = SI_Get(-1, f, t, s);
+        int v = EE_Get(-1, f, t, s);
         if (v == 0)
         {
             if (ps < s)
             { 
                 ps = s;
-                ShowMessage("GOT MC FRAME %lld %d", t, s);
+                ShowMessage("GOT EE FRAME %lld %d", t, s);
             }
             
             f->Release();
