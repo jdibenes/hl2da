@@ -22,6 +22,7 @@ Unified HoloLens 2 plugin for acquiring sensor data.
   - Head Tracking
   - Eye Tracking
   - Hand Tracking
+- Extended Eye Tracking (30, 60, or 90 FPS)
 
 ## References
 
