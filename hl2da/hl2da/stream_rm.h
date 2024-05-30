@@ -1,78 +1,20 @@
 
 #pragma once
 
-#include "research_mode.h"
-
-#include <winrt/Windows.Foundation.Numerics.h>
-
-class rm_frame
-{
-private:
-    ULONG m_count;
-
-public:
-    IResearchModeSensorFrame* rmsf;
-    winrt::Windows::Foundation::Numerics::float4x4 pose;
-
-    rm_frame(IResearchModeSensorFrame* f, winrt::Windows::Foundation::Numerics::float4x4 const& p);
-
-    ULONG AddRef();
-    ULONG Release();
-};
-
-struct rm_data_vlc
-{
-    uint8_t const* buffer;
-    size_t length;
-};
-
-struct rm_data_zht
-{
-    uint16_t const* buffer;
-    size_t length;
-    uint16_t const* ab_depth_buffer;
-    size_t ab_depth_length;
-};
-
-struct rm_data_zlt
-{
-    uint16_t const* buffer;
-    size_t length;
-    uint16_t const* ab_depth_buffer;
-    size_t ab_depth_length;
-    uint8_t const* sigma_buffer;
-    size_t sigma_length;
-};
-
-struct rm_data_acc
-{
-    AccelDataStruct const* buffer;
-    size_t length;
-};
-
-struct rm_data_gyr
-{
-    GyroDataStruct const* buffer;
-    size_t length;
-};
-
-struct rm_data_mag
-{
-    MagDataStruct const* buffer;
-    size_t length;
-};
+#include <stdint.h>
 
 void RM_SetEnable(int id, bool enable);
 
-int RM_Get(int id, int32_t stamp, rm_frame*& f, uint64_t& t, int32_t& s);
-int RM_Get(int id, uint64_t timestamp, int time_preference, bool tiebreak_right, rm_frame*& f, uint64_t& t, int32_t& s);
+int RM_Get(int id, int32_t stamp, void*& f, uint64_t& t, int32_t& s);
+int RM_Get(int id, uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s);
+void RM_Release(void* frame);
 
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_vlc& d);
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_zht& d);
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_zlt& d);
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_acc& d);
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_gyr& d);
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_mag& d);
+void RM_Extract_VLC(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length);
+void RM_Extract_Depth_AHAT(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void const** pose_buffer, int32_t* pose_length);
+void RM_Extract_Depth_Longthrow(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void const** sigma_buffer, int32_t* sigma_length, void const** pose_buffer, int32_t* pose_length);
+void RM_Extract_IMU_Accelerometer(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length);
+void RM_Extract_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length);
+void RM_Extract_IMU_Magnetometer(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length);
 
 void RM_GetExtrinsics(int id, float* out);
 void RM_MapImagePointToCameraUnitPlane(int id, float const* in, float* out, int point_count);

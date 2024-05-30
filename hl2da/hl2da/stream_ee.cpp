@@ -20,6 +20,35 @@ using namespace winrt::Windows::Perception;
 using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Microsoft::MixedReality::EyeTracking;
 
+struct ee_data
+{
+    winrt::Windows::Foundation::Numerics::float3 c_origin;
+    winrt::Windows::Foundation::Numerics::float3 c_direction;
+    winrt::Windows::Foundation::Numerics::float3 l_origin;
+    winrt::Windows::Foundation::Numerics::float3 l_direction;
+    winrt::Windows::Foundation::Numerics::float3 r_origin;
+    winrt::Windows::Foundation::Numerics::float3 r_direction;
+    float  l_openness;
+    float  r_openness;
+    float  vergence_distance;
+};
+
+struct ee_frame
+{
+private:
+    ULONG m_count;
+
+public:
+    uint32_t valid;
+    ee_data frame;
+    winrt::Windows::Foundation::Numerics::float4x4 pose;
+
+    ee_frame();
+
+    ULONG AddRef();
+    ULONG Release();
+};
+
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
@@ -167,7 +196,7 @@ static DWORD WINAPI EE_EntryPoint(void* param)
 }
 
 // OK
-void EE_SetFPS(int fps_index)
+void EE_SetFormat(int fps_index)
 {
     g_fps_index = fps_index;
 }
@@ -179,21 +208,38 @@ void EE_SetEnable(bool enable)
 }
 
 // OK
-int EE_Get(int32_t stamp, ee_frame*& f, uint64_t& t, int32_t& s)
+int EE_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
     SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(stamp, f, t, s);
-    if (v == 0) { f->AddRef(); }
+    int v = g_buffer.get(stamp, (ee_frame*&)f, t, s);
+    if (v == 0) { ((ee_frame*&)f)->AddRef(); }
     return v;
 }
 
 // OK
-int EE_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, ee_frame*& f, uint64_t& t, int32_t& s)
+int EE_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
     SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, f, t, s);
-    if (v == 0) { f->AddRef(); }
+    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, (ee_frame*&)f, t, s);
+    if (v == 0) { ((ee_frame*&)f)->AddRef(); }
     return v;
+}
+
+// OK
+void EE_Release(void* frame)
+{
+    ((ee_frame*)frame)->Release();
+}
+
+// OK
+void EE_Extract(void* frame, int32_t* valid, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
+{
+    ee_frame* f = (ee_frame*)frame;
+    *valid = f->valid;
+    *buffer = &f->frame;
+    *length = sizeof(ee_frame::frame) / sizeof(float);
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(ee_frame::pose) / sizeof(float);
 }
 
 // OK

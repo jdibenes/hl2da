@@ -23,6 +23,28 @@ using namespace winrt::Windows::Media::Devices::Core;
 using namespace winrt::Windows::Foundation::Numerics;
 using namespace winrt::Windows::Perception::Spatial;
 
+class pv_frame
+{
+private:
+    ULONG m_count;
+
+public:
+    winrt::Windows::Media::Capture::Frames::MediaFrameReference mfr;
+    winrt::Windows::Foundation::Numerics::float4 intrinsics;
+    winrt::Windows::Foundation::Numerics::float4x4 pose;
+
+    pv_frame(winrt::Windows::Media::Capture::Frames::MediaFrameReference const& f, winrt::Windows::Foundation::Numerics::float4 const& k, winrt::Windows::Foundation::Numerics::float4x4 const& p);
+
+    ULONG AddRef();
+    ULONG Release();
+};
+
+struct pv_data
+{
+    uint8_t* buffer;
+    uint32_t length;
+};
+
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
@@ -164,25 +186,31 @@ void PV_SetEnable(bool enable)
 }
 
 // OK
-int PV_Get(int32_t stamp, pv_frame*& f, uint64_t& t, int32_t& s)
+int PV_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
     SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(stamp, f, t, s);
-    if (v == 0) { f->AddRef(); }
+    int v = g_buffer.get(stamp, (pv_frame*&)f, t, s);
+    if (v == 0) { ((pv_frame*&)f)->AddRef(); }
     return v;
 }
 
 // OK
-int PV_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, pv_frame*& f, uint64_t& t, int32_t& s)
+int PV_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
     SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, f, t, s);
-    if (v == 0) { f->AddRef(); }
+    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, (pv_frame*&)f, t, s);
+    if (v == 0) { ((pv_frame*&)f)->AddRef(); }
     return v;
 }
 
 // OK
-void PV_Extract(MediaFrameReference const& ref, pv_data& d)
+void PV_Release(void* frame)
+{
+    ((pv_frame*)frame)->Release();
+}
+
+// OK
+void PV_Extract2(MediaFrameReference const& ref, pv_data& d)
 {
     winrt::Windows::Graphics::Imaging::SoftwareBitmap bmp = ref.VideoMediaFrame().SoftwareBitmap();
     winrt::Windows::Graphics::Imaging::BitmapBuffer buf = bmp.LockBuffer(winrt::Windows::Graphics::Imaging::BitmapBufferAccessMode::Read);
@@ -190,6 +218,20 @@ void PV_Extract(MediaFrameReference const& ref, pv_data& d)
     winrt::impl::com_ref<Windows::Foundation::IMemoryBufferByteAccess> bba = m_ref.as<Windows::Foundation::IMemoryBufferByteAccess>();
 
     bba->GetBuffer(&d.buffer, &d.length);
+}
+
+// OK
+void PV_Extract(void* frame, void const** buffer, int32_t* length, void const** intrinsics_buffer, int32_t* intrinsics_length, void const** pose_buffer, int32_t* pose_length)
+{
+    pv_frame* f = (pv_frame*)frame;
+    pv_data d;
+    PV_Extract2(f->mfr, d);
+    *buffer = d.buffer;
+    *length = (int32_t)d.length;
+    *intrinsics_buffer = &f->intrinsics;
+    *intrinsics_length = sizeof(pv_frame::intrinsics) / sizeof(float);
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(pv_frame::pose) / sizeof(float);
 }
 
 // OK
