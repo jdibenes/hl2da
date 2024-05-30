@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include <memory>
+#include "hl2da_api.h"
 
 /**
  * 
@@ -13,8 +14,8 @@ class HL2DA_API hl2da_framebuffer
 private:    
     void* frame;
 
-    int32_t status;
-    int32_t id;
+    hl2da_api::STATUS status;
+    hl2da_api::SENSOR_ID id;
     uint64_t timestamp;
     int32_t framestamp;
     int32_t valid;
@@ -29,8 +30,8 @@ public:
     hl2da_framebuffer();
 	~hl2da_framebuffer();
 
-    int32_t Status();
-    int32_t Id();
+    hl2da_api::STATUS Status();
+    hl2da_api::SENSOR_ID Id();
     uint64_t Timestamp();
     int32_t Framestamp();
     int32_t Valid();
@@ -40,6 +41,6 @@ public:
 
     void Destroy();
 
-    static std::shared_ptr<hl2da_framebuffer> GetFrame(int id, int framestamp);
-    static std::shared_ptr<hl2da_framebuffer> GetFrame(int id, uint64_t timestamp, int time_preference, bool tiebreak_right);
+    static std::shared_ptr<hl2da_framebuffer> GetFrame(hl2da_api::SENSOR_ID id, int framestamp);
+    static std::shared_ptr<hl2da_framebuffer> GetFrame(hl2da_api::SENSOR_ID id, uint64_t timestamp, hl2da_api::TIME_PREFERENCE time_preference, bool tiebreak_right);
 };

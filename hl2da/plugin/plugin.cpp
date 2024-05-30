@@ -229,9 +229,9 @@ void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int poin
 
 // OK
 PLUGIN_EXPORT
-void SetFormat_PV(pv_captureformat const* cf)
+void SetFormat_PV(void const* cf)
 {
-    PV_SetFormat(*cf);
+    PV_SetFormat(*(pv_captureformat*)cf);
 }
 
 // OK

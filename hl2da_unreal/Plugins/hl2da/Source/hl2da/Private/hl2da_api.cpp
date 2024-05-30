@@ -19,7 +19,7 @@ typedef void (*pfn_Extract)(int id, void* frame, int32_t* valid, void const** b,
 typedef void (*pfn_GetExtrinsics_RM)(int id, float* out);
 typedef void (*pfn_MapImagePointToCameraUnitPlane_RM)(int id, float const* in, float* out, int point_count);
 typedef void (*pfn_MapCameraSpaceToImagePoint_RM)(int id, float const* in, float* out, int point_count);
-typedef void (*pfn_SetFormat_PV)(pv_captureformat const* cf);
+typedef void (*pfn_SetFormat_PV)(hl2da_api::pv_captureformat const* cf);
 typedef void (*pfn_SetFormat_MC)(int raw);
 typedef void (*pfn_SetFormat_EE)(int fps_index);
 
@@ -121,49 +121,49 @@ int hl2da_api::OverrideWorldCoordinateSystem(void* scs)
     return reinterpret_cast<pfn_OverrideWorldCoordinateSystem>(p_OverrideWorldCoordinateSystem)(scs);
 }
 
-void hl2da_api::Initialize(int id, int buffer_size)
+void hl2da_api::Initialize(SENSOR_ID id, int buffer_size)
 {
-    reinterpret_cast<pfn_Initialize>(p_Initialize)(id, buffer_size);
+    reinterpret_cast<pfn_Initialize>(p_Initialize)((int)id, buffer_size);
 }
 
-void hl2da_api::SetEnable(int id, bool enable)
+void hl2da_api::SetEnable(SENSOR_ID id, bool enable)
 {
-    reinterpret_cast<pfn_SetEnable>(p_SetEnable)(id, enable);
+    reinterpret_cast<pfn_SetEnable>(p_SetEnable)((int)id, enable);
 }
 
-int hl2da_api::GetByFramestamp(int id, int stamp, void** frame, uint64_t* timestamp, int32_t* framestamp)
+int hl2da_api::GetByFramestamp(SENSOR_ID id, int stamp, void** frame, uint64_t* timestamp, int32_t* framestamp)
 {
-    return reinterpret_cast<pfn_GetByFramestamp>(p_GetByFramestamp)(id, stamp, frame, timestamp, framestamp);
+    return reinterpret_cast<pfn_GetByFramestamp>(p_GetByFramestamp)((int)id, stamp, frame, timestamp, framestamp);
 }
 
-int hl2da_api::GetByTimestamp(int id, uint64_t stamp, int time_preference, bool tiebreak_right, void** frame, uint64_t* timestamp, int32_t* framestamp)
+int hl2da_api::GetByTimestamp(SENSOR_ID id, uint64_t stamp, TIME_PREFERENCE time_preference, bool tiebreak_right, void** frame, uint64_t* timestamp, int32_t* framestamp)
 {
-    return reinterpret_cast<pfn_GetByTimestamp>(p_GetByTimestamp)(id, stamp, time_preference, tiebreak_right, frame, timestamp, framestamp);
+    return reinterpret_cast<pfn_GetByTimestamp>(p_GetByTimestamp)((int)id, stamp, (int)time_preference, tiebreak_right, frame, timestamp, framestamp);
 }
 
-void hl2da_api::Release(int id, void* frame)
+void hl2da_api::Release(SENSOR_ID id, void* frame)
 {
-    reinterpret_cast<pfn_Release>(p_Release)(id, frame);
+    reinterpret_cast<pfn_Release>(p_Release)((int)id, frame);
 }
 
-void hl2da_api::Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l)
+void hl2da_api::Extract(SENSOR_ID id, void* frame, int32_t* valid, void const** b, int32_t* l)
 {
-    reinterpret_cast<pfn_Extract>(p_Extract)(id, frame, valid, b, l);
+    reinterpret_cast<pfn_Extract>(p_Extract)((int)id, frame, valid, b, l);
 }
 
-void hl2da_api::GetExtrinsics_RM(int id, float* extrinsics)
+void hl2da_api::GetExtrinsics_RM(SENSOR_ID id, float* extrinsics)
 {
-    reinterpret_cast<pfn_GetExtrinsics_RM>(p_GetExtrinsics_RM)(id, extrinsics);
+    reinterpret_cast<pfn_GetExtrinsics_RM>(p_GetExtrinsics_RM)((int)id, extrinsics);
 }
 
-void hl2da_api::MapImagePointToCameraUnitPlane_RM(int id, float const* image_points, float* camera_points, int point_count)
+void hl2da_api::MapImagePointToCameraUnitPlane_RM(SENSOR_ID id, float const* image_points, float* camera_points, int point_count)
 {
-    reinterpret_cast<pfn_MapImagePointToCameraUnitPlane_RM>(p_MapImagePointToCameraUnitPlane_RM)(id, image_points, camera_points, point_count);
+    reinterpret_cast<pfn_MapImagePointToCameraUnitPlane_RM>(p_MapImagePointToCameraUnitPlane_RM)((int)id, image_points, camera_points, point_count);
 }
 
-void hl2da_api::MapCameraSpaceToImagePoint_RM(int id, float const* camera_points, float* image_points, int point_count)
+void hl2da_api::MapCameraSpaceToImagePoint_RM(SENSOR_ID id, float const* camera_points, float* image_points, int point_count)
 {
-    reinterpret_cast<pfn_MapCameraSpaceToImagePoint_RM>(p_MapCameraSpaceToImagePoint_RM)(id, camera_points, image_points, point_count);
+    reinterpret_cast<pfn_MapCameraSpaceToImagePoint_RM>(p_MapCameraSpaceToImagePoint_RM)((int)id, camera_points, image_points, point_count);
 }
 
 void hl2da_api::SetFormat_PV(pv_captureformat const& cf)
@@ -171,12 +171,35 @@ void hl2da_api::SetFormat_PV(pv_captureformat const& cf)
     reinterpret_cast<pfn_SetFormat_PV>(p_SetFormat_PV)(&cf);
 }
 
-void hl2da_api::SetFormat_MC(bool raw)
+void hl2da_api::SetFormat_MC(MC_CHANNELS use)
 {
-    reinterpret_cast<pfn_SetFormat_MC>(p_SetFormat_MC)(raw);
+    reinterpret_cast<pfn_SetFormat_MC>(p_SetFormat_MC)((int)use);
 }
 
-void hl2da_api::SetFormat_EE(int fps_index)
+void hl2da_api::SetFormat_EE(EE_FPS_INDEX fps_index)
 {
-    reinterpret_cast<pfn_SetFormat_EE>(p_SetFormat_EE)(fps_index);
+    reinterpret_cast<pfn_SetFormat_EE>(p_SetFormat_EE)((int)fps_index);
+}
+
+hl2da_api::pv_captureformat hl2da_api::CreateFormat_PV(uint16_t width, uint16_t height, uint8_t framerate, bool enable_mrc, bool shared)
+{
+    pv_captureformat cf;
+
+    cf.enable_mrc = enable_mrc;
+    cf.hologram_composition = true;
+    cf.recording_indicator = false;
+    cf.video_stabilization = false;
+    cf.blank_protected = false;
+    cf.show_mesh = false;
+    cf.shared = shared;
+    cf.global_opacity = 0.9f;
+    cf.output_width = 0.0f;
+    cf.output_height = 0.0f;
+    cf.video_stabilization_length = 0;
+    cf.hologram_perspective = (int)HOLOGRAM_PERSPECTIVE::PV;
+    cf.width = width;
+    cf.height = height;
+    cf.framerate = framerate;
+
+    return cf;
 }

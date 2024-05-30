@@ -1,5 +1,4 @@
 
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
@@ -34,23 +33,33 @@ public class HoloLens2DA : MonoBehaviour
     private Texture2D tex_lt_sigma;
     private Texture2D tex_pv;
 
-    private Dictionary<int, int> last_framestamp = new Dictionary<int, int>();
+    // data vlc: u8 image, pose
+    // data ahat: u16 z, u16 ab, pose
+    // data lt: u16 z, u16 ab, u8 sigma, pose
+    // data imu: AoS, pose
+    // PV: u8 image, float intrinsics, pose
+    // MC: float samples
+    // SI: float head, float eye, S left, S right
+    // EE: float eyedata, pose
+
+    private Dictionary<hl2da_api.SENSOR_ID, int> last_framestamp = new Dictionary<hl2da_api.SENSOR_ID, int>();
+    hl2da_api.pv_captureformat pvcf;
 
     // Start is called before the first frame update
     void Start()
     {
-        hl2da.InitializeComponents();
-        hl2da.OverrideWorldCoordinateSystem();
+        hl2da_user.InitializeComponents();
+        hl2da_user.OverrideWorldCoordinateSystem();
 
         
-        float[,] extrinsics_lf  = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_VLC_LEFTFRONT);
-        float[,] extrinsics_ll  = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_VLC_LEFTLEFT);
-        float[,] extrinsics_rf  = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_VLC_RIGHTFRONT);
-        float[,] extrinsics_rr  = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_VLC_RIGHTRIGHT);
-        float[,] extrinsics_ht  = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_DEPTH_AHAT);
-        float[,] extrinsics_lt  = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_DEPTH_LONGTHROW);
-        float[,] extrinsics_acc = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_IMU_ACCELEROMETER);
-        float[,] extrinsics_gyr = hl2da.GetSensorExtrinsics(hl2da.sensor_id.RM_IMU_GYROSCOPE);
+        float[,] extrinsics_lf  = hl2da_user.GetExtrinsics_RM(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT);
+        float[,] extrinsics_ll  = hl2da_user.GetExtrinsics_RM(hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT);
+        float[,] extrinsics_rf  = hl2da_user.GetExtrinsics_RM(hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT);
+        float[,] extrinsics_rr  = hl2da_user.GetExtrinsics_RM(hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT);
+        float[,] extrinsics_ht  = hl2da_user.GetExtrinsics_RM(hl2da_api.SENSOR_ID.RM_DEPTH_AHAT);
+        float[,] extrinsics_lt  = hl2da_user.GetExtrinsics_RM(hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW);
+        float[,] extrinsics_acc = hl2da_user.GetExtrinsics_RM(hl2da_api.SENSOR_ID.RM_IMU_ACCELEROMETER);
+        float[,] extrinsics_gyr = hl2da_user.GetExtrinsics_RM(hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE);
 
         
         float[,] image_points = new float[1, 2];
@@ -62,45 +71,44 @@ public class HoloLens2DA : MonoBehaviour
         camera_points[0, 0] = 0.0f;
         camera_points[0, 1] = 0.0f;
 
-        float[,] mpoint = hl2da.MapImagePointToCameraUnitPlane(hl2da.sensor_id.RM_VLC_LEFTFRONT, image_points);
-        float[,] ppoint = hl2da.MapCameraSpaceToImagePoint(hl2da.sensor_id.RM_VLC_LEFTFRONT, camera_points);
+        float[,] mpoint = hl2da_user.MapImagePointToCameraUnitPlane_RM(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT, image_points);
+        float[,] ppoint = hl2da_user.MapCameraSpaceToImagePoint_RM(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT, camera_points);
 
 
 
-        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_LEFTFRONT,      30);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_LEFTLEFT,       30);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_RIGHTFRONT,     30);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_VLC_RIGHTRIGHT,     30);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_DEPTH_AHAT,         45);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_DEPTH_LONGTHROW,     5); // must be small, don't hold too many frames for too long
-        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_ACCELEROMETER,  12);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_GYROSCOPE,      24);
-        hl2da.InitializeStream(hl2da.sensor_id.RM_IMU_MAGNETOMETER,    5);
-        hl2da.InitializeStream(hl2da.sensor_id.PV,                    30);
-        hl2da.InitializeStream(hl2da.sensor_id.MICROPHONE,            20); // internal copy, can hold frames "indefinitely"
-        hl2da.InitializeStream(hl2da.sensor_id.SPATIAL_INPUT,         30);
-        hl2da.InitializeStream(hl2da.sensor_id.EXTENDED_EYE_TRACKING, 30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT,      30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT,       30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT,     30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT,     30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_DEPTH_AHAT,         45);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW,     5); // must be small, don't hold too many frames for too long
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_ACCELEROMETER,  12);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE,      24);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_MAGNETOMETER,    5);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.PV,                    30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.MICROPHONE,            20); // internal copy, can hold frames "indefinitely"
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.SPATIAL_INPUT,         30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, 30);
 
-        hl2da.pv_captureformat pvcf = hl2da.CreateFormat_PV(640, 360, 30, false, false);
-        hl2da.SetStreamFormat_PV(pvcf);
+        pvcf = hl2da_user.CreateFormat_PV(640, 360, 30, false, false);
 
-        hl2da.SetStreamFormat_Microphone(false);
+        hl2da_user.SetFormat_PV(pvcf);
+        hl2da_user.SetFormat_Microphone(hl2da_api.MC_CHANNELS.USE_2);
+        hl2da_user.SetFormat_ExtendedEyeTracking(hl2da_api.EE_FPS_INDEX.FPS_90);
 
-        hl2da.SetStreamFormat_ExtendedEyeTracking(2);
-
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_LEFTFRONT,      true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_LEFTLEFT,       true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_RIGHTFRONT,     true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_VLC_RIGHTRIGHT,     true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_DEPTH_AHAT,         true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_DEPTH_LONGTHROW,    true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_ACCELEROMETER,  true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_GYROSCOPE,      true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.RM_IMU_MAGNETOMETER,   true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.PV,                    true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.MICROPHONE,            true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.SPATIAL_INPUT,         true);
-        hl2da.SetStreamEnable(hl2da.sensor_id.EXTENDED_EYE_TRACKING, true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT,      true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT,       true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT,     true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT,     true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_DEPTH_AHAT,         true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW,    true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_IMU_ACCELEROMETER,  true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE,      true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_IMU_MAGNETOMETER,   true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.PV,                    true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.MICROPHONE,            true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.SPATIAL_INPUT,         true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, true);
 
         tex_lf       = new Texture2D(640, 480, TextureFormat.R8,  false);
         tex_ll       = new Texture2D(640, 480, TextureFormat.R8,  false);
@@ -113,19 +121,16 @@ public class HoloLens2DA : MonoBehaviour
         tex_lt_sigma = new Texture2D(320, 288, TextureFormat.R8,  false);
         tex_pv       = new Texture2D(640, 360, TextureFormat.R8,  false);
 
-        for (int i = 0; i < 16; ++i)
-        {
-            last_framestamp[i] = -1;
-        }
+        for (int i = 0; i < 13; ++i) { last_framestamp[(hl2da_api.SENSOR_ID)i] = -1; }
     }
 
     // Update is called once per frame
     void Update()
     {
-        Update_RM_VLC(hl2da.sensor_id.RM_VLC_LEFTFRONT,  tex_lf, quad_lf);
-        Update_RM_VLC(hl2da.sensor_id.RM_VLC_LEFTLEFT,   tex_ll, quad_ll);
-        Update_RM_VLC(hl2da.sensor_id.RM_VLC_RIGHTFRONT, tex_rf, quad_rf);
-        Update_RM_VLC(hl2da.sensor_id.RM_VLC_RIGHTRIGHT, tex_rr, quad_rr);
+        Update_RM_VLC(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT,  tex_lf, quad_lf);
+        Update_RM_VLC(hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT,   tex_ll, quad_ll);
+        Update_RM_VLC(hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT, tex_rf, quad_rf);
+        Update_RM_VLC(hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT, tex_rr, quad_rr);
         Update_RM_Depth_AHAT();
         Update_RM_Depth_Longthrow();
         Update_RM_IMU_Accelerometer();
@@ -137,20 +142,24 @@ public class HoloLens2DA : MonoBehaviour
         Update_ExtendedEyeTracking();
     }
 
-    void Update_RM_VLC(hl2da.sensor_id id, Texture2D tex, GameObject quad)
+    bool IsNewFrame(hl2da_framebuffer fb)
+    {
+        if (fb.Framestamp <= last_framestamp[fb.Id]) { return false; }
+        last_framestamp[fb.Id] = fb.Framestamp;
+        return true;
+    }
+
+    void Update_RM_VLC(hl2da_api.SENSOR_ID id, Texture2D tex, GameObject quad)
     {
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
-
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        float[,] pose = hl2da.Unpack2D<float>(fb.buffer[3], hl2da.POSE_ROWS, hl2da.POSE_COLS);
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(id, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Load frame data into textures
-        tex.LoadRawTextureData(fb.buffer[0], fb.length[0]); // Image is u8
+        tex.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(byte)); // Image is u8
         tex.Apply();
+
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
         // Display frame
         quad.GetComponent<Renderer>().material.mainTexture = tex;
@@ -158,22 +167,17 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_Depth_AHAT()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.RM_DEPTH_AHAT;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
-
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        float[,] pose = hl2da.Unpack2D<float>(fb.buffer[3], hl2da.POSE_ROWS, hl2da.POSE_COLS);
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_DEPTH_AHAT, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Load frame data into textures
-        tex_ht.LoadRawTextureData(fb.buffer[0], fb.length[0] * sizeof(ushort));                      // Depth is u16
-        tex_ht_ab.LoadRawTextureData(fb.buffer[1], fb.length[1] * sizeof(ushort)); // AB is u16
+        tex_ht.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(ushort)); // Depth is u16
+        tex_ht_ab.LoadRawTextureData(fb.Buffer(1), fb.Length(1) * sizeof(ushort)); // AB is u16
         tex_ht.Apply();
         tex_ht_ab.Apply();
+
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
         // Display frame
         quad_ht.GetComponent<Renderer>().material.mainTexture = tex_ht;
@@ -182,24 +186,19 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_Depth_Longthrow()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.RM_DEPTH_LONGTHROW;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
-
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        float[,] pose = hl2da.Unpack2D<float>(fb.buffer[3], hl2da.POSE_ROWS, hl2da.POSE_COLS);
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Load frame data into textures
-        tex_lt.LoadRawTextureData(fb.buffer[0], fb.length[0] * sizeof(ushort));                      // Depth is u16
-        tex_lt_ab.LoadRawTextureData(fb.buffer[1], fb.length[1] * sizeof(ushort)); // AB is u16
-        tex_lt_sigma.LoadRawTextureData(fb.buffer[2], fb.length[2]);                     // Sigma is u8
+        tex_lt.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(ushort)); // Depth is u16
+        tex_lt_ab.LoadRawTextureData(fb.Buffer(1), fb.Length(1) * sizeof(ushort)); // AB is u16
+        tex_lt_sigma.LoadRawTextureData(fb.Buffer(2), fb.Length(2)); // Sigma is u8
         tex_lt.Apply();
         tex_lt_ab.Apply();
         tex_lt_sigma.Apply();
+
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
         // Display frame
         quad_lt.GetComponent<Renderer>().material.mainTexture = tex_lt;
@@ -209,78 +208,61 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_IMU_Accelerometer()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.RM_IMU_ACCELEROMETER;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_IMU_ACCELEROMETER, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        hl2da.AccelDataStruct[] samples = hl2da.Unpack1D<hl2da.AccelDataStruct>(fb.buffer[0], fb.length[0]);
-        float[,] pose = hl2da.Unpack2D<float>(fb.buffer[3], hl2da.POSE_ROWS, hl2da.POSE_COLS);
+        // Unpack data
+        hl2da_api.AccelDataStruct[] samples = hl2da_user.Unpack1D<hl2da_api.AccelDataStruct>(fb.Buffer(0), fb.Length(0));
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
         // Display first sample in the batch
-        hl2da.AccelDataStruct sample_0 = samples[0];
+        hl2da_api.AccelDataStruct sample_0 = samples[0];
         tmp_acc.GetComponent<TextMeshPro>().text = string.Format("Accelerometer <{0}, {1}, {2}, {3}, {4}, {5}>", sample_0.VinylHupTicks, sample_0.SocTicks, sample_0.x, sample_0.y, sample_0.z, sample_0.temperature);
     }
 
     void Update_RM_IMU_Gyroscope()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.RM_IMU_GYROSCOPE;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        hl2da.GyroDataStruct[] samples = hl2da.Unpack1D<hl2da.GyroDataStruct>(fb.buffer[0], fb.length[0]);
-        float[,] pose = hl2da.Unpack2D<float>(fb.buffer[3], hl2da.POSE_ROWS, hl2da.POSE_COLS);
+        // Unpack data
+        hl2da_api.GyroDataStruct[] samples = hl2da_user.Unpack1D<hl2da_api.GyroDataStruct>(fb.Buffer(0), fb.Length(0));
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
         // Display first sample in the batch
-        hl2da.GyroDataStruct sample_0 = samples[0];
+        hl2da_api.GyroDataStruct sample_0 = samples[0];
         tmp_gyr.GetComponent<TextMeshPro>().text = string.Format("Gyroscope <{0}, {1}, {2}, {3}, {4}, {5}>", sample_0.VinylHupTicks, sample_0.SocTicks, sample_0.x, sample_0.y, sample_0.z, sample_0.temperature);
     }
 
     void Update_RM_IMU_Magnetometer()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.RM_IMU_MAGNETOMETER;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_IMU_MAGNETOMETER, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        hl2da.MagDataStruct[] samples = hl2da.Unpack1D<hl2da.MagDataStruct>(fb.buffer[0], fb.length[0]);
-        float[,] pose = hl2da.Unpack2D<float>(fb.buffer[3], hl2da.POSE_ROWS, hl2da.POSE_COLS);
+        // Unpack data
+        hl2da_api.MagDataStruct[] samples = hl2da_user.Unpack1D<hl2da_api.MagDataStruct>(fb.Buffer(0), fb.Length(0));
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
         // Display first sample in the batch
-        hl2da.MagDataStruct sample_0 = samples[0];
+        hl2da_api.MagDataStruct sample_0 = samples[0];
         tmp_mag.GetComponent<TextMeshPro>().text = string.Format("Magnetometer <{0}, {1}, {2}, {3}, {4}>", sample_0.VinylHupTicks, sample_0.SocTicks, sample_0.x, sample_0.y, sample_0.z);
     }
 
     void Update_PV()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.PV;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
-
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        float[] intrinsics = hl2da.Unpack1D<float>(fb.buffer[2], fb.length[2]);
-        float[,] pose = hl2da.Unpack2D<float>(fb.buffer[3], hl2da.POSE_ROWS, hl2da.POSE_COLS);
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.PV, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Load frame data into textures
-        tex_pv.LoadRawTextureData(fb.buffer[0], 640 * 360); //fb.length); // Image is NV12, load Y only
+        tex_pv.LoadRawTextureData(fb.Buffer(0), pvcf.width * pvcf.height * sizeof(byte)); // Image is NV12, load Y only
         tex_pv.Apply();
+
+        float[] intrinsics = hl2da_user.Unpack1D<float>(fb.Buffer(2), fb.Length(2)); // fx, fy, cx, cy
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
         // Display frame
         quad_pv.GetComponent<Renderer>().material.mainTexture = tex_pv;
@@ -288,53 +270,41 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_Microphone()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.MICROPHONE;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.MICROPHONE, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        float[] samples = hl2da.Unpack1D<float>(fb.buffer[0], fb.length[0]);
+        // Display first five samples
+        float[] samples = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0));
 
         tmp_mic.GetComponent<TextMeshPro>().text = string.Format("Microphone <{0}, {1}, {2}, {3}, {4}>", samples[0], samples[1], samples[2], samples[3], samples[4]);
     }
 
     void Update_SpatialInput()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.SPATIAL_INPUT;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.SPATIAL_INPUT, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
-
-        float[] head_pose = hl2da.Unpack1D<float>(fb.buffer[0], fb.length[0]);
-        float[] eye_ray = hl2da.Unpack1D<float>(fb.buffer[1], fb.length[1]);
-        hl2da.JointPose[] left_hand = hl2da.Unpack1D<hl2da.JointPose>(fb.buffer[2], fb.length[2]);
-        hl2da.JointPose[] right_hand = hl2da.Unpack1D<hl2da.JointPose>(fb.buffer[3], fb.length[3]);
+        // Display head position
+        float[] head_pose = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0));
+        float[] eye_ray = hl2da_user.Unpack1D<float>(fb.Buffer(1), fb.Length(1));
+        hl2da_api.JointPose[] left_hand = hl2da_user.Unpack1D<hl2da_api.JointPose>(fb.Buffer(2), fb.Length(2));
+        hl2da_api.JointPose[] right_hand = hl2da_user.Unpack1D<hl2da_api.JointPose>(fb.Buffer(3), fb.Length(3));
 
         tmp_si.GetComponent<TextMeshPro>().text = string.Format("Spatial Input <{0}, {1}, {2}>", head_pose[0], head_pose[1], head_pose[2]);
     }
 
     void Update_ExtendedEyeTracking()
     {
-        hl2da.sensor_id id = hl2da.sensor_id.EXTENDED_EYE_TRACKING;
-
         // Get most recent frame
-        hl2da.frame_buffer fb = hl2da.GetStreamFrame(id, -1);
-        if (fb.status != hl2da.get_status.OK) { return; }
+        hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, -1);
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
-        if (fb.framestamp <= last_framestamp[(int)id]) { return; }
-        last_framestamp[(int)id] = fb.framestamp;
+        // Display combined gaze ray (origin, direction)
+        float[] eye_data = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0));
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
-        float[] eye_data = hl2da.Unpack1D<float>(fb.buffer[0], fb.length[0]);
-        float[,] pose = hl2da.Unpack2D<float>(fb.buffer[3], hl2da.POSE_ROWS, hl2da.POSE_COLS);
-
-        tmp_ee.GetComponent<TextMeshPro>().text = string.Format("EE <{0}, {1}, {2}>", eye_data[0], eye_data[1], eye_data[2]);
+        tmp_ee.GetComponent<TextMeshPro>().text = string.Format("EE <{0}, {1}, {2}, {3}, {4}, {5}>", eye_data[0], eye_data[1], eye_data[2], eye_data[3], eye_data[4], eye_data[5]);
     }
 }
