@@ -72,10 +72,64 @@ public static class hl2da_api
         // 36
     }
 
+    public enum STATUS
+    {
+        DISCARDED = -1,
+        OK = 0,
+        WAIT = 1,
+    }
+
+    public enum TIME_PREFERENCE
+    {
+        PAST = -1,
+        NEAREST = 0,
+        FUTURE = 1,
+    }
+
+    public enum MC_CHANNELS
+    {
+        USE_2 = 0,
+        USE_5 = 1,
+    }
+
+    public enum EE_FPS_INDEX
+    {
+        FPS_30 = 0,
+        FPS_60 = 1,
+        FPS_90 = 2,
+    }
+
+    [Flags]
+    public enum SI_VALID
+    {
+        HEAD = 1,
+        EYE = 2,
+        LEFT = 4,
+        RIGHT = 8,
+    }
+
+    [Flags]
+    public enum EE_VALID
+    {
+        CALIBRATION = 1,
+        COMBINED_GAZE = 2,
+        LEFT_GAZE = 4,
+        RIGHT_GAZE = 8,
+        LEFT_OPENNESS = 16,
+        RIGHT_OPENNESS = 32,
+        VERGENCE_DISTANCE = 64,
+    }
+
+    public enum HOLOGRAM_PERSPECTIVE
+    {
+        DISPLAY = 0,
+        PV = 1,
+    }
+
     [StructLayout(LayoutKind.Explicit)]
     public struct pv_captureformat
     {
-        [FieldOffset( 0)] public byte enable;
+        [FieldOffset( 0)] public byte enable_mrc;
         [FieldOffset( 1)] public byte hologram_composition;
         [FieldOffset( 2)] public byte recording_indicator;
         [FieldOffset( 3)] public byte video_stabilization;

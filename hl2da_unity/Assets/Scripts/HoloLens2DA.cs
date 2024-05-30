@@ -91,11 +91,10 @@ public class HoloLens2DA : MonoBehaviour
         hl2da_user.Initialize(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, 30);
 
         pvcf = hl2da_user.CreateFormat_PV(640, 360, 30, false, false);
+
         hl2da_user.SetFormat_PV(pvcf);
-
-        hl2da_user.SetFormat_Microphone(false); // false for 2 channels, true for 5 channels
-
-        hl2da_user.SetFormat_ExtendedEyeTracking(2); // 0: 30 FPS, 1: 60 FPS, 2: 90 FPS 
+        hl2da_user.SetFormat_Microphone(hl2da_api.MC_CHANNELS.USE_2);
+        hl2da_user.SetFormat_ExtendedEyeTracking(hl2da_api.EE_FPS_INDEX.FPS_90);
 
         hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT,      true);
         hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT,       true);
@@ -154,7 +153,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(id, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Load frame data into textures
         tex.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(byte)); // Image is u8
@@ -170,7 +169,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_DEPTH_AHAT, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Load frame data into textures
         tex_ht.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(ushort)); // Depth is u16
@@ -189,7 +188,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Load frame data into textures
         tex_lt.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(ushort)); // Depth is u16
@@ -211,7 +210,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_IMU_ACCELEROMETER, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Unpack data
         hl2da_api.AccelDataStruct[] samples = hl2da_user.Unpack1D<hl2da_api.AccelDataStruct>(fb.Buffer(0), fb.Length(0));
@@ -226,7 +225,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Unpack data
         hl2da_api.GyroDataStruct[] samples = hl2da_user.Unpack1D<hl2da_api.GyroDataStruct>(fb.Buffer(0), fb.Length(0));
@@ -241,7 +240,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.RM_IMU_MAGNETOMETER, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Unpack data
         hl2da_api.MagDataStruct[] samples = hl2da_user.Unpack1D<hl2da_api.MagDataStruct>(fb.Buffer(0), fb.Length(0));
@@ -256,7 +255,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.PV, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Load frame data into textures
         tex_pv.LoadRawTextureData(fb.Buffer(0), pvcf.width * pvcf.height * sizeof(byte)); // Image is NV12, load Y only
@@ -273,7 +272,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.MICROPHONE, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Display first five samples
         float[] samples = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0));
@@ -285,7 +284,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.SPATIAL_INPUT, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Display head position
         float[] head_pose = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0));
@@ -300,7 +299,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         // Get most recent frame
         hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, -1);
-        if ((fb.Status != hl2da_framebuffer.STATUS.OK) || !IsNewFrame(fb)) { return; }
+        if ((fb.Status != hl2da_api.STATUS.OK) || !IsNewFrame(fb)) { return; }
 
         // Display combined gaze ray (origin, direction)
         float[] eye_data = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0));

@@ -3,25 +3,11 @@ using System;
 
 public class hl2da_framebuffer
 {
-    public enum STATUS
-    {
-        DISCARDED = -1,
-        OK = 0,
-        WAIT = 1,
-    }
-
-    public enum TIME_PREFERENCE
-    {
-        PAST = -1,
-        NEAREST = 0,
-        FUTURE = 1,
-    }
-
     private const int BUFFER_COUNT = 4;
 
     private IntPtr frame;
 
-    private STATUS status;
+    private hl2da_api.STATUS status;
     private hl2da_api.SENSOR_ID id;
     private ulong timestamp;
     private int framestamp;
@@ -40,7 +26,7 @@ public class hl2da_framebuffer
         Destroy();
     }
 
-    public STATUS Status { get { return status; } }
+    public hl2da_api.STATUS Status { get { return status; } }
 
     public hl2da_api.SENSOR_ID Id { get { return id; } }
 
@@ -49,6 +35,10 @@ public class hl2da_framebuffer
     public int Framestamp { get { return framestamp; } }
 
     public int Valid { get { return valid; } }
+
+    public hl2da_api.SI_VALID Valid_SI { get { return (hl2da_api.SI_VALID)valid; } }
+
+    public hl2da_api.EE_VALID Valid_EE { get { return (hl2da_api.EE_VALID)valid; } }
 
     public IntPtr Buffer(uint index)
     {
@@ -65,7 +55,7 @@ public class hl2da_framebuffer
     private void Reset()
     {
         frame = IntPtr.Zero;
-        status = STATUS.DISCARDED;
+        status = hl2da_api.STATUS.DISCARDED;
         id = (hl2da_api.SENSOR_ID)(-1);
         timestamp = 0;
         framestamp = 0;
@@ -90,16 +80,16 @@ public class hl2da_framebuffer
     {
         hl2da_framebuffer fb = new hl2da_framebuffer();
         fb.id = id;
-        fb.status = (STATUS)hl2da_api.GetByFramestamp((int)id, framestamp, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
+        fb.status = (hl2da_api.STATUS)hl2da_api.GetByFramestamp((int)id, framestamp, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
         if (fb.frame != IntPtr.Zero) { Extract(fb); }
         return fb;
     }
 
-    public static hl2da_framebuffer GetFrame(hl2da_api.SENSOR_ID id, ulong timestamp, TIME_PREFERENCE time_preference, bool tiebreak_right)
+    public static hl2da_framebuffer GetFrame(hl2da_api.SENSOR_ID id, ulong timestamp, hl2da_api.TIME_PREFERENCE time_preference, bool tiebreak_right)
     {
         hl2da_framebuffer fb = new hl2da_framebuffer();
         fb.id = id;
-        fb.status = (STATUS)hl2da_api.GetByTimestamp((int)id, timestamp, (int)time_preference, tiebreak_right ? 1 : 0, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
+        fb.status = (hl2da_api.STATUS)hl2da_api.GetByTimestamp((int)id, timestamp, (int)time_preference, tiebreak_right ? 1 : 0, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
         if (fb.frame != IntPtr.Zero) { Extract(fb); }
         return fb;
     }

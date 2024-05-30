@@ -115,21 +115,21 @@ public class hl2da_user
         hl2da_api.SetFormat_PV(ref cf);
     }
 
-    public static void SetFormat_Microphone(bool raw)
+    public static void SetFormat_Microphone(hl2da_api.MC_CHANNELS set)
     {
-        hl2da_api.SetFormat_MC(raw ? 1 : 0);
+        hl2da_api.SetFormat_MC((int)set);
     }
 
-    public static void SetFormat_ExtendedEyeTracking(int fps_index)
+    public static void SetFormat_ExtendedEyeTracking(hl2da_api.EE_FPS_INDEX fps_index)
     {
-        hl2da_api.SetFormat_EE(fps_index);
+        hl2da_api.SetFormat_EE((int)fps_index);
     }
 
     public static hl2da_api.pv_captureformat CreateFormat_PV(ushort width, ushort height, byte framerate, bool enable_mrc, bool shared)
     {
         hl2da_api.pv_captureformat cf = new hl2da_api.pv_captureformat();
 
-        cf.enable = enable_mrc ? (byte)1 : (byte)0;
+        cf.enable_mrc = enable_mrc ? (byte)1 : (byte)0;
         cf.hologram_composition = 1;
         cf.recording_indicator = 0;
         cf.video_stabilization = 0;
@@ -140,7 +140,7 @@ public class hl2da_user
         cf.output_width = 0.0f;
         cf.output_height = 0.0f;
         cf.video_stabilization_length = 0;
-        cf.hologram_perspective = 1;
+        cf.hologram_perspective = (int)hl2da_api.HOLOGRAM_PERSPECTIVE.PV;
         cf.width = width;
         cf.height = height;
         cf.framerate = framerate;
