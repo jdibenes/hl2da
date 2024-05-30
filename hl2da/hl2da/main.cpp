@@ -80,29 +80,102 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 
         window.Activate();
 
+        pv_captureformat pvcf;
+        pvcf.mrcvo.enable = false;
+        pvcf.mrcvo.shared = false;
+        pvcf.vf.width = 640;
+        pvcf.vf.height = 360;
+        pvcf.vf.framerate = 30;
+
+        PV_SetFormat(pvcf);
+        MC_SetFormat(false);
         EE_SetFormat(2);
-        EE_Initialize(20);
+
+        RM_Initialize(0, 30);
+        RM_Initialize(1, 30);
+        RM_Initialize(2, 30);
+        RM_Initialize(3, 30);
+
+        //RM_Initialize(4, 45);
+        RM_Initialize(5, 5);
+
+        RM_Initialize(6, 12);
+        RM_Initialize(7, 24);
+        RM_Initialize(8, 5);
+
+        PV_Initialize(30);
+        MC_Initialize(62);
+        SI_Initialize(30);
+        EE_Initialize(90);
+
+        RM_SetEnable(0, true);        
+        RM_SetEnable(1, true);
+        RM_SetEnable(2, true);
+        RM_SetEnable(3, true);
+
+        //RM_SetEnable(4, true);
+        RM_SetEnable(5, true);
+
+        RM_SetEnable(6, true);
+        RM_SetEnable(7, true);
+        RM_SetEnable(8, true);
+
+        PV_SetEnable(true);
+        MC_SetEnable(true);
+        SI_SetEnable(true);
         EE_SetEnable(true);
 
-        void* f;
-        uint64_t t;
-        int32_t s;
-        int32_t ps = -1;
+        void* f[13];
+        uint64_t t[13];
+        int32_t s[13];
+        int v[13];
+        void* f_ref;
+        uint64_t t_ref;
+        int32_t s_ref;
+        int v_ref;
+        int p_s_ref = -1;
+
 
         while (!m_windowClosed)
 		{
 		window.Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 
-        int v = EE_Get(-1, f, t, s);
-        if (v == 0)
+        v_ref = PV_Get(-10, f_ref, t_ref, s_ref);
+        if (v_ref == 0)
         {
-            if (ps < s)
-            { 
-                ps = s;
-                ShowMessage("GOT EE FRAME %lld %d", t, s);
+            if (p_s_ref < s_ref)
+            {
+                p_s_ref = s_ref;
+
+                v[0] = RM_Get(0, t_ref, 0, false, f[0], t[0], s[0]);
+                v[1] = RM_Get(1, t_ref, 0, false, f[1], t[1], s[1]);
+                v[2] = RM_Get(2, t_ref, 0, false, f[2], t[2], s[2]);
+                v[3] = RM_Get(3, t_ref, 0, false, f[3], t[3], s[3]);
+                v[4] = RM_Get(4, t_ref, 0, false, f[4], t[4], s[4]);
+                v[5] = RM_Get(5, t_ref, 0, false, f[5], t[5], s[5]);
+                v[6] = RM_Get(6, t_ref, 0, false, f[6], t[6], s[6]);
+                v[7] = RM_Get(7, t_ref, 0, false, f[7], t[7], s[7]);
+                v[8] = RM_Get(8, t_ref, 0, false, f[8], t[8], s[8]);
+                v[9] = PV_Get(t_ref, 0, false, f[9], t[9], s[9]);
+                v[10] = MC_Get(t_ref, 0, false, f[10], t[10], s[10]);
+                v[11] = SI_Get(t_ref, 0, false, f[11], t[11], s[11]);
+                v[12] = EE_Get(t_ref, 0, false, f[12], t[12], s[12]);
+
+                for (int i = 0; i < 13; ++i)
+                {
+                    if (v[i] != 0) { continue; }
+
+                    ShowMessage("GOT PAIR %d (%d, %d) at (%lld, %lld) delta: %lld ", i, s_ref, s[i], t_ref, t[i], (int64_t)t_ref - (int64_t)t[i]);
+
+                    if (i <= 8) { RM_Release(f[i]); }
+                    if (i == 9) { PV_Release(f[i]); }
+                    if (i == 10) { MC_Release(f[i]); }
+                    if (i == 11) { SI_Release(f[i]); }
+                    if (i == 12) { EE_Release(f[i]); }
+                }
             }
-            
-            EE_Release(f);
+
+            PV_Release(f_ref);
         }
 		}
 

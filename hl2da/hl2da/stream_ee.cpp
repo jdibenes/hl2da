@@ -1,11 +1,8 @@
 
-#include <Windows.h>
-#include "locator.h"
 #include "extended_eye_tracking.h"
-#include "stream_ee.h"
-#include "ring_buffer.h"
+#include "locator.h"
+#include "frame_buffer.h"
 #include "timestamps.h"
-#include "lock.h"
 #include "log.h"
 
 #include <winrt/Windows.Foundation.h>
@@ -33,28 +30,22 @@ struct ee_data
     float  vergence_distance;
 };
 
-struct ee_frame
+struct ee_frame : public sensor_frame
 {
-private:
-    ULONG m_count;
-
 public:
     uint32_t valid;
     ee_data frame;
     winrt::Windows::Foundation::Numerics::float4x4 pose;
 
     ee_frame();
-
-    ULONG AddRef();
-    ULONG Release();
+    ~ee_frame();
 };
 
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
 
-static SRWLOCK g_lock;
-static ring_buffer<ee_frame*> g_buffer;
+static frame_buffer g_buffer;
 static HANDLE g_event_enable = NULL; // CloseHandle
 static HANDLE g_event_quit = NULL; // CloseHandle
 static HANDLE g_thread = NULL; // CloseHandle
@@ -66,40 +57,15 @@ static int32_t g_fps_index;
 //-----------------------------------------------------------------------------
 
 // OK
-ee_frame::ee_frame() : m_count(1)
+ee_frame::ee_frame() : sensor_frame()
 {
+
 }
 
 // OK
-ULONG ee_frame::AddRef()
+ee_frame::~ee_frame()
 {
-    return InterlockedIncrement(&m_count);
-}
 
-// OK
-ULONG ee_frame::Release()
-{
-    ULONG uCount = InterlockedDecrement(&m_count);
-    if (uCount != 0) { return uCount; }
-    delete this;
-    return uCount;
-}
-
-// OK
-static void EE_Insert(ee_frame* frame, uint64_t timestamp)
-{
-    ee_frame* f;
-    SRWLock srw(&g_lock, true);
-    f = g_buffer.insert(frame, timestamp);
-    if (f) { f->Release(); }
-}
-
-// OK
-static void EE_Clear()
-{
-    SRWLock srw(&g_lock, true);
-    for (int32_t i = 0; i < g_buffer.size(); ++i) { g_buffer.at(i)->Release(); }
-    g_buffer.reset();
 }
 
 // OK
@@ -169,11 +135,11 @@ static void EE_Acquire(SpatialLocator const &locator, uint64_t utc_offset)
     f->valid = 0;
     }
 
-    EE_Insert(f, timestamp);
+    g_buffer.Insert(f, timestamp);
     }
     while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0);
 
-    EE_Clear();
+    g_buffer.Clear();
 }
 
 // OK
@@ -184,9 +150,8 @@ static DWORD WINAPI EE_EntryPoint(void* param)
     SpatialLocator locator = nullptr;
     uint64_t utc_offset;
 
-    ShowMessage("EET: Waiting for consent");
-
     ExtendedEyeTracking_Initialize();
+
     locator = ExtendedEyeTracking_CreateLocator();
     utc_offset = GetQPCToUTCOffset(32);
 
@@ -210,19 +175,13 @@ void EE_SetEnable(bool enable)
 // OK
 int EE_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
-    SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(stamp, (ee_frame*&)f, t, s);
-    if (v == 0) { ((ee_frame*&)f)->AddRef(); }
-    return v;
+    return g_buffer.Get(stamp, (sensor_frame*&)f, t, s);
 }
 
 // OK
 int EE_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
-    SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, (ee_frame*&)f, t, s);
-    if (v == 0) { ((ee_frame*&)f)->AddRef(); }
-    return v;
+    return g_buffer.Get(timestamp, time_preference, tiebreak_right, (sensor_frame*&)f, t, s);
 }
 
 // OK
@@ -245,8 +204,7 @@ void EE_Extract(void* frame, int32_t* valid, void const** buffer, int32_t* lengt
 // OK
 void EE_Initialize(int buffer_size)
 {
-    InitializeSRWLock(&g_lock);
-    g_buffer.reset(buffer_size);
+    g_buffer.Reset(buffer_size);
     g_event_enable = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_event_quit = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_thread = CreateThread(NULL, 0, EE_EntryPoint, NULL, 0, NULL);

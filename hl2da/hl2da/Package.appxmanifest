@@ -31,5 +31,6 @@
     <DeviceCapability Name="microphone"/>
     <DeviceCapability Name="gazeInput"/>
     <DeviceCapability Name="webcam"/>
+	<DeviceCapability Name="backgroundSpatialPerception"/>
   </Capabilities>
 </Package>

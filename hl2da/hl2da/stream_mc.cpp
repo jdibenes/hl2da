@@ -1,8 +1,6 @@
 
-#include "stream_mc.h"
 #include "microphone_capture.h"
-#include "ring_buffer.h"
-#include "lock.h"
+#include "frame_buffer.h"
 #include "log.h"
 
 #include <winrt/Windows.Foundation.Collections.h>
@@ -12,27 +10,21 @@
 using namespace winrt::Windows::UI::Core;
 using namespace winrt::Windows::ApplicationModel::Core;
 
-class mc_frame
+class mc_frame : public sensor_frame
 {
-private:
-	ULONG m_count;
-
 public:
 	uint8_t* buffer;
 	int32_t length;
 
 	mc_frame(uint8_t* b, int32_t l);
-
-	ULONG AddRef();
-	ULONG Release();
+	~mc_frame();
 };
 
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
 
-static SRWLOCK g_lock;
-static ring_buffer<mc_frame*> g_buffer;
+static frame_buffer g_buffer;
 static HANDLE g_event_enable = NULL; // CloseHandle
 static HANDLE g_event_quit = NULL; // CloseHandle
 static HANDLE g_thread = NULL; // CloseHandle
@@ -45,41 +37,19 @@ bool g_raw = false;
 //-----------------------------------------------------------------------------
 
 // OK
-mc_frame::mc_frame(uint8_t* b, int32_t l) : buffer(b), length(l), m_count(1)
+mc_frame::mc_frame(uint8_t* b, int32_t l) : sensor_frame(), buffer(b), length(l)
 {
 }
 
-// OK
-ULONG mc_frame::AddRef()
+mc_frame::~mc_frame()
 {
-	return InterlockedIncrement(&m_count);
-}
-
-// OK
-ULONG mc_frame::Release()
-{
-	ULONG uCount = InterlockedDecrement(&m_count);
-	if (uCount != 0) { return uCount; }
-	if (buffer) { delete[] buffer; }
-	delete this;
-	return uCount;
+	delete[] buffer;
 }
 
 // OK
 static void MC_Insert(uint8_t* buffer, int32_t length, uint64_t timestamp)
 {
-	mc_frame* f;
-	SRWLock srw(&g_lock, true);
-	f = g_buffer.insert(new mc_frame(buffer, length), timestamp);
-	if (f) { f->Release(); }
-}
-
-// OK
-static void MC_Clear()
-{
-	SRWLock srw(&g_lock, true);
-	for (int32_t i = 0; i < g_buffer.size(); ++i) { g_buffer.at(i)->Release(); }
-	g_buffer.reset();
+	g_buffer.Insert(new mc_frame(buffer, length), timestamp);
 }
 
 // OK
@@ -103,7 +73,7 @@ static void MC_Acquire()
 
 	do { g_microphoneCapture->WriteSample(MC_Insert); } while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0);
 
-	MC_Clear();
+	g_buffer.Clear();
 
 	g_microphoneCapture->Stop();
 }
@@ -130,19 +100,13 @@ void MC_SetEnable(bool enable)
 // OK
 int MC_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
-	SRWLock srw(&g_lock, false);
-	int v = g_buffer.get(stamp, (mc_frame*&)f, t, s);
-	if (v == 0) { ((mc_frame*&)f)->AddRef(); }
-	return v;
+	return g_buffer.Get(stamp, (sensor_frame*&)f, t, s);
 }
 
 // OK
 int MC_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
-	SRWLock srw(&g_lock, false);
-	int v = g_buffer.get(timestamp, time_preference, tiebreak_right, (mc_frame*&)f, t, s);
-	if (v == 0) { ((mc_frame*&)f)->AddRef(); }
-	return v;
+	return g_buffer.Get(timestamp, time_preference, tiebreak_right, (sensor_frame*&)f, t, s);
 }
 
 // OK
@@ -162,8 +126,7 @@ void MC_Extract(void* frame, void const** buffer, int32_t* length)
 // OK
 void MC_Initialize(int32_t buffer_size)
 {
-	InitializeSRWLock(&g_lock);
-	g_buffer.reset(buffer_size);
+	g_buffer.Reset(buffer_size);
 	g_event_enable = CreateEvent(NULL, TRUE, FALSE, NULL);
 	g_event_quit = CreateEvent(NULL, TRUE, FALSE, NULL);
 	g_thread = CreateThread(NULL, 0, MC_EntryPoint, NULL, 0, NULL);

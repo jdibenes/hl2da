@@ -1,11 +1,8 @@
 
-#include <Windows.h>
-#include <queue>
-#include "locator.h"
 #include "spatial_input.h"
-#include "ring_buffer.h"
+#include "locator.h"
+#include "frame_buffer.h"
 #include "timestamps.h"
-#include "lock.h"
 #include "log.h"
 
 #include <winrt/Windows.Foundation.Numerics.h>
@@ -18,11 +15,8 @@ using namespace winrt::Windows::Perception;
 using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Windows::Perception::People;
 
-class si_frame
+class si_frame : public sensor_frame
 {
-private:
-    ULONG m_count;
-
 public:
     int32_t valid;
     SpatialInput_Frame head_pose;
@@ -31,17 +25,14 @@ public:
     winrt::Windows::Perception::People::JointPose right_hand[HAND_JOINTS];
 
     si_frame();
-
-    ULONG AddRef();
-    ULONG Release();
+    ~si_frame();
 };
 
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
 
-static SRWLOCK g_lock;
-static ring_buffer<si_frame*> g_buffer;
+static frame_buffer g_buffer;
 static HANDLE g_event_enable = NULL; // CloseHandle
 static HANDLE g_event_quit = NULL; // CloseHandle
 static HANDLE g_thread = NULL; // CloseHandle
@@ -51,40 +42,15 @@ static HANDLE g_thread = NULL; // CloseHandle
 //-----------------------------------------------------------------------------
 
 // OK
-si_frame::si_frame() : m_count(1)
+si_frame::si_frame() : sensor_frame()
 {
+
 }
 
 // OK
-ULONG si_frame::AddRef()
+si_frame::~si_frame()
 {
-    return InterlockedIncrement(&m_count);
-}
 
-// OK
-ULONG si_frame::Release()
-{
-    ULONG uCount = InterlockedDecrement(&m_count);
-    if (uCount != 0) { return uCount; }
-    delete this;
-    return uCount;
-}
-
-// OK
-static void SI_Insert(si_frame* frame, uint64_t timestamp)
-{
-    si_frame* f;
-    SRWLock srw(&g_lock, true);
-    f = g_buffer.insert(frame, timestamp);
-    if (f) { f->Release(); }
-}
-
-// OK
-static void SI_Clear()
-{
-    SRWLock srw(&g_lock, true);
-    for (int32_t i = 0; i < g_buffer.size(); ++i) { g_buffer.at(i)->Release(); }
-    g_buffer.reset();
 }
 
 // OK
@@ -114,24 +80,19 @@ static void SI_Acquire()
 
     frame->valid = (status1 | (status2 << 2)) & 0x0F;
 
-    SI_Insert(frame, qpc);
+    g_buffer.Insert(frame, qpc);
     }
     while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0);
     
-    SI_Clear();
+    g_buffer.Clear();
 }
 
 // OK
 static DWORD WINAPI SI_EntryPoint(void *param)
 {
     (void)param;
-
-    ShowMessage("SI: Waiting for consent");
-
     SpatialInput_WaitForEyeConsent();
-
     do { SI_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
-
     return 0;
 }
 
@@ -144,19 +105,13 @@ void SI_SetEnable(bool enable)
 // OK
 int SI_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
-    SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(stamp, (si_frame*&)f, t, s);
-    if (v == 0) { ((si_frame*&)f)->AddRef(); }
-    return v;
+    return g_buffer.Get(stamp, (sensor_frame*&)f, t, s);
 }
 
 // OK
 int SI_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
-    SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, (si_frame*&)f, t, s);
-    if (v == 0) { ((si_frame*&)f)->AddRef(); }
-    return v;
+    return g_buffer.Get(timestamp, time_preference, tiebreak_right, (sensor_frame*&)f, t, s);
 }
 
 // OK
@@ -183,8 +138,7 @@ void SI_Extract(void* frame, int32_t* valid, void const** head_buffer, int32_t* 
 // OK
 void SI_Initialize(int buffer_size)
 {
-    InitializeSRWLock(&g_lock);
-    g_buffer.reset(buffer_size);
+    g_buffer.Reset(buffer_size);
     g_event_enable = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_event_quit = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_thread = CreateThread(NULL, 0, SI_EntryPoint, NULL, 0, NULL);
@@ -200,6 +154,7 @@ void SI_Quit()
 void SI_Cleanup()
 {
     WaitForSingleObject(g_thread, INFINITE);
+
     CloseHandle(g_thread);
     CloseHandle(g_event_quit);
     CloseHandle(g_event_enable);
