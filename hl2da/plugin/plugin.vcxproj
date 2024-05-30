@@ -248,6 +248,7 @@
   <ItemGroup>
     <ClInclude Include="..\hl2da\custom_video_effect.h" />
     <ClInclude Include="..\hl2da\extended_eye_tracking.h" />
+    <ClInclude Include="..\hl2da\frame_buffer.h" />
     <ClInclude Include="..\hl2da\locator.h" />
     <ClInclude Include="..\hl2da\lock.h" />
     <ClInclude Include="..\hl2da\log.h" />
@@ -270,6 +271,7 @@
   <ItemGroup>
     <ClCompile Include="..\hl2da\custom_video_effect.cpp" />
     <ClCompile Include="..\hl2da\extended_eye_tracking.cpp" />
+    <ClCompile Include="..\hl2da\frame_buffer.cpp" />
     <ClCompile Include="..\hl2da\locator.cpp" />
     <ClCompile Include="..\hl2da\lock.cpp" />
     <ClCompile Include="..\hl2da\log.cpp" />

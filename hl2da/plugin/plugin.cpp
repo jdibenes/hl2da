@@ -210,21 +210,47 @@ void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l)
 PLUGIN_EXPORT
 void GetExtrinsics_RM(int id, float* out)
 {
-    RM_GetExtrinsics(id, out);
+    switch (id)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+    case 6:
+    case 7: RM_GetExtrinsics(id, out); break;
+    }
 }
 
 // OK
 PLUGIN_EXPORT
 void MapImagePointToCameraUnitPlane_RM(int id, float const* in, float* out, int point_count)
 {
-    RM_MapImagePointToCameraUnitPlane(id, in, out, point_count);
+    switch (id)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5: RM_MapImagePointToCameraUnitPlane(id, in, out, point_count); break;
+    }    
 }
 
 // OK
 PLUGIN_EXPORT
 void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int point_count)
 {
-    RM_MapCameraSpaceToImagePoint(id, in, out, point_count);
+    switch (id)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5: RM_MapCameraSpaceToImagePoint(id, in, out, point_count); break;
+    }    
 }
 
 // OK
@@ -246,4 +272,67 @@ PLUGIN_EXPORT
 void SetFormat_EE(int fps_index)
 {
     EE_SetFormat(fps_index);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetFocus(uint32_t focusmode, uint32_t autofocusrange, uint32_t distance, uint32_t value, uint32_t disabledriverfallback)
+{
+    PersonalVideo_SetFocus(focusmode, autofocusrange, distance, value, disabledriverfallback);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetVideoTemporalDenoising(uint32_t mode)
+{
+    PersonalVideo_SetVideoTemporalDenoising(mode);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetWhiteBalance_Preset(uint32_t preset)
+{
+    PersonalVideo_SetWhiteBalance_Preset(preset);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetWhiteBalance_Value(uint32_t value)
+{
+    PersonalVideo_SetWhiteBalance_Value(value);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetExposure(uint32_t setauto, uint32_t value)
+{
+    PersonalVideo_SetExposure(setauto, value);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetExposurePriorityVideo(uint32_t enabled)
+{
+    PersonalVideo_SetExposurePriorityVideo(enabled);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetSceneMode(uint32_t mode)
+{
+    PersonalVideo_SetSceneMode(mode);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetIsoSpeed(uint32_t setauto, uint32_t value)
+{
+    PersonalVideo_SetIsoSpeed(setauto, value);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetBacklightCompensation(uint32_t enable)
+{
+    PersonalVideo_SetBacklightCompensation(enable != 0);
 }

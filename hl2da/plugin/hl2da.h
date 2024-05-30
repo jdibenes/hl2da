@@ -182,3 +182,30 @@ void SetFormat_MC(int raw);
 
 PLUGIN_IMPORT
 void SetFormat_EE(int fps_index);
+
+PLUGIN_IMPORT
+void PV_SetFocus(uint32_t focusmode, uint32_t autofocusrange, uint32_t distance, uint32_t value, uint32_t disabledriverfallback);
+
+PLUGIN_IMPORT
+void PV_SetVideoTemporalDenoising(uint32_t mode);
+
+PLUGIN_IMPORT
+void PV_SetWhiteBalance_Preset(uint32_t preset);
+
+PLUGIN_IMPORT
+void PV_SetWhiteBalance_Value(uint32_t value);
+
+PLUGIN_IMPORT
+void PV_SetExposure(uint32_t setauto, uint32_t value);
+
+PLUGIN_IMPORT
+void PV_SetExposurePriorityVideo(uint32_t enabled);
+
+PLUGIN_IMPORT
+void PV_SetSceneMode(uint32_t mode);
+
+PLUGIN_IMPORT
+void PV_SetIsoSpeed(uint32_t setauto, uint32_t value);
+
+PLUGIN_IMPORT
+void PV_SetBacklightCompensation(uint32_t enable);
