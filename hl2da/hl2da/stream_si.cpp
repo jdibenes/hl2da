@@ -2,7 +2,7 @@
 #include <Windows.h>
 #include <queue>
 #include "locator.h"
-#include "stream_si.h"
+#include "spatial_input.h"
 #include "ring_buffer.h"
 #include "timestamps.h"
 #include "lock.h"
@@ -17,6 +17,24 @@ using namespace winrt::Windows::Foundation::Numerics;
 using namespace winrt::Windows::Perception;
 using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Windows::Perception::People;
+
+class si_frame
+{
+private:
+    ULONG m_count;
+
+public:
+    int32_t valid;
+    SpatialInput_Frame head_pose;
+    SpatialInput_Ray eye_ray;
+    winrt::Windows::Perception::People::JointPose left_hand[HAND_JOINTS];
+    winrt::Windows::Perception::People::JointPose right_hand[HAND_JOINTS];
+
+    si_frame();
+
+    ULONG AddRef();
+    ULONG Release();
+};
 
 //-----------------------------------------------------------------------------
 // Global Variables
@@ -124,21 +142,42 @@ void SI_SetEnable(bool enable)
 }
 
 // OK
-int SI_Get(int32_t stamp, si_frame*& f, uint64_t& t, int32_t& s)
+int SI_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
     SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(stamp, f, t, s);
-    if (v == 0) { f->AddRef(); }
+    int v = g_buffer.get(stamp, (si_frame*&)f, t, s);
+    if (v == 0) { ((si_frame*&)f)->AddRef(); }
     return v;
 }
 
 // OK
-int SI_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, si_frame*& f, uint64_t& t, int32_t& s)
+int SI_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
     SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, f, t, s);
-    if (v == 0) { f->AddRef(); }
+    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, (si_frame*&)f, t, s);
+    if (v == 0) { ((si_frame*&)f)->AddRef(); }
     return v;
+}
+
+// OK
+void SI_Release(void* frame)
+{
+    ((si_frame*)frame)->Release();
+}
+
+// OK
+void SI_Extract(void* frame, int32_t* valid, void const** head_buffer, int32_t* head_length, void const** eye_buffer, int32_t* eye_length, void const** left_buffer, int32_t* left_length, void const** right_buffer, int32_t* right_length)
+{
+    si_frame* f = (si_frame*)frame;
+    *valid = f->valid;
+    *head_buffer = &f->head_pose;
+    *head_length = sizeof(si_frame::head_pose) / sizeof(float);
+    *eye_buffer = &f->eye_ray;
+    *eye_length = sizeof(si_frame::eye_ray) / sizeof(float);
+    *left_buffer = f->left_hand;
+    *left_length = HAND_JOINTS;
+    *right_buffer = f->right_hand;
+    *right_length = HAND_JOINTS;
 }
 
 // OK

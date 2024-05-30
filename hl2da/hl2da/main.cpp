@@ -1,8 +1,9 @@
 
 #include <windows.h>
+#include "locator.h"
 #include "research_mode.h"
 #include "personal_video.h"
-#include "locator.h"
+#include "spatial_input.h"
 #include "stream_rm.h"
 #include "stream_pv.h"
 #include "stream_mc.h"
@@ -79,11 +80,11 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 
         window.Activate();
 
-        EE_SetFPS(2);
+        EE_SetFormat(2);
         EE_Initialize(20);
         EE_SetEnable(true);
 
-        ee_frame* f;
+        void* f;
         uint64_t t;
         int32_t s;
         int32_t ps = -1;
@@ -101,7 +102,7 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
                 ShowMessage("GOT EE FRAME %lld %d", t, s);
             }
             
-            f->Release();
+            EE_Release(f);
         }
 		}
 

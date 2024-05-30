@@ -1,0 +1,24 @@
+{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0",
+	"FriendlyName": "hl2da",
+	"Description": "hl2da quartz",
+	"Category": "Other",
+	"CreatedBy": "jcds",
+	"CreatedByURL": "https://github.com/jdibenes/hl2da",
+	"DocsURL": "",
+	"MarketplaceURL": "",
+	"SupportURL": "",
+	"CanContainContent": true,
+	"IsBetaVersion": false,
+	"IsExperimentalVersion": false,
+	"Installed": false,
+	"Modules": [
+		{
+			"Name": "hl2da",
+			"Type": "Runtime",
+			"LoadingPhase": "Default"
+		}
+	]
+}

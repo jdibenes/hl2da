@@ -2,6 +2,7 @@
 #include "../hl2da/locator.h"
 #include "../hl2da/research_mode.h"
 #include "../hl2da/personal_video.h"
+#include "../hl2da/spatial_input.h"
 #include "../hl2da/stream_rm.h"
 #include "../hl2da/stream_pv.h"
 #include "../hl2da/stream_mc.h"
@@ -18,18 +19,21 @@ using namespace winrt::Windows::ApplicationModel::Core;
 
 #define PLUGIN_EXPORT extern "C" __declspec(dllexport)
 
+// OK
 PLUGIN_EXPORT
 void Copy(void const* source, void* destination, int bytes)
 {
     memcpy(destination, source, bytes);
 }
 
+// OK
 PLUGIN_EXPORT
 void DebugMessage(char const* str)
 {
     ShowMessage("%s", str);
 }
 
+// OK
 PLUGIN_EXPORT
 void InitializeComponents()
 {
@@ -41,8 +45,9 @@ void InitializeComponents()
     RM_InitializeDepthLock();
 }
 
+// OK
 PLUGIN_EXPORT
-void InitializeGlobal()
+void InitializeComponentsOnUI()
 {
     HANDLE event_done = CreateEvent(NULL, TRUE, FALSE, NULL);
     CoreApplication::Views().GetAt(0).Dispatcher().RunAsync(CoreDispatcherPriority::High, [=]() { InitializeComponents(); SetEvent(event_done); }).get();
@@ -50,6 +55,7 @@ void InitializeGlobal()
     CloseHandle(event_done);
 }
 
+// OK
 PLUGIN_EXPORT
 int OverrideWorldCoordinateSystem(void* scs_ptr)
 {
@@ -64,6 +70,7 @@ int OverrideWorldCoordinateSystem(void* scs_ptr)
     return true;
 }
 
+// OK
 PLUGIN_EXPORT
 void Initialize(int id, int buffer_size)
 {
@@ -85,6 +92,7 @@ void Initialize(int id, int buffer_size)
     }
 }
 
+// OK
 PLUGIN_EXPORT
 void SetEnable(int id, int enable)
 {
@@ -106,6 +114,7 @@ void SetEnable(int id, int enable)
     }
 }
 
+// OK
 PLUGIN_EXPORT
 int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, int32_t* framestamp)
 {
@@ -119,16 +128,17 @@ int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, in
     case  5:
     case  6:
     case  7:
-    case  8: return RM_Get(id, stamp, *(rm_frame**)frame, *timestamp, *framestamp);
-    case  9: return PV_Get(    stamp, *(pv_frame**)frame, *timestamp, *framestamp);
-    case 10: return MC_Get(    stamp, *(mc_frame**)frame, *timestamp, *framestamp);
-    case 11: return SI_Get(    stamp, *(si_frame**)frame, *timestamp, *framestamp);
-    case 12: return EE_Get(    stamp, *(ee_frame**)frame, *timestamp, *framestamp);
+    case  8: return RM_Get(id, stamp, *frame, *timestamp, *framestamp);
+    case  9: return PV_Get(    stamp, *frame, *timestamp, *framestamp);
+    case 10: return MC_Get(    stamp, *frame, *timestamp, *framestamp);
+    case 11: return SI_Get(    stamp, *frame, *timestamp, *framestamp);
+    case 12: return EE_Get(    stamp, *frame, *timestamp, *framestamp);
     }
 
     return -1;
 }
 
+// OK
 PLUGIN_EXPORT
 int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_right, void** frame, uint64_t* timestamp, int32_t* framestamp)
 {
@@ -142,16 +152,17 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
     case  5:
     case  6:
     case  7:
-    case  8: return RM_Get(id, stamp, time_preference, tiebreak_right != 0, *(rm_frame**)frame, *timestamp, *framestamp);
-    case  9: return PV_Get(    stamp, time_preference, tiebreak_right != 0, *(pv_frame**)frame, *timestamp, *framestamp);
-    case 10: return MC_Get(    stamp, time_preference, tiebreak_right != 0, *(mc_frame**)frame, *timestamp, *framestamp);
-    case 11: return SI_Get(    stamp, time_preference, tiebreak_right != 0, *(si_frame**)frame, *timestamp, *framestamp);
-    case 12: return EE_Get(    stamp, time_preference, tiebreak_right != 0, *(ee_frame**)frame, *timestamp, *framestamp);
+    case  8: return RM_Get(id, stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
+    case  9: return PV_Get(    stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
+    case 10: return MC_Get(    stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
+    case 11: return SI_Get(    stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
+    case 12: return EE_Get(    stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
     }
 
     return -1;
 }
 
+// OK
 PLUGIN_EXPORT
 void Release(int id, void* frame)
 {
@@ -165,172 +176,74 @@ void Release(int id, void* frame)
     case  5:
     case  6:
     case  7:
-    case  8: ((rm_frame*)frame)->Release(); break;
-    case  9: ((pv_frame*)frame)->Release(); break;
-    case 10: ((mc_frame*)frame)->Release(); break;
-    case 11: ((si_frame*)frame)->Release(); break;
-    case 12: ((ee_frame*)frame)->Release(); break;
-    }    
+    case  8: RM_Release(frame); break;
+    case  9: PV_Release(frame); break;
+    case 10: MC_Release(frame); break;
+    case 11: SI_Release(frame); break;
+    case 12: EE_Release(frame); break;
+    }
 }
 
+// OK
 PLUGIN_EXPORT
-void Extract_RM_VLC(void* frame, void const** buffer, int32_t* length, void** pose_buffer, int32_t* pose_length)
+void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l)
 {
-    rm_frame* f = (rm_frame*)frame;
-    rm_data_vlc d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *pose_buffer = &(f->pose);
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+    switch (id)
+    {
+    case  0:
+    case  1:
+    case  2:
+    case  3: RM_Extract_VLC(              frame,        b + 0, l + 0,                             b + 3, l + 3); break;
+    case  4: RM_Extract_Depth_AHAT(       frame,        b + 0, l + 0, b + 1, l + 1,               b + 3, l + 3); break;
+    case  5: RM_Extract_Depth_Longthrow(  frame,        b + 0, l + 0, b + 1, l + 1, b + 2, l + 2, b + 3, l + 3); break;
+    case  6: RM_Extract_IMU_Accelerometer(frame,        b + 0, l + 0,                             b + 3, l + 3); break;
+    case  7: RM_Extract_IMU_Gyroscope(    frame,        b + 0, l + 0,                             b + 3, l + 3); break;
+    case  8: RM_Extract_IMU_Magnetometer( frame,        b + 0, l + 0,                             b + 3, l + 3); break;
+    case  9: PV_Extract(                  frame,        b + 0, l + 0,               b + 2, l + 2, b + 3, l + 3); break;
+    case 10: MC_Extract(                  frame,        b + 0, l + 0                                          ); break;
+    case 11: SI_Extract(                  frame, valid, b + 0, l + 0, b + 1, l + 1, b + 2, l + 2, b + 3, l + 3); break;
+    case 12: EE_Extract(                  frame, valid, b + 0, l + 0,                             b + 3, l + 3); break;
+    }
 }
 
-PLUGIN_EXPORT
-void Extract_RM_Depth_AHAT(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void** pose_buffer, int32_t* pose_length)
-{
-    rm_frame* f = (rm_frame*)frame;
-    rm_data_zht d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *ab_depth_buffer = d.ab_depth_buffer;
-    *ab_depth_length = (int32_t)d.ab_depth_length;
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
-}
-
-PLUGIN_EXPORT
-void Extract_RM_Depth_Longthrow(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void const** sigma_buffer, int32_t* sigma_length, void** pose_buffer, int32_t* pose_length)
-{
-    rm_frame* f = (rm_frame*)frame;
-    rm_data_zlt d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *ab_depth_buffer = d.ab_depth_buffer;
-    *ab_depth_length = (int32_t)d.ab_depth_length;
-    *sigma_buffer = d.sigma_buffer;
-    *sigma_length = (int32_t)d.sigma_length;
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
-}
-
-PLUGIN_EXPORT
-void Extract_RM_IMU_Accelerometer(void* frame, void const** buffer, int32_t* length, void** pose_buffer, int32_t* pose_length)
-{
-    rm_frame* f = (rm_frame*)frame;
-    rm_data_acc d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
-}
-
-PLUGIN_EXPORT
-void Extract_RM_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length, void** pose_buffer, int32_t* pose_length)
-{
-    rm_frame* f = (rm_frame*)frame;
-    rm_data_gyr d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
-}
-
-PLUGIN_EXPORT
-void Extract_RM_IMU_Magnetometer(void* frame, void const** buffer, int32_t* length, void** pose_buffer, int32_t* pose_length)
-{
-    rm_frame* f = (rm_frame*)frame;
-    rm_data_mag d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
-}
-
-PLUGIN_EXPORT
-void Extract_PV(void* frame, void const** buffer, int32_t* length, void const** intrinsics_buffer, int32_t* intrinsics_length, void const** pose_buffer, int32_t* pose_length)
-{
-    pv_frame* f = (pv_frame*)frame;
-    pv_data d;
-    PV_Extract(f->mfr, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *intrinsics_buffer = &f->intrinsics;
-    *intrinsics_length = sizeof(pv_frame::intrinsics) / sizeof(float);
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(pv_frame::pose) / sizeof(float);
-}
-
-PLUGIN_EXPORT
-void Extract_MC(void* frame, void const** buffer, int32_t* length)
-{
-    mc_frame* f = (mc_frame*)frame;
-    *buffer = f->buffer;
-    *length = (int32_t)f->length;
-}
-
-PLUGIN_EXPORT
-void Extract_SI(void* frame, int32_t* valid, void const** head_buffer, int32_t* head_length, void const** eye_buffer, int32_t* eye_length, void const** left_buffer, int32_t* left_length, void const** right_buffer, int32_t* right_length)
-{
-    si_frame* f = (si_frame*)frame;
-    *valid = f->valid;
-    *head_buffer = &f->head_pose;
-    *head_length = sizeof(si_frame::head_pose) / sizeof(float);
-    *eye_buffer = &f->eye_ray;
-    *eye_length = sizeof(si_frame::eye_ray) / sizeof(float);
-    *left_buffer = f->left_hand;
-    *left_length = HAND_JOINTS;
-    *right_buffer = f->right_hand;
-    *right_length = HAND_JOINTS;
-}
-
-PLUGIN_EXPORT
-void Extract_EE(void* frame, int32_t* valid, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
-{
-    ee_frame* f = (ee_frame*)frame;
-    *valid = f->valid;
-    *buffer = &f->frame;
-    *length = sizeof(ee_frame::frame) / sizeof(float);
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(ee_frame::pose) / sizeof(float);
-}
-
+// OK
 PLUGIN_EXPORT
 void GetExtrinsics_RM(int id, float* out)
 {
     RM_GetExtrinsics(id, out);
 }
 
+// OK
 PLUGIN_EXPORT
 void MapImagePointToCameraUnitPlane_RM(int id, float const* in, float* out, int point_count)
 {
     RM_MapImagePointToCameraUnitPlane(id, in, out, point_count);
 }
 
+// OK
 PLUGIN_EXPORT
 void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int point_count)
 {
     RM_MapCameraSpaceToImagePoint(id, in, out, point_count);
 }
 
+// OK
 PLUGIN_EXPORT
 void SetFormat_PV(pv_captureformat const* cf)
 {
     PV_SetFormat(*cf);
 }
 
+// OK
 PLUGIN_EXPORT
 void SetFormat_MC(int raw)
 {
     MC_SetFormat(raw != 0);
 }
 
+// OK
 PLUGIN_EXPORT
 void SetFormat_EE(int fps_index)
 {
-    EE_SetFPS(fps_index);
+    EE_SetFormat(fps_index);
 }

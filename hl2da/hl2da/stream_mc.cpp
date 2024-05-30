@@ -12,6 +12,21 @@
 using namespace winrt::Windows::UI::Core;
 using namespace winrt::Windows::ApplicationModel::Core;
 
+class mc_frame
+{
+private:
+	ULONG m_count;
+
+public:
+	uint8_t* buffer;
+	int32_t length;
+
+	mc_frame(uint8_t* b, int32_t l);
+
+	ULONG AddRef();
+	ULONG Release();
+};
+
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
@@ -113,21 +128,35 @@ void MC_SetEnable(bool enable)
 }
 
 // OK
-int MC_Get(int32_t stamp, mc_frame*& f, uint64_t& t, int32_t& s)
+int MC_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
 	SRWLock srw(&g_lock, false);
-	int v = g_buffer.get(stamp, f, t, s);
-	if (v == 0) { f->AddRef(); }
+	int v = g_buffer.get(stamp, (mc_frame*&)f, t, s);
+	if (v == 0) { ((mc_frame*&)f)->AddRef(); }
 	return v;
 }
 
 // OK
-int MC_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, mc_frame*& f, uint64_t& t, int32_t& s)
+int MC_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
 	SRWLock srw(&g_lock, false);
-	int v = g_buffer.get(timestamp, time_preference, tiebreak_right, f, t, s);
-	if (v == 0) { f->AddRef(); }
+	int v = g_buffer.get(timestamp, time_preference, tiebreak_right, (mc_frame*&)f, t, s);
+	if (v == 0) { ((mc_frame*&)f)->AddRef(); }
 	return v;
+}
+
+// OK
+void MC_Release(void* frame)
+{
+	((mc_frame*)frame)->Release();
+}
+
+// OK
+void MC_Extract(void* frame, void const** buffer, int32_t* length)
+{
+	mc_frame* f = (mc_frame*)frame;
+	*buffer = f->buffer;
+	*length = (int32_t)f->length;
 }
 
 // OK

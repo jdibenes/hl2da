@@ -16,7 +16,78 @@ enum sensor_id
     RM_DEPTH_LONGTHROW,
     RM_IMU_ACCELEROMETER,
     RM_IMU_GYROSCOPE,
-    RM_IMU_MAGNETOMETER
+    RM_IMU_MAGNETOMETER,
+    PV,
+    MICROPHONE,
+    SPATIAL_INPUT,
+    EXTENDED_EYE_TRACKING,
+};
+
+struct AccelDataStruct
+{
+    uint64_t VinylHupTicks;
+    uint64_t SocTicks;
+    float AccelValues[3];
+    float temperature;
+};
+
+struct GyroDataStruct
+{
+    uint64_t VinylHupTicks;
+    uint64_t SocTicks;
+    float GyroValues[3];
+    float temperature;
+};
+
+struct MagDataStruct
+{
+    uint64_t VinylHupTicks;
+    uint64_t SocTicks;
+    float MagValues[3];
+};
+
+struct pv_videoformat
+{
+    uint16_t width;
+    uint16_t height;
+    uint8_t framerate;
+};
+
+struct mrc_video_options
+{
+    bool enable;
+    bool hologram_composition;
+    bool recording_indicator;
+    bool video_stabilization;
+    bool blank_protected;
+    bool show_mesh;
+    bool shared;
+    uint8_t _reserved[1];
+    float global_opacity;
+    float output_width;
+    float output_height;
+    uint32_t video_stabilization_length;
+    uint32_t hologram_perspective;
+};
+
+struct pv_captureformat
+{
+    mrc_video_options mrcvo;
+    pv_videoformat vf;
+    uint8_t _reserved[2];
+};
+
+struct joint_pose
+{
+    float rx;
+    float ry;
+    float rz;
+    float rw;
+    float tx;
+    float ty;
+    float tz;
+    float radius;
+    int32_t accuracy;
 };
 
 PLUGIN_IMPORT
@@ -26,7 +97,10 @@ PLUGIN_IMPORT
 void DebugMessage(char const* str);
 
 PLUGIN_IMPORT
-void InitializeGlobal();
+void InitializeComponents();
+
+PLUGIN_IMPORT
+void InitializeComponentsOnUI();
 
 PLUGIN_IMPORT
 int OverrideWorldCoordinateSystem(void* scs_ptr);
@@ -44,25 +118,10 @@ PLUGIN_IMPORT
 int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_right, void** frame, uint64_t* timestamp, int32_t* framestamp);
 
 PLUGIN_IMPORT
-void Release_RM(void* frame);
+void Release(int id, void* frame);
 
 PLUGIN_IMPORT
-void Extract_RM_VLC(void* frame, void const** buffer, int32_t* length, void** pose_buffer, int32_t* pose_length);
-
-PLUGIN_IMPORT
-void Extract_RM_Depth_AHAT(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void** pose_buffer, int32_t* pose_length);
-
-PLUGIN_IMPORT
-void Extract_RM_Depth_Longthrow(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void const** sigma_buffer, int32_t* sigma_length, void** pose_buffer, int32_t* pose_length);
-
-PLUGIN_IMPORT
-void Extract_RM_IMU_Accelerometer(void* frame, void const** buffer, int32_t* length, void** pose_buffer, int32_t* pose_length);
-
-PLUGIN_IMPORT
-void Extract_RM_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length, void** pose_buffer, int32_t* pose_length);
-
-PLUGIN_IMPORT
-void Extract_RM_IMU_Magnetometer(void* frame, void const** buffer, int32_t* length, void** pose_buffer, int32_t* pose_length);
+void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l);
 
 PLUGIN_IMPORT
 void GetExtrinsics_RM(int id, float* out);
@@ -72,3 +131,12 @@ void MapImagePointToCameraUnitPlane_RM(int id, float const* in, float* out, int 
 
 PLUGIN_IMPORT
 void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int point_count);
+
+PLUGIN_IMPORT
+void SetFormat_PV(pv_captureformat const* cf);
+
+PLUGIN_IMPORT
+void SetFormat_MC(int raw);
+
+PLUGIN_IMPORT
+void SetFormat_EE(int fps_index);

@@ -1,5 +1,5 @@
 
-#include "stream_rm.h"
+#include "research_mode.h"
 #include "locator.h"
 #include "timestamps.h"
 #include "ring_buffer.h"
@@ -19,6 +19,21 @@ using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Windows::Perception::Spatial::Preview;
 
+class rm_frame
+{
+private:
+    ULONG m_count;
+
+public:
+    IResearchModeSensorFrame* rmsf;
+    winrt::Windows::Foundation::Numerics::float4x4 pose;
+
+    rm_frame(IResearchModeSensorFrame* f, winrt::Windows::Foundation::Numerics::float4x4 const& p);
+
+    ULONG AddRef();
+    ULONG Release();
+};
+
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
@@ -35,6 +50,48 @@ static HANDLE g_thread[SENSOR_COUNT]; // CloseHandle
 //-----------------------------------------------------------------------------
 // Functions
 //-----------------------------------------------------------------------------
+
+struct rm_data_vlc
+{
+    uint8_t const* buffer;
+    size_t length;
+};
+
+struct rm_data_zht
+{
+    uint16_t const* buffer;
+    size_t length;
+    uint16_t const* ab_depth_buffer;
+    size_t ab_depth_length;
+};
+
+struct rm_data_zlt
+{
+    uint16_t const* buffer;
+    size_t length;
+    uint16_t const* ab_depth_buffer;
+    size_t ab_depth_length;
+    uint8_t const* sigma_buffer;
+    size_t sigma_length;
+};
+
+struct rm_data_acc
+{
+    AccelDataStruct const* buffer;
+    size_t length;
+};
+
+struct rm_data_gyr
+{
+    GyroDataStruct const* buffer;
+    size_t length;
+};
+
+struct rm_data_mag
+{
+    MagDataStruct const* buffer;
+    size_t length;
+};
 
 // OK
 rm_frame::rm_frame(IResearchModeSensorFrame* f, float4x4 const& p) : rmsf(f), pose(p), m_count(1)
@@ -150,21 +207,27 @@ void RM_SetEnable(int id, bool enable)
 }
 
 // OK
-int RM_Get(int id, int32_t stamp, rm_frame*& f, uint64_t& t, int32_t& s)
+int RM_Get(int id, int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
     SRWLock srw(&g_lock[id], false);
-    int v = g_buffer[id].get(stamp, f, t, s);
-    if (v == 0) { f->AddRef(); }
+    int v = g_buffer[id].get(stamp, (rm_frame*&)f, t, s);
+    if (v == 0) { ((rm_frame*&)f)->AddRef(); }
     return v;
 }
 
 // OK
-int RM_Get(int id, uint64_t timestamp, int time_preference, bool tiebreak_right, rm_frame*& f, uint64_t& t, int32_t& s)
+int RM_Get(int id, uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
     SRWLock srw(&g_lock[id], false);
-    int v = g_buffer[id].get(timestamp, time_preference, tiebreak_right, f, t, s);
-    if (v == 0) { f->AddRef(); }
+    int v = g_buffer[id].get(timestamp, time_preference, tiebreak_right, (rm_frame*&)f, t, s);
+    if (v == 0) { ((rm_frame*&)f)->AddRef(); }
     return v;
+}
+
+// OK
+void RM_Release(void* frame)
+{
+    ((rm_frame*)frame)->Release();
 }
 
 // OK
@@ -228,6 +291,84 @@ void RM_Extract(IResearchModeSensorFrame* f, rm_data_mag& d)
     f->QueryInterface(IID_PPV_ARGS(&pMagFrame));
     pMagFrame->GetMagnetometerSamples(&d.buffer, &d.length);
     pMagFrame->Release();
+}
+
+// OK
+void RM_Extract_VLC(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
+{
+    rm_frame* f = (rm_frame*)frame;
+    rm_data_vlc d;
+    RM_Extract(f->rmsf, d);
+    *buffer = d.buffer;
+    *length = (int32_t)d.length;
+    *pose_buffer = &(f->pose);
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+}
+
+// OK
+void RM_Extract_Depth_AHAT(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void const** pose_buffer, int32_t* pose_length)
+{
+    rm_frame* f = (rm_frame*)frame;
+    rm_data_zht d;
+    RM_Extract(f->rmsf, d);
+    *buffer = d.buffer;
+    *length = (int32_t)d.length;
+    *ab_depth_buffer = d.ab_depth_buffer;
+    *ab_depth_length = (int32_t)d.ab_depth_length;
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+}
+
+// OK
+void RM_Extract_Depth_Longthrow(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void const** sigma_buffer, int32_t* sigma_length, void const** pose_buffer, int32_t* pose_length)
+{
+    rm_frame* f = (rm_frame*)frame;
+    rm_data_zlt d;
+    RM_Extract(f->rmsf, d);
+    *buffer = d.buffer;
+    *length = (int32_t)d.length;
+    *ab_depth_buffer = d.ab_depth_buffer;
+    *ab_depth_length = (int32_t)d.ab_depth_length;
+    *sigma_buffer = d.sigma_buffer;
+    *sigma_length = (int32_t)d.sigma_length;
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+}
+
+// OK
+void RM_Extract_IMU_Accelerometer(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
+{
+    rm_frame* f = (rm_frame*)frame;
+    rm_data_acc d;
+    RM_Extract(f->rmsf, d);
+    *buffer = d.buffer;
+    *length = (int32_t)d.length;
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+}
+
+// OK
+void RM_Extract_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
+{
+    rm_frame* f = (rm_frame*)frame;
+    rm_data_gyr d;
+    RM_Extract(f->rmsf, d);
+    *buffer = d.buffer;
+    *length = (int32_t)d.length;
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+}
+
+// OK
+void RM_Extract_IMU_Magnetometer(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
+{
+    rm_frame* f = (rm_frame*)frame;
+    rm_data_mag d;
+    RM_Extract(f->rmsf, d);
+    *buffer = d.buffer;
+    *length = (int32_t)d.length;
+    *pose_buffer = &f->pose;
+    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 // OK
