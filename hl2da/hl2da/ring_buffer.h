@@ -23,10 +23,10 @@ private:
     {
         while ((r - l) > 1)
         {
-            int32_t m = (r + l) / 2;
-            int32_t m_index = m % size;
-            uint64_t t = m_timestamps[m_index];
-            if (t > timestamp) { r = m; } else if (t < timestamp) { l = m; } else { return { m_index, m_index }; }
+        int32_t m = (r + l) / 2;
+        int32_t m_index = m % size;
+        uint64_t t = m_timestamps[m_index];
+        if (t > timestamp) { r = m; } else if (t < timestamp) { l = m; } else { return { m_index, m_index }; }
         }
 
         return { l % size, r % size };

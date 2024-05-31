@@ -1,13 +1,10 @@
 
-#include <MemoryBuffer.h>
 #include "stream_pv.h"
 #include "personal_video.h"
 #include "locator.h"
-#include "ring_buffer.h"
-#include "lock.h"
-#include "log.h"
+#include "frame_buffer.h"
 #include "timestamps.h"
-#include "research_mode.h"
+#include "log.h"
 
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Media.Capture.h>
@@ -23,34 +20,26 @@ using namespace winrt::Windows::Media::Devices::Core;
 using namespace winrt::Windows::Foundation::Numerics;
 using namespace winrt::Windows::Perception::Spatial;
 
-class pv_frame
+class pv_frame : public sensor_frame
 {
-private:
-    ULONG m_count;
-
 public:
+    winrt::Windows::Graphics::Imaging::SoftwareBitmap bmp = nullptr;
+    winrt::Windows::Graphics::Imaging::BitmapBuffer buf = nullptr;
+    winrt::Windows::Foundation::IMemoryBufferReference ref;
+
     winrt::Windows::Media::Capture::Frames::MediaFrameReference mfr;
     winrt::Windows::Foundation::Numerics::float4 intrinsics;
     winrt::Windows::Foundation::Numerics::float4x4 pose;
 
     pv_frame(winrt::Windows::Media::Capture::Frames::MediaFrameReference const& f, winrt::Windows::Foundation::Numerics::float4 const& k, winrt::Windows::Foundation::Numerics::float4x4 const& p);
-
-    ULONG AddRef();
-    ULONG Release();
-};
-
-struct pv_data
-{
-    uint8_t* buffer;
-    uint32_t length;
+    ~pv_frame();
 };
 
 //-----------------------------------------------------------------------------
 // Global Variables
 //-----------------------------------------------------------------------------
 
-static SRWLOCK g_lock;
-static ring_buffer<pv_frame*> g_buffer;
+static frame_buffer g_buffer;
 static HANDLE g_event_client = NULL; // CloseHandle
 static HANDLE g_event_enable = NULL; // CloseHandle
 static HANDLE g_event_quit = NULL; // CloseHandle
@@ -65,41 +54,20 @@ MRCVideoOptions g_options;
 //-----------------------------------------------------------------------------
 
 // OK
-pv_frame::pv_frame(MediaFrameReference const& f, float4 const& k, float4x4 const& p) : mfr(f), intrinsics(k), pose(p), m_count(1)
+pv_frame::pv_frame(MediaFrameReference const& f, float4 const& k, float4x4 const& p) : sensor_frame(), mfr(f), intrinsics(k), pose(p)
 {
+    bmp = f.VideoMediaFrame().SoftwareBitmap();
+    buf = bmp.LockBuffer(winrt::Windows::Graphics::Imaging::BitmapBufferAccessMode::Read);
+    ref = buf.CreateReference();
 }
 
 // OK
-ULONG pv_frame::AddRef()
+pv_frame::~pv_frame()
 {
-    return InterlockedIncrement(&m_count);
-}
-
-// OK
-ULONG pv_frame::Release()
-{
-    ULONG uCount = InterlockedDecrement(&m_count);
-    if (uCount != 0) { return uCount; }
-    mfr = nullptr; // Close?
-    delete this;
-    return uCount;
-}
-
-// OK
-static void PV_Insert(MediaFrameReference const& frame, float4 const& k, float4x4 const& pose, uint64_t timestamp)
-{
-    pv_frame* f;
-    SRWLock srw(&g_lock, true);
-    f = g_buffer.insert(new pv_frame(frame, k, pose), timestamp);
-    if (f) { f->Release(); }
-}
-
-// OK
-static void PV_Clear()
-{
-    SRWLock srw(&g_lock, true);
-    for (int32_t i = 0; i < g_buffer.size(); ++i) { g_buffer.at(i)->Release(); }
-    g_buffer.reset();
+    ref.Close();
+    buf.Close();
+    bmp.Close();
+    mfr.Close();
 }
 
 // OK
@@ -128,7 +96,7 @@ static void PV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArr
 
     pose = Locator_GetTransformTo(frame.CoordinateSystem(), Locator_GetWorldCoordinateSystem(QPCTimestampToPerceptionTimestamp(timestamp)));
 
-    PV_Insert(frame, k, pose, timestamp);
+    g_buffer.Insert(new pv_frame(frame, k, pose), timestamp);
 }
 
 // OK
@@ -158,7 +126,7 @@ static void PV_Stream()
 
     videoFrameReader.Close();
 
-    PV_Clear();
+    g_buffer.Clear();
 
     PersonalVideo_Close();
 }
@@ -188,19 +156,13 @@ void PV_SetEnable(bool enable)
 // OK
 int PV_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
-    SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(stamp, (pv_frame*&)f, t, s);
-    if (v == 0) { ((pv_frame*&)f)->AddRef(); }
-    return v;
+    return g_buffer.Get(stamp, (sensor_frame*&)f, t, s);
 }
 
 // OK
 int PV_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
-    SRWLock srw(&g_lock, false);
-    int v = g_buffer.get(timestamp, time_preference, tiebreak_right, (pv_frame*&)f, t, s);
-    if (v == 0) { ((pv_frame*&)f)->AddRef(); }
-    return v;
+    return g_buffer.Get(timestamp, time_preference, tiebreak_right, (sensor_frame*&)f, t, s);
 }
 
 // OK
@@ -210,24 +172,12 @@ void PV_Release(void* frame)
 }
 
 // OK
-void PV_Extract2(MediaFrameReference const& ref, pv_data& d)
-{
-    winrt::Windows::Graphics::Imaging::SoftwareBitmap bmp = ref.VideoMediaFrame().SoftwareBitmap();
-    winrt::Windows::Graphics::Imaging::BitmapBuffer buf = bmp.LockBuffer(winrt::Windows::Graphics::Imaging::BitmapBufferAccessMode::Read);
-    winrt::Windows::Foundation::IMemoryBufferReference m_ref = buf.CreateReference();
-    winrt::impl::com_ref<Windows::Foundation::IMemoryBufferByteAccess> bba = m_ref.as<Windows::Foundation::IMemoryBufferByteAccess>();
-
-    bba->GetBuffer(&d.buffer, &d.length);
-}
-
-// OK
 void PV_Extract(void* frame, void const** buffer, int32_t* length, void const** intrinsics_buffer, int32_t* intrinsics_length, void const** pose_buffer, int32_t* pose_length)
 {
     pv_frame* f = (pv_frame*)frame;
-    pv_data d;
-    PV_Extract2(f->mfr, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
+
+    *buffer = f->ref.data();
+    *length = (int32_t)f->ref.Capacity();
     *intrinsics_buffer = &f->intrinsics;
     *intrinsics_length = sizeof(pv_frame::intrinsics) / sizeof(float);
     *pose_buffer = &f->pose;
@@ -237,8 +187,7 @@ void PV_Extract(void* frame, void const** buffer, int32_t* length, void const** 
 // OK
 void PV_Initialize(int32_t buffer_size)
 {
-    InitializeSRWLock(&g_lock);
-    g_buffer.reset(buffer_size);
+    g_buffer.Reset(buffer_size);
     g_event_client = CreateEvent(NULL, FALSE, FALSE, NULL);
     g_event_enable = CreateEvent(NULL, FALSE, FALSE, NULL);
     g_event_quit = CreateEvent(NULL, TRUE, FALSE, NULL);

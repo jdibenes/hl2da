@@ -124,6 +124,9 @@
     <ClCompile Include="stream_ee.cpp">
       <Filter>Source Files\interfaces</Filter>
     </ClCompile>
+    <ClCompile Include="frame_buffer.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
@@ -182,6 +185,9 @@
     </ClInclude>
     <ClInclude Include="stream_ee.h">
       <Filter>Header Files\interfaces</Filter>
+    </ClInclude>
+    <ClInclude Include="frame_buffer.h">
+      <Filter>Header Files\utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

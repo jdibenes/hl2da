@@ -1,11 +1,9 @@
 
 #include "research_mode.h"
 #include "locator.h"
+#include "frame_buffer.h"
 #include "timestamps.h"
-#include "ring_buffer.h"
-#include "lock.h"
 #include "log.h"
-#include "types.h"
 
 #include <winrt/Windows.Foundation.Numerics.h>
 #include <winrt/Windows.Perception.h>
@@ -19,19 +17,14 @@ using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Windows::Perception::Spatial::Preview;
 
-class rm_frame
+class rm_frame : public sensor_frame
 {
-private:
-    ULONG m_count;
-
 public:
     IResearchModeSensorFrame* rmsf;
     winrt::Windows::Foundation::Numerics::float4x4 pose;
 
     rm_frame(IResearchModeSensorFrame* f, winrt::Windows::Foundation::Numerics::float4x4 const& p);
-
-    ULONG AddRef();
-    ULONG Release();
+    ~rm_frame();
 };
 
 //-----------------------------------------------------------------------------
@@ -41,8 +34,9 @@ public:
 constexpr int SENSOR_COUNT = 9;
 
 static CRITICAL_SECTION g_depth_lock;
-static SRWLOCK g_lock[SENSOR_COUNT];
-static ring_buffer<rm_frame*> g_buffer[SENSOR_COUNT];
+static bool g_bypass_lock;
+
+static frame_buffer g_buffer[SENSOR_COUNT];
 static HANDLE g_event_enable[SENSOR_COUNT]; // CloseHandle
 static HANDLE g_event_quit[SENSOR_COUNT]; // CloseHandle
 static HANDLE g_thread[SENSOR_COUNT]; // CloseHandle
@@ -51,90 +45,21 @@ static HANDLE g_thread[SENSOR_COUNT]; // CloseHandle
 // Functions
 //-----------------------------------------------------------------------------
 
-struct rm_data_vlc
-{
-    uint8_t const* buffer;
-    size_t length;
-};
-
-struct rm_data_zht
-{
-    uint16_t const* buffer;
-    size_t length;
-    uint16_t const* ab_depth_buffer;
-    size_t ab_depth_length;
-};
-
-struct rm_data_zlt
-{
-    uint16_t const* buffer;
-    size_t length;
-    uint16_t const* ab_depth_buffer;
-    size_t ab_depth_length;
-    uint8_t const* sigma_buffer;
-    size_t sigma_length;
-};
-
-struct rm_data_acc
-{
-    AccelDataStruct const* buffer;
-    size_t length;
-};
-
-struct rm_data_gyr
-{
-    GyroDataStruct const* buffer;
-    size_t length;
-};
-
-struct rm_data_mag
-{
-    MagDataStruct const* buffer;
-    size_t length;
-};
-
 // OK
-rm_frame::rm_frame(IResearchModeSensorFrame* f, float4x4 const& p) : rmsf(f), pose(p), m_count(1)
+rm_frame::rm_frame(IResearchModeSensorFrame* f, float4x4 const& p) : sensor_frame(), rmsf(f), pose(p)
 {
 }
 
 // OK
-ULONG rm_frame::AddRef()
+rm_frame::~rm_frame()
 {
-    return InterlockedIncrement(&m_count);
-}
-
-// OK
-ULONG rm_frame::Release()
-{
-    ULONG uCount = InterlockedDecrement(&m_count);
-    if (uCount != 0) { return uCount; }
-    if (rmsf) { rmsf->Release(); }
-    delete this;    
-    return uCount;
-}
-
-// OK
-static void RM_Insert(int id, IResearchModeSensorFrame* pSensorFrame, float4x4 const& pose, uint64_t timestamp)
-{
-    rm_frame* f;
-    SRWLock srw(&g_lock[id], true);
-    f = g_buffer[id].insert(new rm_frame(pSensorFrame, pose), timestamp);
-    if (f) { f->Release(); }
-}
-
-// OK
-static void RM_Clear(int id)
-{
-    SRWLock srw(&g_lock[id], true);
-    for (int32_t i = 0; i < g_buffer[id].size(); ++i) { g_buffer[id].at(i)->Release(); }
-    g_buffer[id].reset();
+    rmsf->Release();
 }
 
 // OK
 static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const& locator)
 {
-    bool is_depth_camera = (id == DEPTH_AHAT) || (id == DEPTH_LONG_THROW);
+    bool is_depth_camera = ((id == DEPTH_AHAT) || (id == DEPTH_LONG_THROW)) && !g_bypass_lock;
     PerceptionTimestamp perception_timestamp = nullptr;
     HANDLE event_enable = g_event_enable[id];
     IResearchModeSensorFrame* pSensorFrame; // Release
@@ -142,11 +67,7 @@ static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const
     ResearchModeSensorTimestamp timestamp;    
     float4x4 pose;
 
-    ShowMessage(L"RM%d: Waiting for enable", id);
-
     WaitForSingleObject(event_enable, INFINITE);
-
-    ShowMessage(L"RM%d: Enabled", id);
 
     if (is_depth_camera) { EnterCriticalSection(&g_depth_lock); }
 
@@ -157,23 +78,19 @@ static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const
     sensor->GetNextBuffer(&pSensorFrame); // block
 
     pSensorFrame->GetTimeStamp(&timestamp);
-
     host_ticks = timestamp.HostTicks;
     perception_timestamp = QPCTimestampToPerceptionTimestamp(host_ticks);
-
     pose = Locator_Locate(perception_timestamp, locator, Locator_GetWorldCoordinateSystem(perception_timestamp));
 
-    RM_Insert(id, pSensorFrame, pose, host_ticks);
+    g_buffer[id].Insert(new rm_frame(pSensorFrame, pose), host_ticks);
     }
     while (WaitForSingleObject(event_enable, 0) == WAIT_OBJECT_0);
 
-    RM_Clear(id);
+    g_buffer[id].Clear();
 
     sensor->CloseStream();
 
     if (is_depth_camera) { LeaveCriticalSection(&g_depth_lock); }
-
-    ShowMessage(L"RM%d: Disabled", id);
 }
 
 // OK
@@ -186,8 +103,6 @@ static DWORD WINAPI RM_EntryPoint(void* param)
 
     sensor = (IResearchModeSensor*)param;
     type = sensor->GetSensorType();
-
-    ShowMessage(L"RM%d (%s): Waiting for consent", type, sensor->GetFriendlyName());
 
     ok = ResearchMode_WaitForConsent(sensor);
     if (!ok) { return false; }
@@ -209,19 +124,13 @@ void RM_SetEnable(int id, bool enable)
 // OK
 int RM_Get(int id, int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
-    SRWLock srw(&g_lock[id], false);
-    int v = g_buffer[id].get(stamp, (rm_frame*&)f, t, s);
-    if (v == 0) { ((rm_frame*&)f)->AddRef(); }
-    return v;
+    return g_buffer[id].Get(stamp, (sensor_frame*&)f, t, s);
 }
 
 // OK
 int RM_Get(int id, uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
-    SRWLock srw(&g_lock[id], false);
-    int v = g_buffer[id].get(timestamp, time_preference, tiebreak_right, (rm_frame*&)f, t, s);
-    if (v == 0) { ((rm_frame*&)f)->AddRef(); }
-    return v;
+    return g_buffer[id].Get(timestamp, time_preference, tiebreak_right, (sensor_frame*&)f, t, s);
 }
 
 // OK
@@ -231,76 +140,19 @@ void RM_Release(void* frame)
 }
 
 // OK
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_vlc& d)
-{
-    IResearchModeSensorVLCFrame* pVLCFrame; // Release
-    
-    f->QueryInterface(IID_PPV_ARGS(&pVLCFrame));
-    pVLCFrame->GetBuffer(&d.buffer, &d.length);
-    pVLCFrame->Release();
-}
-
-// OK
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_zht& d)
-{
-    IResearchModeSensorDepthFrame* pDepthFrame; // Release
-
-    f->QueryInterface(IID_PPV_ARGS(&pDepthFrame));
-    pDepthFrame->GetBuffer(&d.buffer, &d.length);
-    pDepthFrame->GetAbDepthBuffer(&d.ab_depth_buffer, &d.ab_depth_length);
-    pDepthFrame->Release();
-}
-
-// OK
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_zlt& d)
-{
-    IResearchModeSensorDepthFrame* pDepthFrame; // Release
-
-    f->QueryInterface(IID_PPV_ARGS(&pDepthFrame));
-    pDepthFrame->GetBuffer(&d.buffer, &d.length);
-    pDepthFrame->GetAbDepthBuffer(&d.ab_depth_buffer, &d.ab_depth_length);
-    pDepthFrame->GetSigmaBuffer(&d.sigma_buffer, &d.sigma_length);
-    pDepthFrame->Release();
-}
-
-// OK
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_acc& d)
-{
-    IResearchModeAccelFrame* pAccFrame; // Release
-
-    f->QueryInterface(IID_PPV_ARGS(&pAccFrame));
-    pAccFrame->GetCalibratedAccelarationSamples(&d.buffer, &d.length);
-    pAccFrame->Release();
-}
-
-// OK
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_gyr& d)
-{
-    IResearchModeGyroFrame* pGyroFrame; // Release
-
-    f->QueryInterface(IID_PPV_ARGS(&pGyroFrame));
-    pGyroFrame->GetCalibratedGyroSamples(&d.buffer, &d.length);
-    pGyroFrame->Release();
-}
-
-// OK
-void RM_Extract(IResearchModeSensorFrame* f, rm_data_mag& d)
-{
-    IResearchModeMagFrame* pMagFrame; // Release
-
-    f->QueryInterface(IID_PPV_ARGS(&pMagFrame));
-    pMagFrame->GetMagnetometerSamples(&d.buffer, &d.length);
-    pMagFrame->Release();
-}
-
-// OK
 void RM_Extract_VLC(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
 {
     rm_frame* f = (rm_frame*)frame;
-    rm_data_vlc d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
+    IResearchModeSensorVLCFrame* pVLCFrame; // Release
+    uint8_t const* b;
+    size_t l;
+
+    f->rmsf->QueryInterface(IID_PPV_ARGS(&pVLCFrame));
+    pVLCFrame->GetBuffer(&b, &l);
+    pVLCFrame->Release();
+
+    *buffer = b;
+    *length = (int32_t)l;
     *pose_buffer = &(f->pose);
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -309,12 +161,21 @@ void RM_Extract_VLC(void* frame, void const** buffer, int32_t* length, void cons
 void RM_Extract_Depth_AHAT(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void const** pose_buffer, int32_t* pose_length)
 {
     rm_frame* f = (rm_frame*)frame;
-    rm_data_zht d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *ab_depth_buffer = d.ab_depth_buffer;
-    *ab_depth_length = (int32_t)d.ab_depth_length;
+    IResearchModeSensorDepthFrame* pDepthFrame; // Release
+    uint16_t const* b;
+    size_t l;
+    uint16_t const* ab_depth_b;
+    size_t ab_depth_l;
+
+    f->rmsf->QueryInterface(IID_PPV_ARGS(&pDepthFrame));
+    pDepthFrame->GetBuffer(&b, &l);
+    pDepthFrame->GetAbDepthBuffer(&ab_depth_b, &ab_depth_l);
+    pDepthFrame->Release();
+
+    *buffer = b;
+    *length = (int32_t)l;
+    *ab_depth_buffer = ab_depth_b;
+    *ab_depth_length = (int32_t)ab_depth_l;
     *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -323,14 +184,26 @@ void RM_Extract_Depth_AHAT(void* frame, void const** buffer, int32_t* length, vo
 void RM_Extract_Depth_Longthrow(void* frame, void const** buffer, int32_t* length, void const** ab_depth_buffer, int32_t* ab_depth_length, void const** sigma_buffer, int32_t* sigma_length, void const** pose_buffer, int32_t* pose_length)
 {
     rm_frame* f = (rm_frame*)frame;
-    rm_data_zlt d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
-    *ab_depth_buffer = d.ab_depth_buffer;
-    *ab_depth_length = (int32_t)d.ab_depth_length;
-    *sigma_buffer = d.sigma_buffer;
-    *sigma_length = (int32_t)d.sigma_length;
+    IResearchModeSensorDepthFrame* pDepthFrame; // Release
+    uint16_t const* b;
+    size_t l;
+    uint16_t const* ab_depth_b;
+    size_t ab_depth_l;
+    uint8_t const* sigma_b;
+    size_t sigma_l;
+
+    f->rmsf->QueryInterface(IID_PPV_ARGS(&pDepthFrame));
+    pDepthFrame->GetBuffer(&b, &l);
+    pDepthFrame->GetAbDepthBuffer(&ab_depth_b, &ab_depth_l);
+    pDepthFrame->GetSigmaBuffer(&sigma_b, &sigma_l);
+    pDepthFrame->Release();
+
+    *buffer = b;
+    *length = (int32_t)l;
+    *ab_depth_buffer = ab_depth_b;
+    *ab_depth_length = (int32_t)ab_depth_l;
+    *sigma_buffer = sigma_b;
+    *sigma_length = (int32_t)sigma_l;
     *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -339,10 +212,16 @@ void RM_Extract_Depth_Longthrow(void* frame, void const** buffer, int32_t* lengt
 void RM_Extract_IMU_Accelerometer(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
 {
     rm_frame* f = (rm_frame*)frame;
-    rm_data_acc d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
+    IResearchModeAccelFrame* pAccFrame; // Release
+    AccelDataStruct const* b;
+    size_t l;
+    
+    f->rmsf->QueryInterface(IID_PPV_ARGS(&pAccFrame));
+    pAccFrame->GetCalibratedAccelarationSamples(&b, &l);
+    pAccFrame->Release();
+
+    *buffer = b;
+    *length = (int32_t)l;
     *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -351,10 +230,16 @@ void RM_Extract_IMU_Accelerometer(void* frame, void const** buffer, int32_t* len
 void RM_Extract_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
 {
     rm_frame* f = (rm_frame*)frame;
-    rm_data_gyr d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
+    IResearchModeGyroFrame* pGyroFrame; // Release
+    GyroDataStruct const* b;
+    size_t l;
+
+    f->rmsf->QueryInterface(IID_PPV_ARGS(&pGyroFrame));
+    pGyroFrame->GetCalibratedGyroSamples(&b, &l);
+    pGyroFrame->Release();
+
+    *buffer = b;
+    *length = (int32_t)l;
     *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -363,10 +248,16 @@ void RM_Extract_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length,
 void RM_Extract_IMU_Magnetometer(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
 {
     rm_frame* f = (rm_frame*)frame;
-    rm_data_mag d;
-    RM_Extract(f->rmsf, d);
-    *buffer = d.buffer;
-    *length = (int32_t)d.length;
+    IResearchModeMagFrame* pMagFrame; // Release
+    MagDataStruct const* b;
+    size_t l;
+
+    f->rmsf->QueryInterface(IID_PPV_ARGS(&pMagFrame));
+    pMagFrame->GetMagnetometerSamples(&b, &l);
+    pMagFrame->Release();
+
+    *buffer = b;
+    *length = (int32_t)l;
     *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -387,25 +278,9 @@ void RM_GetExtrinsics(int id, float* out)
     case RIGHT_FRONT:
     case RIGHT_RIGHT:
     case DEPTH_AHAT:
-    case DEPTH_LONG_THROW:
-        sensor->QueryInterface(IID_PPV_ARGS(&pCameraSensor));
-        pCameraSensor->GetCameraExtrinsicsMatrix(&extrinsics);
-        pCameraSensor->Release();
-        break;
-    case IMU_ACCEL:
-        sensor->QueryInterface(IID_PPV_ARGS(&pAccelSensor));
-        pAccelSensor->GetExtrinsicsMatrix(&extrinsics);
-        pAccelSensor->Release();
-        break;
-    case IMU_GYRO:
-        sensor->QueryInterface(IID_PPV_ARGS(&pGyroSensor));
-        pGyroSensor->GetExtrinsicsMatrix(&extrinsics);
-        pGyroSensor->Release();
-        break;
-    case IMU_MAG:
-    default:
-        memset(extrinsics.m, 0, sizeof(extrinsics.m));
-        break;
+    case DEPTH_LONG_THROW: sensor->QueryInterface(IID_PPV_ARGS(&pCameraSensor)); pCameraSensor->GetCameraExtrinsicsMatrix(&extrinsics); pCameraSensor->Release(); break;
+    case IMU_ACCEL:        sensor->QueryInterface(IID_PPV_ARGS(&pAccelSensor));  pAccelSensor->GetExtrinsicsMatrix(&extrinsics);        pAccelSensor->Release();  break;
+    case IMU_GYRO:         sensor->QueryInterface(IID_PPV_ARGS(&pGyroSensor));   pGyroSensor->GetExtrinsicsMatrix(&extrinsics);         pGyroSensor->Release();   break;
     }
 
     memcpy(out, extrinsics.m, sizeof(extrinsics.m));
@@ -468,10 +343,15 @@ void RM_CleanupDepthLock()
 }
 
 // OK
+void RM_BypassDepthLock(bool bypass)
+{
+    g_bypass_lock = bypass;
+}
+
+// OK
 void RM_Initialize(int id, int32_t buffer_size)
 {
-    InitializeSRWLock(&g_lock[id]);
-    g_buffer[id].reset(buffer_size);
+    g_buffer[id].Reset(buffer_size);
     g_event_enable[id] = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_event_quit[id] = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_thread[id] = CreateThread(NULL, 0, RM_EntryPoint, ResearchMode_GetSensor((ResearchModeSensorType)id), NULL, NULL);

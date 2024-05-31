@@ -1,6 +1,7 @@
 
 #pragma once
 
+#include <Windows.h>
 #include "custom_video_effect.h"
 #include <winrt/Windows.Media.Capture.Frames.h>
 
