@@ -22,6 +22,15 @@ enum class SENSOR_ID : int32_t
     EXTENDED_EYE_TRACKING,
 };
 
+enum class MICROPHONE_ARRAY_CHANNEL : int32_t
+{
+    TOP_LEFT = 0,
+    TOP_CENTER = 1,
+    TOP_RIGHT = 2,
+    BOTTOM_LEFT = 3,
+    BOTTOM_RIGHT = 4,
+};
+
 struct AccelDataStruct
 {
     uint64_t VinylHupTicks;
