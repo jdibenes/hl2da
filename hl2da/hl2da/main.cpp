@@ -91,41 +91,18 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
         MC_SetFormat(false);
         EE_SetFormat(2);
 
-        RM_Initialize(0, 30);
-        RM_Initialize(1, 30);
-        RM_Initialize(2, 30);
-        RM_Initialize(3, 30);
+        int const RM_ID = 5;
+        // 0-3: [, 8732) // MEM
+        // 4:   [, 2652) // MEM
+        // 5:   [18, 19) // SAME AS PV
+        // 6:   [, ) // MEM
+        // 7:   [, ) // MEM
+        // 8:   [, ) // MEM
+        int const RM_BUF_SIZE = 18; 
+        //int const PV_BUF_SIZE = 18; // [18,19)
 
-        //RM_Initialize(4, 45);
-        RM_Initialize(5, 5);
-
-        RM_Initialize(6, 12);
-        RM_Initialize(7, 24);
-        RM_Initialize(8, 5);
-
-        int const PV_BUF_SIZE = 18; // [18,19)
-
-        PV_Initialize(PV_BUF_SIZE); // MAX 18
-        MC_Initialize(62); // Internal copies (no hard limit)
-        SI_Initialize(30); // Internal copies (no hard limit)
-        EE_Initialize(90); // Internal copies (no hard limit)
-
-        RM_SetEnable(0, true);        
-        RM_SetEnable(1, true);
-        RM_SetEnable(2, true);
-        RM_SetEnable(3, true);
-
-        //RM_SetEnable(4, true);
-        RM_SetEnable(5, true);
-
-        RM_SetEnable(6, true);
-        RM_SetEnable(7, true);
-        RM_SetEnable(8, true);
-
-        PV_SetEnable(true);
-        MC_SetEnable(true);
-        SI_SetEnable(true);
-        EE_SetEnable(true);
+        RM_Initialize(RM_ID, RM_BUF_SIZE);
+        RM_SetEnable(RM_ID, true);
 
         void* f[13];
         uint64_t t[13];
@@ -139,11 +116,93 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
         void const* buffer[4];
         int32_t length[4];
 
-
         while (!m_windowClosed)
 		{
 		window.Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 
+        v_ref = RM_Get(RM_ID, -RM_BUF_SIZE, f_ref, t_ref, s_ref);
+        if (v_ref == 0)
+        {
+            if (p_s_ref < s_ref)
+            {
+                switch (RM_ID)
+                {
+                case 0:
+                case 1:
+                case 2:
+                case 3: RM_Extract_VLC(f_ref, buffer + 0, length + 0, buffer + 0, length + 0); break;
+                case 4: RM_Extract_Depth_AHAT(f_ref, buffer + 0, length + 0, buffer + 0, length + 0, buffer + 0, length + 0); break;
+                case 5: RM_Extract_Depth_Longthrow(f_ref, buffer + 0, length + 0, buffer + 0, length + 0, buffer + 0, length + 0, buffer + 0, length + 0); break;
+                case 6: RM_Extract_IMU_Accelerometer(f_ref, buffer + 0, length + 0, buffer + 0, length + 0); break;
+                case 7: RM_Extract_IMU_Gyroscope(f_ref, buffer + 0, length + 0, buffer + 0, length + 0); break;
+                case 8: RM_Extract_IMU_Magnetometer(f_ref, buffer + 0, length + 0, buffer + 0, length + 0); break;
+                }
+
+                p_s_ref = s_ref;
+                ShowMessage("GOT %d FRAME %d %lld", RM_ID, s_ref, t_ref);
+            }
+
+            RM_Release(f_ref);
+        }
+
+        }
+
+		CoreApplication::Exit();
+    }
+
+    void OnWindowClosed(CoreWindow const& sender, CoreWindowEventArgs const& args)
+    {
+        (void)sender;
+        (void)args;
+
+        m_windowClosed = true;
+    }    
+};
+
+int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
+{
+    CoreApplication::Run(winrt::make<App>());
+}
+
+
+/*
+RM_Initialize(0, 30);
+RM_Initialize(1, 30);
+RM_Initialize(2, 30);
+RM_Initialize(3, 30);
+
+RM_Initialize(4, 45);
+RM_Initialize(5, 5);
+
+RM_Initialize(6, 12);
+RM_Initialize(7, 24);
+RM_Initialize(8, 5);
+*/
+
+//PV_Initialize(18); // MAX 18
+//MC_Initialize(62); // Internal copies (no hard limit)
+//SI_Initialize(30); // Internal copies (no hard limit)
+//EE_Initialize(90); // Internal copies (no hard limit)
+
+/*
+RM_SetEnable(0, true);
+RM_SetEnable(1, true);
+RM_SetEnable(2, true);
+RM_SetEnable(3, true);
+
+RM_SetEnable(4, true);
+RM_SetEnable(5, true);
+
+RM_SetEnable(6, true);
+RM_SetEnable(7, true);
+RM_SetEnable(8, true);
+
+PV_SetEnable(true);
+MC_SetEnable(true);
+SI_SetEnable(true);
+EE_SetEnable(true);
+*/
+/*
         v_ref = PV_Get(-PV_BUF_SIZE, f_ref, t_ref, s_ref);
         if (v_ref == 0)
         {
@@ -183,21 +242,4 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 
             PV_Release(f_ref);
         }
-		}
-
-		CoreApplication::Exit();
-    }
-
-    void OnWindowClosed(CoreWindow const& sender, CoreWindowEventArgs const& args)
-    {
-        (void)sender;
-        (void)args;
-
-        m_windowClosed = true;
-    }    
-};
-
-int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
-{
-    CoreApplication::Run(winrt::make<App>());
-}
+        */
