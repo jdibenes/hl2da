@@ -76,19 +76,19 @@ public class HoloLens2DA : MonoBehaviour
 
 
 
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT,      30);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT,       30);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT,     30);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT,     30);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_DEPTH_AHAT,         45);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW,     5); // must be small, don't hold too many frames for too long
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_ACCELEROMETER,  12);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE,      24);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_MAGNETOMETER,    5);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.PV,                    30);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.MICROPHONE,            20); // internal copy, can hold frames "indefinitely"
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.SPATIAL_INPUT,         30);
-        hl2da_user.Initialize(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, 30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT,       30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT,        30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT,      30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT,      30);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_DEPTH_AHAT,          45);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW,      5); // must be small, don't hold too many frames for too long
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_ACCELEROMETER,   12);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE,       24);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_IMU_MAGNETOMETER,     5);
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.PV,                     18); // Maximum is 18
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.MICROPHONE,            125); // internal copy, can hold frames "indefinitely"
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.SPATIAL_INPUT,          60); // internal copy, can hold frames "indefinitely"
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, 180); // internal copy, can hold frames "indefinitely"
 
         pvcf = hl2da_user.CreateFormat_PV(640, 360, 30, false, false);
 
@@ -263,6 +263,8 @@ public class HoloLens2DA : MonoBehaviour
 
         float[] intrinsics = hl2da_user.Unpack1D<float>(fb.Buffer(2), fb.Length(2)); // fx, fy, cx, cy
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
+
+        fb.Destroy();
 
         // Display frame
         quad_pv.GetComponent<Renderer>().material.mainTexture = tex_pv;
