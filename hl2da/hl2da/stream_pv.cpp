@@ -1,5 +1,4 @@
 
-#include <MemoryBuffer.h>
 #include "stream_pv.h"
 #include "personal_video.h"
 #include "locator.h"
@@ -24,6 +23,10 @@ using namespace winrt::Windows::Perception::Spatial;
 class pv_frame : public sensor_frame
 {
 public:
+    winrt::Windows::Graphics::Imaging::SoftwareBitmap bmp = nullptr;
+    winrt::Windows::Graphics::Imaging::BitmapBuffer buf = nullptr;
+    winrt::Windows::Foundation::IMemoryBufferReference ref;
+
     winrt::Windows::Media::Capture::Frames::MediaFrameReference mfr;
     winrt::Windows::Foundation::Numerics::float4 intrinsics;
     winrt::Windows::Foundation::Numerics::float4x4 pose;
@@ -53,13 +56,18 @@ MRCVideoOptions g_options;
 // OK
 pv_frame::pv_frame(MediaFrameReference const& f, float4 const& k, float4x4 const& p) : sensor_frame(), mfr(f), intrinsics(k), pose(p)
 {
-
+    bmp = f.VideoMediaFrame().SoftwareBitmap();
+    buf = bmp.LockBuffer(winrt::Windows::Graphics::Imaging::BitmapBufferAccessMode::Read);
+    ref = buf.CreateReference();
 }
 
 // OK
 pv_frame::~pv_frame()
 {
-    mfr = nullptr; // Close?
+    ref.Close();
+    buf.Close();
+    bmp.Close();
+    mfr.Close();
 }
 
 // OK
@@ -167,22 +175,9 @@ void PV_Release(void* frame)
 void PV_Extract(void* frame, void const** buffer, int32_t* length, void const** intrinsics_buffer, int32_t* intrinsics_length, void const** pose_buffer, int32_t* pose_length)
 {
     pv_frame* f = (pv_frame*)frame;
-    winrt::Windows::Graphics::Imaging::SoftwareBitmap bmp = f->mfr.VideoMediaFrame().SoftwareBitmap();
-    winrt::Windows::Graphics::Imaging::BitmapBuffer buf = bmp.LockBuffer(winrt::Windows::Graphics::Imaging::BitmapBufferAccessMode::Read);
-    winrt::Windows::Foundation::IMemoryBufferReference m_ref = buf.CreateReference();
-    winrt::impl::com_ref<Windows::Foundation::IMemoryBufferByteAccess> bba = m_ref.as<Windows::Foundation::IMemoryBufferByteAccess>();
-    uint8_t* b;
-    uint32_t l;
 
-    bba->GetBuffer(&b, &l);
-
-    //bmp.Close();?
-    //buf.Close();?
-    //m_ref.Close();?
-    //bba->Release();?
-
-    *buffer = b;
-    *length = (int32_t)l;
+    *buffer = f->ref.data();
+    *length = (int32_t)f->ref.Capacity();
     *intrinsics_buffer = &f->intrinsics;
     *intrinsics_length = sizeof(pv_frame::intrinsics) / sizeof(float);
     *pose_buffer = &f->pose;

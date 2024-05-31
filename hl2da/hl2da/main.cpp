@@ -103,10 +103,12 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
         RM_Initialize(7, 24);
         RM_Initialize(8, 5);
 
-        PV_Initialize(30);
-        MC_Initialize(62);
-        SI_Initialize(30);
-        EE_Initialize(90);
+        int const PV_BUF_SIZE = 18; // [18,19)
+
+        PV_Initialize(PV_BUF_SIZE); // MAX 18
+        MC_Initialize(62); // Internal copies (no hard limit)
+        SI_Initialize(30); // Internal copies (no hard limit)
+        EE_Initialize(90); // Internal copies (no hard limit)
 
         RM_SetEnable(0, true);        
         RM_SetEnable(1, true);
@@ -134,17 +136,21 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
         int32_t s_ref;
         int v_ref;
         int p_s_ref = -1;
+        void const* buffer[4];
+        int32_t length[4];
 
 
         while (!m_windowClosed)
 		{
 		window.Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 
-        v_ref = PV_Get(-10, f_ref, t_ref, s_ref);
+        v_ref = PV_Get(-PV_BUF_SIZE, f_ref, t_ref, s_ref);
         if (v_ref == 0)
         {
             if (p_s_ref < s_ref)
             {
+                PV_Extract(f_ref, buffer + 0, length + 0, buffer + 1, length + 1, buffer + 2, length + 2);
+
                 p_s_ref = s_ref;
 
                 v[0] = RM_Get(0, t_ref, 0, false, f[0], t[0], s[0]);
