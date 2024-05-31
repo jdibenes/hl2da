@@ -34,6 +34,8 @@ public:
 constexpr int SENSOR_COUNT = 9;
 
 static CRITICAL_SECTION g_depth_lock;
+static bool g_bypass_lock;
+
 static frame_buffer g_buffer[SENSOR_COUNT];
 static HANDLE g_event_enable[SENSOR_COUNT]; // CloseHandle
 static HANDLE g_event_quit[SENSOR_COUNT]; // CloseHandle
@@ -57,7 +59,7 @@ rm_frame::~rm_frame()
 // OK
 static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const& locator)
 {
-    bool is_depth_camera = (id == DEPTH_AHAT) || (id == DEPTH_LONG_THROW);
+    bool is_depth_camera = ((id == DEPTH_AHAT) || (id == DEPTH_LONG_THROW)) && !g_bypass_lock;
     PerceptionTimestamp perception_timestamp = nullptr;
     HANDLE event_enable = g_event_enable[id];
     IResearchModeSensorFrame* pSensorFrame; // Release
@@ -338,6 +340,12 @@ void RM_InitializeDepthLock()
 void RM_CleanupDepthLock()
 {
     DeleteCriticalSection(&g_depth_lock);
+}
+
+// OK
+void RM_BypassDepthLock(bool bypass)
+{
+    g_bypass_lock = bypass;
 }
 
 // OK

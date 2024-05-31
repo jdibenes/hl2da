@@ -23,6 +23,7 @@ void RM_MapCameraSpaceToImagePoint(int id, float const* in, float* out, int poin
 
 void RM_InitializeDepthLock();
 void RM_CleanupDepthLock();
+void RM_BypassDepthLock(bool bypass);
 
 void RM_Initialize(int id, int32_t buffer_size);
 void RM_Quit(int id);
