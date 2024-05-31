@@ -5,18 +5,6 @@ using UnityEngine;
 
 public class hl2da_user
 {
-    public const int RM_VLC_WIDTH = 640;
-    public const int RM_VLC_HEIGHT = 480;
-    public const int RM_VLC_FPS = 30;
-
-    public const int RM_DEPTH_AHAT_WIDTH = 512;
-    public const int RM_DEPTH_AHAT_HEIGHT = 512;
-    public const int RM_DEPTH_AHAT_FPS = 45;
-
-    public const int RM_DEPTH_LONGTHROW_WIDTH = 320;
-    public const int RM_DEPTH_LONGTHROW_HEIGHT = 288;
-    public const int RM_DEPTH_LONGTHROW_FPS = 5;
-
     public const int POSE_ROWS = 4;
     public const int POSE_COLS = 4;
 
@@ -108,6 +96,11 @@ public class hl2da_user
         ho.Free();
 
         return image_points;
+    }
+
+    public static void BypassDepthLock_RM(bool bypass)
+    {
+        hl2da_api.BypassDepthLock_RM(bypass ? 1 : 0);
     }
 
     public static void SetFormat_PV(hl2da_api.pv_captureformat cf)

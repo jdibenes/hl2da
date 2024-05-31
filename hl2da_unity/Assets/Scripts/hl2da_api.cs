@@ -21,6 +21,15 @@ public static class hl2da_api
         EXTENDED_EYE_TRACKING,
     };
 
+    public enum MICROPHONE_ARRAY_CHANNEL
+    {
+        TOP_LEFT = 0,
+        TOP_CENTER = 1,
+        TOP_RIGHT = 2,
+        BOTTOM_LEFT = 3,
+        BOTTOM_RIGHT = 4,
+    }
+
     [StructLayout(LayoutKind.Explicit)]
     public struct AccelDataStruct
     {
@@ -56,6 +65,36 @@ public static class hl2da_api
         [FieldOffset(28)] private float _pad;
         // 32
     };
+
+    public enum SI_HandJointKind
+    {
+        Palm = 0,
+        Wrist = 1,
+        ThumbMetacarpal = 2,
+        ThumbProximal = 3,
+        ThumbDistal = 4,
+        ThumbTip = 5,
+        IndexMetacarpal = 6,
+        IndexProximal = 7,
+        IndexIntermediate = 8,
+        IndexDistal = 9,
+        IndexTip = 10,
+        MiddleMetacarpal = 11,
+        MiddleProximal = 12,
+        MiddleIntermediate = 13,
+        MiddleDistal = 14,
+        MiddleTip = 15,
+        RingMetacarpal = 16,
+        RingProximal = 17,
+        RingIntermediate = 18,
+        RingDistal = 19,
+        RingTip = 20,
+        LittleMetacarpal = 21,
+        LittleProximal = 22,
+        LittleIntermediate = 23,
+        LittleDistal = 24,
+        LittleTip = 25,
+    }
 
     [StructLayout(LayoutKind.Explicit)]
     public struct JointPose
@@ -150,6 +189,115 @@ public static class hl2da_api
         // 36
     }
 
+    public enum PV_FocusMode
+    {
+        Auto = 0,
+        Single = 1,
+        Continuous = 2,
+        Manual = 3,
+    }
+
+    public enum PV_AutoFocusRange
+    {
+        FullRange = 0,
+        Macro = 1,
+        Normal = 2,
+    }
+
+    public enum PV_ManualFocusDistance
+    {
+        Infinity = 0,
+        Nearest = 2,
+    }
+
+    public enum PV_FocusValue
+    {
+        Min = 170,
+        Max = 10000,
+    }
+
+    public enum PV_DriverFallback
+    {
+        Enable = 0,
+        Disable = 1,
+    }
+
+    public enum PV_VideoTemporalDenoisingMode
+    {
+        Off = 0,
+        On = 1,
+    }
+
+    public enum PV_ColorTemperaturePreset
+    {
+        Auto = 0,
+        Manual = 1,
+        Cloudy = 2,
+        Daylight = 3,
+        Flash = 4,
+        Fluorescent = 5,
+        Tungsten = 6,
+        Candlelight = 7,
+    }
+
+    public enum PV_WhiteBalanceValue
+    {
+        Min = 2300, // 25
+        Max = 7500, // 25
+    }
+
+    public enum PV_ExposureMode
+    {
+        Manual = 0,
+        Auto = 1,
+    }
+
+    public enum PV_ExposureValue
+    {
+        Min = 1000, // 10
+        Max = 660000, // 10
+    }
+
+    public enum PV_ExposurePriorityVideo
+    {
+        Disabled = 0,
+        Enabled = 1,
+    }
+
+    public enum PV_CaptureSceneMode
+    {
+        Auto = 0,
+        Macro = 2,
+        Portrait = 3,
+        Sport = 4,
+        Snow = 5,
+        Night = 6,
+        Beach = 7,
+        Sunset = 8,
+        Candlelight = 9,
+        Landscape = 10,
+        NightPortrait = 11,
+        Backlit = 12,
+    }
+
+    public enum PV_IsoSpeedMode
+    {
+        Manual = 0,
+        Auto = 1,
+    }
+
+    public enum PV_IsoSpeedValue
+    {
+        Min = 100,
+        Max = 3200,
+    }
+
+    public enum PV_BacklightCompensationState
+    {
+        Disable = 0,
+        Enable = 1,
+    }
+
     [DllImport("hl2da")]
     public static extern void Copy(IntPtr source, IntPtr destination, int bytes);
 
@@ -190,6 +338,9 @@ public static class hl2da_api
     public static extern void MapCameraSpaceToImagePoint_RM(int id, IntPtr camera_points, IntPtr image_points, int point_count);
 
     [DllImport("hl2da")]
+    public static extern void BypassDepthLock_RM(int bypass);
+
+    [DllImport("hl2da")]
     public static extern void SetFormat_PV(ref pv_captureformat cf);
 
     [DllImport("hl2da")]
@@ -197,4 +348,31 @@ public static class hl2da_api
 
     [DllImport("hl2da")]
     public static extern void SetFormat_EE(int fps_index);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetFocus(uint focusmode, uint autofocusrange, uint distance, uint value, uint disabledriverfallback);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetVideoTemporalDenoising(uint mode);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetWhiteBalance_Preset(uint preset);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetWhiteBalance_Value(uint value);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetExposure(uint setauto, uint value);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetExposurePriorityVideo(uint enabled);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetSceneMode(uint mode);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetIsoSpeed(uint setauto, uint value);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetBacklightCompensation(uint enable);
 }
