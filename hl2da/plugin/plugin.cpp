@@ -255,6 +255,13 @@ void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int poin
 
 // OK
 PLUGIN_EXPORT
+void BypassDepthLock_RM(int bypass)
+{
+    RM_BypassDepthLock(bypass != 0);
+}
+
+// OK
+PLUGIN_EXPORT
 void SetFormat_PV(void const* cf)
 {
     PV_SetFormat(*(pv_captureformat*)cf);
