@@ -46,6 +46,36 @@ struct MagDataStruct
     float _reserved;
 };
 
+enum class SI_HandJointKind : int32_t
+{
+    Palm = 0,
+    Wrist = 1,
+    ThumbMetacarpal = 2,
+    ThumbProximal = 3,
+    ThumbDistal = 4,
+    ThumbTip = 5,
+    IndexMetacarpal = 6,
+    IndexProximal = 7,
+    IndexIntermediate = 8,
+    IndexDistal = 9,
+    IndexTip = 10,
+    MiddleMetacarpal = 11,
+    MiddleProximal = 12,
+    MiddleIntermediate = 13,
+    MiddleDistal = 14,
+    MiddleTip = 15,
+    RingMetacarpal = 16,
+    RingProximal = 17,
+    RingIntermediate = 18,
+    RingDistal = 19,
+    RingTip = 20,
+    LittleMetacarpal = 21,
+    LittleProximal = 22,
+    LittleIntermediate = 23,
+    LittleDistal = 24,
+    LittleTip = 25,
+};
+
 struct JointPose
 {
     float rx;
@@ -86,23 +116,23 @@ enum class EE_FPS_INDEX : int32_t
     FPS_90 = 2,
 };
 
-enum SI_VALID : int32_t
+enum class SI_VALID : int32_t
 {
-    VALID_HEAD = 1,
-    VALID_EYE = 2,
-    VALID_LEFT = 4,
-    VALID_RIGHT = 8,
+    HEAD = 1,
+    EYE = 2,
+    LEFT = 4,
+    RIGHT = 8,
 };
 
-enum EE_VALID : int32_t
+enum class EE_VALID : int32_t
 {
-    VALID_CALIBRATION = 1,
-    VALID_COMBINED_GAZE = 2,
-    VALID_LEFT_GAZE = 4,
-    VALID_RIGHT_GAZE = 8,
-    VALID_LEFT_OPENNESS = 16,
-    VALID_RIGHT_OPENNESS = 32,
-    VALID_VERGENCE_DISTANCE = 64,
+    CALIBRATION = 1,
+    COMBINED_GAZE = 2,
+    LEFT_GAZE = 4,
+    RIGHT_GAZE = 8,
+    LEFT_OPENNESS = 16,
+    RIGHT_OPENNESS = 32,
+    VERGENCE_DISTANCE = 64,
 };
 
 enum class HOLOGRAM_PERSPECTIVE : int32_t
@@ -130,6 +160,115 @@ struct pv_captureformat
     uint16_t height;
     uint8_t framerate;
     uint8_t _reserved_1[3];
+};
+
+enum class PV_FocusMode : uint32_t
+{
+    Auto = 0,
+    Single = 1,
+    Continuous = 2,
+    Manual = 3,
+};
+
+enum class PV_AutoFocusRange : uint32_t
+{
+    FullRange = 0,
+    Macro = 1,
+    Normal = 2,
+};
+
+enum class PV_ManualFocusDistance : uint32_t
+{
+    Infinity = 0,
+    Nearest = 2,
+};
+
+enum class PV_FocusValue : uint32_t
+{
+    Min = 170,
+    Max = 10000,
+};
+
+enum class PV_DriverFallback : uint32_t
+{
+    Enable = 0,
+    Disable = 1,
+};
+
+enum class PV_VideoTemporalDenoisingMode : uint32_t
+{
+    Off = 0,
+    On = 1,
+};
+
+enum class PV_ColorTemperaturePreset : uint32_t
+{
+    Auto = 0,
+    Manual = 1,
+    Cloudy = 2,
+    Daylight = 3,
+    Flash = 4,
+    Fluorescent = 5,
+    Tungsten = 6,
+    Candlelight = 7,
+};
+
+enum class PV_WhiteBalanceValue : uint32_t
+{
+    Min = 2300, // 25
+    Max = 7500, // 25
+};
+
+enum class PV_ExposureMode : uint32_t
+{
+    Manual = 0,
+    Auto = 1,
+};
+
+enum class PV_ExposureValue : uint32_t
+{
+    Min = 1000, // 10
+    Max = 660000, // 10
+};
+
+enum class PV_ExposurePriorityVideo : uint32_t
+{
+    Disabled = 0,
+    Enabled = 1,
+};
+
+enum class PV_CaptureSceneMode : uint32_t
+{
+    Auto = 0,
+    Macro = 2,
+    Portrait = 3,
+    Sport = 4,
+    Snow = 5,
+    Night = 6,
+    Beach = 7,
+    Sunset = 8,
+    Candlelight = 9,
+    Landscape = 10,
+    NightPortrait = 11,
+    Backlit = 12,
+};
+
+enum class PV_IsoSpeedMode : uint32_t
+{
+    Manual = 0,
+    Auto = 1,
+};
+
+enum class PV_IsoSpeedValue : uint32_t
+{
+    Min = 100,
+    Max = 3200,
+};
+
+enum class PV_BacklightCompensationState : uint32_t
+{
+    Disable = 0,
+    Enable = 1,
 };
 
 PLUGIN_IMPORT

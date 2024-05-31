@@ -104,10 +104,10 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
         RM_Initialize(RM_ID, RM_BUF_SIZE);
         RM_SetEnable(RM_ID, true);
 
-        void* f[13];
-        uint64_t t[13];
-        int32_t s[13];
-        int v[13];
+        //void* f[13];
+        //uint64_t t[13];
+        //int32_t s[13];
+        //int v[13];
         void* f_ref;
         uint64_t t_ref;
         int32_t s_ref;
