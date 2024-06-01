@@ -1,4 +1,4 @@
-# HoloLens 2 Data Acquisition (WIP)
+# HoloLens 2 Data Acquisition
 
 Unified HoloLens 2 plugin for acquiring sensor data.
 The plugin enables access to most of the HoloLens sensors, including the Research Mode sensors, through a common interface and allows associating data from multiple streams via timestamps.
