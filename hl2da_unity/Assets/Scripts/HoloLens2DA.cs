@@ -31,6 +31,7 @@ public class HoloLens2DA : MonoBehaviour
     private Dictionary<hl2da_api.SENSOR_ID, string> sensor_names;
     private Dictionary<hl2da_api.SENSOR_ID, int> last_framestamp;
 
+    private hl2da_api.SENSOR_ID sync;
     private hl2da_api.pv_captureformat pvcf;
     private hl2da_api.MC_CHANNELS mcch;
     private hl2da_api.EE_FPS_INDEX eefi;
@@ -52,6 +53,9 @@ public class HoloLens2DA : MonoBehaviour
         // Extended Eye Tracking framerate
         eefi = hl2da_api.EE_FPS_INDEX.FPS_90;
 
+        // Synchronize to sensor (value not in hl2da_api.SENSOR_ID = no synchronization)
+        sync = hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW;
+        
         Initialize_Dictionaries();
 
         hl2da_user.InitializeComponents();
@@ -112,6 +116,18 @@ public class HoloLens2DA : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if ((sync < hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT) || (sync > hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING))
+        {
+            Update_FFA();
+        }
+        else
+        {
+            Update_Sync();
+        }
+    }
+
+    void Update_FFA()
+    {
         for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING; ++id)
         {
             // Get Frame
@@ -119,20 +135,36 @@ public class HoloLens2DA : MonoBehaviour
             // Non-negative index (n>=0): get nth frame where 0 is the first frame ever since SetEnable(true), intended for sequential access (no skip or repeat)
             hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(id, -1); // Get most recent frame
 
-            // To associate frames between different streams use, for example:
-            //   hl2da_framebuffer fb1 = hl2da_framebuffer.GetFrame(id1, -2); // Use a small delay to allow receiving the optimal frame from the second stream
-            //   hl2da_framebuffer fb2 = hl2da_framebuffer.GetFrame(id2, fb1.Timestamp, hl2da_api.TIME_PREFERENCE.NEAREST, false);
-            // If no frame matches fb1.Timestamp exactly then:
-            //   hl2da_api.TIME_PREFERENCE.PAST:    select nearest frame with Timestamp < fb1.Timestamp
-            //   hl2da_api.TIME_PREFERENCE.NEAREST: select nearest frame, in case of a tie choose Timestamp > fb1.Timestamp if tiebreak_right=true else choose Timestamp < fb1.Timestamp
-            //   hl2da_api.TIME_PREFERENCE.FUTURE:  select nearest frame with Timestamp > fb1.Timestamp
-
             // Check result
             // DISCARDED: requested frame is too old and has been removed from the internal buffer (cannot be recovered)
             // OK: got requested frame
             // WAIT: requested frame has not been captured yet (just wait, ideally 1/frame_rate seconds)
             if (fb.Status != hl2da_api.STATUS.OK) { continue; }
 
+            Update_Sensor_Data(fb);
+            fb.Destroy();
+        }
+    }
+
+    void Update_Sync()
+    {
+        hl2da_framebuffer fb_ref = hl2da_framebuffer.GetFrame(sync, -2); // Use a small delay to allow receiving the optimal frame from the second stream
+        if (fb_ref.Status != hl2da_api.STATUS.OK) { return; }
+        ulong fb_ref_timestamp = fb_ref.Timestamp;
+        Update_Sensor_Data(fb_ref);        
+        fb_ref.Destroy();
+
+        for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING; ++id)
+        {
+            if (id == sync) { continue; }
+
+            // Associate frames
+            // If no frame matches fb_ref.Timestamp exactly then:
+            //   hl2da_api.TIME_PREFERENCE.PAST:    select nearest frame with Timestamp < fb_ref_timestamp
+            //   hl2da_api.TIME_PREFERENCE.NEAREST: select nearest frame, in case of a tie choose Timestamp > fb_ref_timestamp if tiebreak_right=true else choose Timestamp < fb_ref_timestamp
+            //   hl2da_api.TIME_PREFERENCE.FUTURE:  select nearest frame with Timestamp > fb_ref_timestamp
+            hl2da_framebuffer fb = hl2da_framebuffer.GetFrame(id, fb_ref_timestamp, hl2da_api.TIME_PREFERENCE.NEAREST, false);
+            if (fb.Status != hl2da_api.STATUS.OK) { continue; }
             Update_Sensor_Data(fb);
             fb.Destroy();
         }
