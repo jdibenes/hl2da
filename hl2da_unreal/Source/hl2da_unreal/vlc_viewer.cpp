@@ -46,5 +46,5 @@ void Uvlc_viewer::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 	if (fb->Framestamp() <= last_fs) { return; }
 	last_fs = fb->Framestamp();
 
-	tex->UpdateTextureRegions(0, 1, region.get(), 640 * 1, 1, (uint8_t*)fb->Buffer(0), [fb](uint8*, FUpdateTextureRegion2D const*) { fb->Destroy(); });
+	tex->UpdateTextureRegions(0, 1, region.get(), 640 * 1, 1, (uint8_t*)fb->Buffer(0), [fb](uint8*, FUpdateTextureRegion2D const*) { });
 }

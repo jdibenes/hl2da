@@ -42,7 +42,7 @@ void Uhl2da_ipl::BeginPlay()
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_VLC_RIGHTFRONT,      60);
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_VLC_RIGHTRIGHT,      60);
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_DEPTH_AHAT,          90);
-	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_DEPTH_LONGTHROW,     60); // Maximum is 18
+	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_DEPTH_LONGTHROW,     15); // Maximum is 18
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_IMU_ACCELEROMETER,   24);
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_IMU_GYROSCOPE,       48);
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_IMU_MAGNETOMETER,    10);
