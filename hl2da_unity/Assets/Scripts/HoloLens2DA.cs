@@ -54,7 +54,7 @@ public class HoloLens2DA : MonoBehaviour
         eefi = hl2da_api.EE_FPS_INDEX.FPS_90;
 
         // Synchronize to sensor (value not in hl2da_api.SENSOR_ID = no synchronization)
-        sync = hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW;
+        sync = (hl2da_api.SENSOR_ID)(-1); // hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW;
         
         Initialize_Dictionaries();
 
