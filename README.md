@@ -19,8 +19,8 @@ A sample Unity project (2020.3.42f1) can be found in the [hl2da_unity](hl2da_uni
   - Accelerometer
   - Gyroscope
   - Magnetometer
-- Front Camera
-- Microphone (2 or 5 channels)
+- Front Camera (Configurable resolution and framerate, NV12)
+- Microphone (2 or 5 channels @ 48000 Hz, 32-bit Float)
 - Spatial Input (30 Hz)
   - Head Tracking
   - Eye Tracking
