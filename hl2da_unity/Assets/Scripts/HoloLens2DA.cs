@@ -47,7 +47,7 @@ public class HoloLens2DA : MonoBehaviour
         // Microphone format
         // hl2da_api.MC_CHANNELS.USE_2: Preprocessed 2-channel audio
         // hl2da_api.MC_CHANNELS.USE_5: Raw audio from the 5-channel HoloLens microphone array
-        mcch = hl2da_api.MC_CHANNELS.USE_2;
+        mcch = hl2da_api.MC_CHANNELS.USE_5;
 
         // Extended Eye Tracking framerate
         eefi = hl2da_api.EE_FPS_INDEX.FPS_90;
@@ -332,15 +332,16 @@ public class HoloLens2DA : MonoBehaviour
         float[] eye_ray = hl2da_user.Unpack1D<float>(fb.Buffer(1), fb.Length(1));
         hl2da_api.JointPose[] left_hand = hl2da_user.Unpack1D<hl2da_api.JointPose>(fb.Buffer(2), fb.Length(2));
         hl2da_api.JointPose[] right_hand = hl2da_user.Unpack1D<hl2da_api.JointPose>(fb.Buffer(3), fb.Length(3));
+        hl2da_api.SI_VALID valid = fb.Valid_SI;
 
         // Display data
         hl2da_api.JointPose left_wrist = left_hand[(int)hl2da_api.SI_HandJointKind.Wrist];
         hl2da_api.JointPose right_wrist = right_hand[(int)hl2da_api.SI_HandJointKind.Wrist];
 
-        si_text[0].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(" Head: position=[{0}, {1}, {2}], forward=[{3}, {4}, {5}], up=[{6}, {7}, {8}]", head_pose[0], head_pose[1], head_pose[2], head_pose[3], head_pose[4], head_pose[5], head_pose[6], head_pose[7], head_pose[8]);
-        si_text[1].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(" Gaze: origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}]", eye_ray[0], eye_ray[1], eye_ray[2], eye_ray[3], eye_ray[4], eye_ray[5]);
-        si_text[2].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(" Left Wrist: orientation=[{0}, {1}, {2}, {3}], position=[{4}, {5}, {6}], radius={7}, accuracy={8}", left_wrist.rx, left_wrist.ry, left_wrist.rz, left_wrist.rw, left_wrist.tx, left_wrist.ty, left_wrist.tz, left_wrist.radius, left_wrist.accuracy);
-        si_text[3].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(" Right Wrist: orientation=[{0}, {1}, {2}, {3}], position=[{4}, {5}, {6}], radius={7}, accuracy={8}", right_wrist.rx, right_wrist.ry, right_wrist.rz, right_wrist.rw, right_wrist.tx, right_wrist.ty, right_wrist.tz, right_wrist.radius, right_wrist.accuracy);
+        si_text[0].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Head: "        + (((valid & hl2da_api.SI_VALID.HEAD)  != 0) ? string.Format("position=[{0}, {1}, {2}], forward=[{3}, {4}, {5}], up=[{6}, {7}, {8}]", head_pose[0], head_pose[1], head_pose[2], head_pose[3], head_pose[4], head_pose[5], head_pose[6], head_pose[7], head_pose[8]) : "<INVALID>");
+        si_text[1].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Eye: "         + (((valid & hl2da_api.SI_VALID.EYE)   != 0) ? string.Format("origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}]", eye_ray[0], eye_ray[1], eye_ray[2], eye_ray[3], eye_ray[4], eye_ray[5]) : "<INVALID>");
+        si_text[2].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Left Wrist: "  + (((valid & hl2da_api.SI_VALID.LEFT)  != 0) ? string.Format("orientation=[{0}, {1}, {2}, {3}], position=[{4}, {5}, {6}], radius={7}, accuracy={8}", left_wrist.rx, left_wrist.ry, left_wrist.rz, left_wrist.rw, left_wrist.tx, left_wrist.ty, left_wrist.tz, left_wrist.radius, left_wrist.accuracy) : "<INVALID>");
+        si_text[3].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Right Wrist: " + (((valid & hl2da_api.SI_VALID.RIGHT) != 0) ? string.Format("orientation=[{0}, {1}, {2}, {3}], position=[{4}, {5}, {6}], radius={7}, accuracy={8}", right_wrist.rx, right_wrist.ry, right_wrist.rz, right_wrist.rw, right_wrist.tx, right_wrist.ty, right_wrist.tz, right_wrist.radius, right_wrist.accuracy) : "<INVALID>");
     }
 
     void Update_ExtendedEyeTracking(hl2da_framebuffer fb)
@@ -348,12 +349,14 @@ public class HoloLens2DA : MonoBehaviour
         // Unpack data
         float[] eye_data = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0));
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
+        hl2da_api.EE_VALID valid = fb.Valid_EE;
 
         // Display data
-        ee_text[0].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(" Combined Gaze: origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}] vergence={6}", eye_data[0], eye_data[1], eye_data[2], eye_data[3], eye_data[4], eye_data[5], eye_data[20]);
-        ee_text[1].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(" Left Gaze: origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}] openness={6}", eye_data[6], eye_data[7], eye_data[8], eye_data[9], eye_data[10], eye_data[11], eye_data[18]);
-        ee_text[2].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(" Right Gaze: origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}] openness={6}", eye_data[12], eye_data[13], eye_data[14], eye_data[15], eye_data[16], eye_data[17], eye_data[19]);
-        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        ee_text[0].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Combined Gaze: " + (((valid & hl2da_api.EE_VALID.COMBINED_GAZE) != 0) ? string.Format("origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}] vergence={6}", eye_data[ 0], eye_data[ 1], eye_data[ 2], eye_data[ 3], eye_data[ 4], eye_data[ 5], eye_data[20]) : "<INVALID>");
+        ee_text[1].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Left Gaze: "     + (((valid & hl2da_api.EE_VALID.LEFT_GAZE)     != 0) ? string.Format("origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}] openness={6}", eye_data[ 6], eye_data[ 7], eye_data[ 8], eye_data[ 9], eye_data[10], eye_data[11], eye_data[18]) : "<INVALID>");
+        ee_text[2].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Right Gaze: "    + (((valid & hl2da_api.EE_VALID.RIGHT_GAZE)    != 0) ? string.Format("origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}] openness={6}", eye_data[12], eye_data[13], eye_data[14], eye_data[15], eye_data[16], eye_data[17], eye_data[19]) : "<INVALID>");
+        
+        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose) + (((valid & hl2da_api.EE_VALID.CALIBRATION) != 0) ? "" : " <BAD CALIBRATION>");
     }
 
     string PoseToString(float[,] pose)
