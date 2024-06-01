@@ -45,6 +45,14 @@ public class HoloLens2DA : MonoBehaviour
         // shared: Enable Shared Mode (for when other apps or modules are already using the PV camera, resolution and framerate parameters are ignored)
         pvcf = hl2da_user.CreateFormat_PV(640, 360, 30, false, false);
 
+        // Additional PV capture settings
+        // To change the focus mode, temporal denoising, white balance, exposure, scene mode, iso speed, or backlight compensation,
+        // after calling Initialize(PV, buffer_size) and SetEnable(PV, true),
+        // wait to receive at least one frame (from hl2da_framebuffer.GetFrame with hl2da_api.STATUS.OK),
+        // then these settings can be changed freely as long as the stream is enabled.
+        // Unlike PV format, these settings are not latched internally, so they will be lost if the stream is restarted (via SetEnable(PV, false) -> SetEnable(PV, true))
+        // and they must be reapplied using the Initialize -> SetEnable -> Wait 1 frame procedure.
+
         // Microphone format
         // hl2da_api.MC_CHANNELS.USE_2: Preprocessed 2-channel audio
         // hl2da_api.MC_CHANNELS.USE_5: Raw audio from the 5-channel HoloLens microphone array
