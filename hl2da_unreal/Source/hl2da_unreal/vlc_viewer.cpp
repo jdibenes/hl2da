@@ -22,11 +22,6 @@ void Uvlc_viewer::BeginPlay()
 	Super::BeginPlay();
 
 	// ...
-	hl2da_api::InitializeLibrary();
-	hl2da_api::InitializeComponents();
-	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT, 30);
-	hl2da_api::SetEnable(hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT, true);
-
 	AActor* top = GetOwner();
 	UStaticMeshComponent* mesh = top->FindComponentByClass<UStaticMeshComponent>();
 	UMaterialInstanceDynamic* mat = mesh->CreateAndSetMaterialInstanceDynamic(0);
@@ -46,7 +41,7 @@ void Uvlc_viewer::TickComponent(float DeltaTime, ELevelTick TickType, FActorComp
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
-	std::shared_ptr<hl2da_framebuffer> fb = hl2da_framebuffer::GetFrame(hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT, -1);
+	std::shared_ptr<hl2da_framebuffer> fb = hl2da_framebuffer::GetFrame((hl2da_api::SENSOR_ID)((int)hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT + (VLC_Index & 3)), -1);
 	if (fb->Status() != hl2da_api::STATUS::OK) { return; }
 	if (fb->Framestamp() <= last_fs) { return; }
 	last_fs = fb->Framestamp();
