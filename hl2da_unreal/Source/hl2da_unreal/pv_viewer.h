@@ -5,11 +5,11 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include <memory>
-#include "vlc_viewer.generated.h"
+#include "pv_viewer.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class HL2DA_UNREAL_API Uvlc_viewer : public UActorComponent
+class HL2DA_UNREAL_API Upv_viewer : public UActorComponent
 {
 	GENERATED_BODY()
 
@@ -19,10 +19,7 @@ class HL2DA_UNREAL_API Uvlc_viewer : public UActorComponent
 
 public:	
 	// Sets default values for this component's properties
-	Uvlc_viewer();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int VLC_Index;
+	Upv_viewer();
 
 protected:
 	// Called when the game starts

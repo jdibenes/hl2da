@@ -4,25 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include <memory>
-#include "vlc_viewer.generated.h"
+#include "hl2da_ipl.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class HL2DA_UNREAL_API Uvlc_viewer : public UActorComponent
+class HL2DA_UNREAL_API Uhl2da_ipl : public UActorComponent
 {
 	GENERATED_BODY()
 
-	UTexture2D* tex;
-	int last_fs;
-	std::shared_ptr<FUpdateTextureRegion2D> region;
-
 public:	
 	// Sets default values for this component's properties
-	Uvlc_viewer();
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int VLC_Index;
+	Uhl2da_ipl();
 
 protected:
 	// Called when the game starts
