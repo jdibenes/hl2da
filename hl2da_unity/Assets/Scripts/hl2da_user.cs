@@ -140,4 +140,49 @@ public class hl2da_user
 
         return cf;
     }
+
+    public static void PV_SetFocus(hl2da_api.PV_FocusMode focusmode, hl2da_api.PV_AutoFocusRange autofocusrange, hl2da_api.PV_ManualFocusDistance distance, uint value, hl2da_api.PV_DriverFallback disabledriverfallback)
+    {
+        hl2da_api.PV_SetFocus((uint)focusmode, (uint)autofocusrange, (uint)distance, value, (uint)disabledriverfallback);
+    }
+
+    public static void PV_SetVideoTemporalDenoising(hl2da_api.PV_VideoTemporalDenoisingMode mode)
+    {
+        hl2da_api.PV_SetVideoTemporalDenoising((uint)mode);
+    }
+
+    public static void PV_SetWhiteBalance_Preset(hl2da_api.PV_ColorTemperaturePreset preset)
+    {
+        hl2da_api.PV_SetWhiteBalance_Preset((uint)preset);
+    }
+
+    public static void PV_SetWhiteBalance_Value(uint value)
+    {
+        hl2da_api.PV_SetWhiteBalance_Value(value);
+    }
+
+    public static void PV_SetExposure(hl2da_api.PV_ExposureMode setauto, uint value)
+    {
+        hl2da_api.PV_SetExposure((uint)setauto, value);
+    }
+
+    public static void PV_SetExposurePriorityVideo(hl2da_api.PV_ExposurePriorityVideo enabled)
+    {
+        hl2da_api.PV_SetExposurePriorityVideo((uint)enabled);
+    }
+
+    public static void PV_SetSceneMode(hl2da_api.PV_CaptureSceneMode mode)
+    {
+        hl2da_api.PV_SetSceneMode((uint)mode);
+    }
+
+    public static void PV_SetIsoSpeed(hl2da_api.PV_IsoSpeedMode setauto, uint value)
+    {
+        hl2da_api.PV_SetIsoSpeed((uint)setauto, value);
+    }
+
+    public static void PV_SetBacklightCompensation(hl2da_api.PV_BacklightCompensationState enable)
+    {
+        hl2da_api.PV_SetBacklightCompensation((uint)enable);
+    }
 }
