@@ -97,6 +97,10 @@ static void PV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArr
     pose = Locator_GetTransformTo(frame.CoordinateSystem(), Locator_GetWorldCoordinateSystem(QPCTimestampToPerceptionTimestamp(timestamp)));
 
     g_buffer.Insert(new pv_frame(frame, k, pose), timestamp);
+
+    if (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0) { return; }
+    SetEvent(g_event_client);
+    g_reader_status = false;
 }
 
 // OK
@@ -150,7 +154,7 @@ void PV_SetFormat(pv_captureformat const& cf)
 // OK
 void PV_SetEnable(bool enable)
 {
-    enable ? SetEvent(g_event_enable) : SetEvent(g_event_client);
+    enable ? SetEvent(g_event_enable) : ResetEvent(g_event_enable);
 }
 
 // OK
@@ -189,7 +193,7 @@ void PV_Initialize(int32_t buffer_size)
 {
     g_buffer.Reset(buffer_size);
     g_event_client = CreateEvent(NULL, FALSE, FALSE, NULL);
-    g_event_enable = CreateEvent(NULL, FALSE, FALSE, NULL);
+    g_event_enable = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_event_quit = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_thread = CreateThread(NULL, 0, PV_EntryPoint, NULL, 0, NULL);
 }
