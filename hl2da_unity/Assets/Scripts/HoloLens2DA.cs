@@ -51,7 +51,7 @@ public class HoloLens2DA : MonoBehaviour
         // wait to receive at least one frame (from hl2da_framebuffer.GetFrame with hl2da_api.STATUS.OK),
         // then these settings can be changed freely as long as the stream is enabled.
         // Unlike PV format, these settings are not latched internally, so they will be lost if the stream is restarted (via SetEnable(PV, false) -> SetEnable(PV, true))
-        // and they must be reapplied using the Initialize -> SetEnable -> Wait 1 frame procedure.
+        // and they must be reapplied using the SetEnable -> Wait 1 frame procedure.
 
         // Microphone format
         // hl2da_api.MC_CHANNELS.USE_2: Preprocessed 2-channel audio
