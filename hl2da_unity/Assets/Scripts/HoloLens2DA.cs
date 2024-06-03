@@ -167,7 +167,7 @@ public class HoloLens2DA : MonoBehaviour
             if (id == sync) { continue; }
 
             // Associate frames
-            // If no frame matches fb_ref.Timestamp exactly then:
+            // If no frame matches fb_ref_timestamp exactly then:
             //   hl2da_api.TIME_PREFERENCE.PAST:    select nearest frame with Timestamp < fb_ref_timestamp
             //   hl2da_api.TIME_PREFERENCE.NEAREST: select nearest frame, in case of a tie choose Timestamp > fb_ref_timestamp if tiebreak_right=true else choose Timestamp < fb_ref_timestamp
             //   hl2da_api.TIME_PREFERENCE.FUTURE:  select nearest frame with Timestamp > fb_ref_timestamp
