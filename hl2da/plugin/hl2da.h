@@ -180,6 +180,29 @@ struct ea_captureformat
     float microphone_gain;
 };
 
+struct ev_captureformat
+{
+    bool enable;
+    bool hologram_composition;
+    bool recording_indicator;
+    bool video_stabilization;
+    bool blank_protected;
+    bool show_mesh;
+    bool shared;
+    uint8_t _reserved_0[1];
+    float global_opacity;
+    float output_width;
+    float output_height;
+    uint32_t video_stabilization_length;
+    uint32_t hologram_perspective;
+    uint16_t width;
+    uint16_t height;
+    uint8_t framerate;
+    uint8_t _reserved_1;
+    wchar_t subtype[64];
+    uint8_t _reserved_2[2];
+};
+
 enum class PV_FocusMode : uint32_t
 {
     Auto = 0,
@@ -347,7 +370,7 @@ PLUGIN_IMPORT
 void SetFormat_EA(void const* cf);
 
 PLUGIN_IMPORT
-void SetFormat_EV(uint32_t width, uint32_t height, uint32_t framerate, wchar_t const* subtype, int32_t shared, uint32_t group_index, uint32_t source_index, uint32_t profile_index);
+void SetFormat_EV(void const* cf);
 
 PLUGIN_IMPORT
 uint64_t GetUTCOffset(int32_t samples);
