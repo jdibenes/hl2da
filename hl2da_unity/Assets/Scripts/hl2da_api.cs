@@ -19,6 +19,8 @@ public static class hl2da_api
         MICROPHONE,
         SPATIAL_INPUT,
         EXTENDED_EYE_TRACKING,
+        EXTENDED_AUDIO,
+        EXTENDED_VIDEO,
     };
 
     public enum MICROPHONE_ARRAY_CHANNEL
@@ -189,6 +191,69 @@ public static class hl2da_api
         // 36
     }
 
+    public enum MIXER_MODE
+    {
+        MICROPHONE = 0,
+        SYSTEM = 1,
+        BOTH = 2,
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct ea_captureformat
+    {
+        [FieldOffset(0)] public uint mixer_mode;
+        [FieldOffset(4)] public float loopback_gain;
+        [FieldOffset(8)] public float microphone_gain;
+        // 12
+    };
+
+    [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
+    public struct ea_audioformat
+    {
+        [FieldOffset( 0)] public uint bitrate;
+        [FieldOffset( 4)] public uint bits_per_sample;
+        [FieldOffset( 8)] public uint channel_count;
+        [FieldOffset(12)] public uint sample_rate;
+        [FieldOffset(16), MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string subtype;
+        // 144
+    }
+    
+    [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
+    public struct ev_captureformat
+    {
+        [FieldOffset(  0)] public byte enable_mrc;
+        [FieldOffset(  1)] public byte hologram_composition;
+        [FieldOffset(  2)] public byte recording_indicator;
+        [FieldOffset(  3)] public byte video_stabilization;
+        [FieldOffset(  4)] public byte blank_protected;
+        [FieldOffset(  5)] public byte show_mesh;
+        [FieldOffset(  6)] public byte shared;
+        [FieldOffset(  7)] private byte _reserved_0;
+        [FieldOffset(  8)] public float global_opacity;
+        [FieldOffset( 12)] public float output_width;
+        [FieldOffset( 16)] public float output_height;
+        [FieldOffset( 20)] public uint video_stabilization_length;
+        [FieldOffset( 24)] public uint hologram_perspective;
+        [FieldOffset( 28)] public ushort width;
+        [FieldOffset( 30)] public ushort height;
+        [FieldOffset( 32)] public byte framerate;
+        [FieldOffset( 33)] private byte _reserved_1;
+        [FieldOffset( 34), MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string subtype;
+        [FieldOffset(162)] private ushort _reserved_2;
+        // 164
+    };
+
+    [StructLayout(LayoutKind.Explicit, CharSet = CharSet.Unicode)]
+    public struct ev_videoformat
+    {
+        [FieldOffset(0)] public ushort width;
+        [FieldOffset(2)] public ushort height;
+        [FieldOffset(4)] public byte framerate;
+        [FieldOffset(5)] private byte _reserved;
+        [FieldOffset(6), MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string subtype;
+        // 134
+    }
+    
     public enum PV_FocusMode
     {
         Auto = 0,
@@ -348,6 +413,15 @@ public static class hl2da_api
 
     [DllImport("hl2da")]
     public static extern void SetFormat_EE(int fps_index);
+
+    [DllImport("hl2da")]
+    public static extern void SetFormat_EA(ref ea_captureformat cf);
+
+    [DllImport("hl2da")]
+    public static extern void SetFormat_EV(ref ev_captureformat cf);
+
+    [DllImport("hl2da")]
+    public static extern ulong GetUTCOffset(int samples);
 
     [DllImport("hl2da")]
     public static extern void PV_SetFocus(uint focusmode, uint autofocusrange, uint distance, uint value, uint disabledriverfallback);

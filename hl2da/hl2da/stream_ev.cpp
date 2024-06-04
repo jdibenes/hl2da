@@ -1,7 +1,6 @@
 
-#include "stream_pv.h"
-#include "personal_video.h"
-#include "locator.h"
+#include "stream_ev.h"
+#include "extended_video.h"
 #include "frame_buffer.h"
 #include "timestamps.h"
 #include "log.h"
@@ -9,18 +8,17 @@
 #include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Media.Capture.h>
 #include <winrt/Windows.Media.Capture.Frames.h>
+#include <winrt/Windows.Media.MediaProperties.h>
 #include <winrt/Windows.Media.Devices.Core.h>
 #include <winrt/Windows.Foundation.Numerics.h>
-#include <winrt/Windows.Perception.Spatial.h>
 #include <winrt/Windows.Graphics.Imaging.h>
 
 using namespace winrt::Windows::Media::Capture;
 using namespace winrt::Windows::Media::Capture::Frames;
 using namespace winrt::Windows::Media::Devices::Core;
 using namespace winrt::Windows::Foundation::Numerics;
-using namespace winrt::Windows::Perception::Spatial;
 
-class pv_frame : public sensor_frame
+class ev_frame : public sensor_frame
 {
 public:
     winrt::Windows::Graphics::Imaging::SoftwareBitmap bmp = nullptr;
@@ -28,11 +26,10 @@ public:
     winrt::Windows::Foundation::IMemoryBufferReference ref;
 
     winrt::Windows::Media::Capture::Frames::MediaFrameReference mfr;
-    winrt::Windows::Foundation::Numerics::float4 intrinsics;
-    winrt::Windows::Foundation::Numerics::float4x4 pose;
+    ev_videoformat format;
 
-    pv_frame(winrt::Windows::Media::Capture::Frames::MediaFrameReference const& f, winrt::Windows::Foundation::Numerics::float4 const& k, winrt::Windows::Foundation::Numerics::float4x4 const& p);
-    ~pv_frame();
+    ev_frame(winrt::Windows::Media::Capture::Frames::MediaFrameReference const& f);
+    ~ev_frame();
 };
 
 //-----------------------------------------------------------------------------
@@ -45,8 +42,8 @@ static HANDLE g_event_enable = NULL; // CloseHandle
 static HANDLE g_event_quit = NULL; // CloseHandle
 static HANDLE g_thread = NULL; // CloseHandle
 
-static std::atomic<bool> g_reader_status;
-static pv_videoformat g_format;
+static std::atomic<bool> g_reader_status = false;
+static ev_videoformat g_format;
 static MRCVideoOptions g_options;
 
 //-----------------------------------------------------------------------------
@@ -54,15 +51,25 @@ static MRCVideoOptions g_options;
 //-----------------------------------------------------------------------------
 
 // OK
-pv_frame::pv_frame(MediaFrameReference const& f, float4 const& k, float4x4 const& p) : sensor_frame(), mfr(f), intrinsics(k), pose(p)
+ev_frame::ev_frame(MediaFrameReference const& f) : sensor_frame(), mfr(f)
 {
+    auto const& frameformat = f.Format();
+    auto const& videoformat = frameformat.VideoFormat();
+    auto const& framerate   = frameformat.FrameRate();
+
+    format.width = (uint16_t)videoformat.Width();
+    format.height = (uint16_t)videoformat.Height();
+    format.framerate = (uint8_t)((double)framerate.Numerator() / (double)framerate.Denominator());
+
+    wcscpy_s(format.subtype, sizeof(ev_videoformat::subtype) / sizeof(wchar_t), frameformat.Subtype().c_str());
+
     bmp = f.VideoMediaFrame().SoftwareBitmap();
     buf = bmp.LockBuffer(winrt::Windows::Graphics::Imaging::BitmapBufferAccessMode::Read);
     ref = buf.CreateReference();
 }
 
 // OK
-pv_frame::~pv_frame()
+ev_frame::~ev_frame()
 {
     ref.Close();
     buf.Close();
@@ -71,17 +78,13 @@ pv_frame::~pv_frame()
 }
 
 // OK
-static void PV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArrivedEventArgs const& args)
+static void EV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArrivedEventArgs const& args)
 {
     (void)args;
     
     CameraIntrinsics intrinsics = nullptr;
     MediaFrameReference frame = nullptr;
     int64_t timestamp;
-    float2 f;
-    float2 c;
-    float4 k;
-    float4x4 pose;
 
     if (!g_reader_status) { return; }
     frame = sender.TryAcquireLatestFrame();
@@ -89,14 +92,7 @@ static void PV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArr
 
     timestamp = frame.SystemRelativeTime().Value().count();
 
-    intrinsics = frame.VideoMediaFrame().CameraIntrinsics();
-    f = intrinsics.FocalLength();
-    c = intrinsics.PrincipalPoint();
-    k = float4(f.x, f.y, c.x, c.y);
-
-    pose = Locator_GetTransformTo(frame.CoordinateSystem(), Locator_GetWorldCoordinateSystem(QPCTimestampToPerceptionTimestamp(timestamp)));
-
-    g_buffer.Insert(new pv_frame(frame, k, pose), timestamp);
+    g_buffer.Insert(new ev_frame(frame), timestamp);
 
     if (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0) { return; }
     SetEvent(g_event_client);
@@ -104,7 +100,7 @@ static void PV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArr
 }
 
 // OK
-static void PV_Acquire()
+static void EV_Acquire()
 {
     MediaFrameReader videoFrameReader = nullptr;
     bool ok;
@@ -112,15 +108,17 @@ static void PV_Acquire()
     WaitForSingleObject(g_event_enable, INFINITE);
     WaitForSingleObject(g_event_client, 0);
 
-    PersonalVideo_Open(g_options);
-
-    ok = PersonalVideo_SetFormat(g_format.width, g_format.height, g_format.framerate);
+    ExtendedVideo_Open(g_options);
+    ok = ExtendedVideo_Status();
     if (ok)
     {
-    videoFrameReader = PersonalVideo_CreateFrameReader();
+    ok = ExtendedVideo_SetFormat(g_format.width, g_format.height, g_format.framerate, g_format.subtype);
+    if (ok)
+    {
+    videoFrameReader = ExtendedVideo_CreateFrameReader();
 
     videoFrameReader.AcquisitionMode(MediaFrameReaderAcquisitionMode::Buffered);
-    videoFrameReader.FrameArrived(PV_OnVideoFrameArrived);
+    videoFrameReader.FrameArrived(EV_OnVideoFrameArrived);
 
     g_reader_status = true;
     videoFrameReader.StartAsync().get();
@@ -133,82 +131,81 @@ static void PV_Acquire()
     g_buffer.Clear();
     }
 
-    PersonalVideo_Close();
+    ExtendedVideo_Close();
+    }
 
     ResetEvent(g_event_enable);
 }
 
 // OK
-static DWORD WINAPI PV_EntryPoint(void *param)
+static DWORD WINAPI EV_EntryPoint(void *param)
 {
     (void)param;
-    PersonalVideo_RegisterEvent(g_event_client);
-    do { PV_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+    ExtendedVideo_RegisterEvent(g_event_client);
+    do { EV_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
     return 0;
 }
 
 // OK
-void PV_SetFormat(pv_captureformat const& cf)
+void EV_SetFormat(ev_captureformat const& cf)
 {
     g_options = cf.mrcvo;
     g_format = cf.vf;
 }
 
 // OK
-void PV_SetEnable(bool enable)
+void EV_SetEnable(bool enable)
 {
     enable ? SetEvent(g_event_enable) : ResetEvent(g_event_enable);
 }
 
 // OK
-int PV_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
+int EV_Get(int32_t stamp, void*& f, uint64_t& t, int32_t& s)
 {
     return g_buffer.Get(stamp, (sensor_frame*&)f, t, s);
 }
 
 // OK
-int PV_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
+int EV_Get(uint64_t timestamp, int time_preference, bool tiebreak_right, void*& f, uint64_t& t, int32_t& s)
 {
     return g_buffer.Get(timestamp, time_preference, tiebreak_right, (sensor_frame*&)f, t, s);
 }
 
 // OK
-void PV_Release(void* frame)
+void EV_Release(void* frame)
 {
-    ((pv_frame*)frame)->Release();
+    ((ev_frame*)frame)->Release();
 }
 
 // OK
-void PV_Extract(void* frame, void const** buffer, int32_t* length, void const** intrinsics_buffer, int32_t* intrinsics_length, void const** pose_buffer, int32_t* pose_length)
+void EV_Extract(void* frame, void const** buffer, int32_t* length, void const** format_buffer, int32_t* format_length)
 {
-    pv_frame* f = (pv_frame*)frame;
+    ev_frame* f = (ev_frame*)frame;
 
     *buffer = f->ref.data();
     *length = (int32_t)f->ref.Capacity();
-    *intrinsics_buffer = &f->intrinsics;
-    *intrinsics_length = sizeof(pv_frame::intrinsics) / sizeof(float);
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(pv_frame::pose) / sizeof(float);
+    *format_buffer = &f->format;
+    *format_length = sizeof(ev_frame::format) / sizeof(ev_videoformat);
 }
 
 // OK
-void PV_Initialize(int32_t buffer_size)
+void EV_Initialize(int32_t buffer_size)
 {
     g_buffer.Reset(buffer_size);
     g_event_client = CreateEvent(NULL, FALSE, FALSE, NULL);
     g_event_enable = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_event_quit = CreateEvent(NULL, TRUE, FALSE, NULL);
-    g_thread = CreateThread(NULL, 0, PV_EntryPoint, NULL, 0, NULL);
+    g_thread = CreateThread(NULL, 0, EV_EntryPoint, NULL, 0, NULL);
 }
 
 // OK
-void PV_Quit()
+void EV_Quit()
 {
     SetEvent(g_event_quit);
 }
 
 // OK
-void PV_Cleanup()
+void EV_Cleanup()
 {
     WaitForSingleObject(g_thread, INFINITE);
 

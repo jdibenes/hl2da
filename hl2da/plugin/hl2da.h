@@ -20,6 +20,8 @@ enum class SENSOR_ID : int32_t
     MICROPHONE,
     SPATIAL_INPUT,
     EXTENDED_EYE_TRACKING,
+    EXTENDED_AUDIO,
+    EXTENDED_VIDEO,
 };
 
 enum class MICROPHONE_ARRAY_CHANNEL : int32_t
@@ -169,6 +171,61 @@ struct pv_captureformat
     uint16_t height;
     uint8_t framerate;
     uint8_t _reserved_1[3];
+};
+
+enum class MIXER_MODE : uint32_t
+{
+    MICROPHONE = 0,
+    SYSTEM = 1,
+    BOTH = 2,
+};
+
+struct ea_captureformat
+{
+    uint32_t mixer_mode;
+    float loopback_gain;
+    float microphone_gain;
+};
+
+struct ea_audioformat
+{
+    uint32_t bitrate;
+    uint32_t bits_per_sample;
+    uint32_t channel_count;
+    uint32_t sample_rate;
+    wchar_t subtype[64];
+};
+
+struct ev_captureformat
+{
+    bool enable_mrc;
+    bool hologram_composition;
+    bool recording_indicator;
+    bool video_stabilization;
+    bool blank_protected;
+    bool show_mesh;
+    bool shared;
+    uint8_t _reserved_0[1];
+    float global_opacity;
+    float output_width;
+    float output_height;
+    uint32_t video_stabilization_length;
+    uint32_t hologram_perspective;
+    uint16_t width;
+    uint16_t height;
+    uint8_t framerate;
+    uint8_t _reserved_1;
+    wchar_t subtype[64];
+    uint8_t _reserved_2[2];
+};
+
+struct ev_videoformat
+{
+    uint16_t width;
+    uint16_t height;
+    uint8_t framerate;
+    uint8_t _reserved;
+    wchar_t subtype[64];
 };
 
 enum class PV_FocusMode : uint32_t
@@ -333,6 +390,15 @@ void SetFormat_MC(int raw);
 
 PLUGIN_IMPORT
 void SetFormat_EE(int fps_index);
+
+PLUGIN_IMPORT
+void SetFormat_EA(void const* cf);
+
+PLUGIN_IMPORT
+void SetFormat_EV(void const* cf);
+
+PLUGIN_IMPORT
+uint64_t GetUTCOffset(int32_t samples);
 
 PLUGIN_IMPORT
 void PV_SetFocus(uint32_t focusmode, uint32_t autofocusrange, uint32_t distance, uint32_t value, uint32_t disabledriverfallback);
