@@ -20,6 +20,8 @@ enum class SENSOR_ID : int32_t
     MICROPHONE,
     SPATIAL_INPUT,
     EXTENDED_EYE_TRACKING,
+    EXTENDED_AUDIO,
+    EXTENDED_VIDEO,
 };
 
 enum class MICROPHONE_ARRAY_CHANNEL : int32_t
@@ -169,6 +171,13 @@ struct pv_captureformat
     uint16_t height;
     uint8_t framerate;
     uint8_t _reserved_1[3];
+};
+
+struct ea_captureformat
+{
+    uint32_t mixer_mode;
+    float loopback_gain;
+    float microphone_gain;
 };
 
 enum class PV_FocusMode : uint32_t
@@ -333,6 +342,12 @@ void SetFormat_MC(int raw);
 
 PLUGIN_IMPORT
 void SetFormat_EE(int fps_index);
+
+PLUGIN_IMPORT
+void SetFormat_EA(void const* cf);
+
+PLUGIN_IMPORT
+void SetFormat_EV(uint32_t width, uint32_t height, uint32_t framerate, wchar_t const* subtype, int32_t shared, uint32_t group_index, uint32_t source_index, uint32_t profile_index);
 
 PLUGIN_IMPORT
 void PV_SetFocus(uint32_t focusmode, uint32_t autofocusrange, uint32_t distance, uint32_t value, uint32_t disabledriverfallback);
