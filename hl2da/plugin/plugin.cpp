@@ -305,22 +305,9 @@ void SetFormat_EA(void const* cf)
 
 // OK
 PLUGIN_EXPORT
-void SetFormat_EV(uint32_t width, uint32_t height, uint32_t framerate, wchar_t const* subtype, int32_t shared, uint32_t group_index, uint32_t source_index, uint32_t profile_index)
+void SetFormat_EV(void const* cf)
 {
-    ev_captureformat cf;
-
-    cf.vf.width     = (uint16_t)width;
-    cf.vf.height    = (uint16_t)height;
-    cf.vf.framerate = (uint8_t)framerate;
-
-    wcscpy_s(cf.vf.subtype, sizeof(ev_videoformat::subtype) / sizeof(wchar_t), subtype);
-
-    cf.mrcvo.shared         = shared != 0;
-    cf.mrcvo.global_opacity = (float)group_index;
-    cf.mrcvo.output_width   = (float)source_index;
-    cf.mrcvo.output_height  = (float)profile_index;
-
-    EV_SetFormat(cf);
+    EV_SetFormat(*(ev_captureformat*)cf);
 }
 
 // OK
