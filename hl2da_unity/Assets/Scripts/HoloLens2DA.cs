@@ -16,9 +16,12 @@ public class HoloLens2DA : MonoBehaviour
     public GameObject gyr_text;
     public GameObject mag_text;
     public GameObject pv_image;
+    public GameObject ev_image;
     public GameObject mic_text;
     public GameObject[] si_text;
     public GameObject[] ee_text;
+    public GameObject ea_text;
+    public GameObject ev_text;
 
     private Texture2D[] tex_vlc;
     private Texture2D tex_ht;
@@ -27,12 +30,15 @@ public class HoloLens2DA : MonoBehaviour
     private Texture2D tex_lt_ab;
     private Texture2D tex_lt_sigma;
     private Texture2D tex_pv;
+    private Texture2D tex_ev;
 
     private Dictionary<hl2da_api.SENSOR_ID, string> sensor_names;
     private Dictionary<hl2da_api.SENSOR_ID, int> last_framestamp;
 
     private hl2da_api.SENSOR_ID sync;
     private hl2da_api.pv_captureformat pvcf;
+    private hl2da_api.ea_captureformat eacf;
+    private hl2da_api.ev_captureformat evcf;
     private hl2da_api.MC_CHANNELS mcch;
     private hl2da_api.EE_FPS_INDEX eefi;
 
@@ -51,7 +57,7 @@ public class HoloLens2DA : MonoBehaviour
         // wait to receive at least one frame (from hl2da_framebuffer.GetFrame with hl2da_api.STATUS.OK),
         // then these settings can be changed freely as long as the stream is enabled.
         // Unlike PV format, these settings are not latched internally, so they will be lost if the stream is restarted (via SetEnable(PV, false) -> SetEnable(PV, true))
-        // and they must be reapplied using the SetEnable -> Wait 1 frame procedure.
+        // and they must be reapplied using the SetEnable(PV, true) -> Wait one frame procedure.
 
         // Microphone format
         // hl2da_api.MC_CHANNELS.USE_2: Preprocessed 2-channel audio
@@ -60,6 +66,15 @@ public class HoloLens2DA : MonoBehaviour
 
         // Extended Eye Tracking framerate
         eefi = hl2da_api.EE_FPS_INDEX.FPS_90;
+
+        // Extended Audio format
+        // See https://github.com/jdibenes/hl2ss/blob/main/viewer/client_stream_extended_audio.py for how to find the device_index for your microphone
+        // source_index = 0 should work for most microphones but different values > 0 allow to select different formats if any
+        eacf = hl2da_user.CreateFormat_EA(hl2da_api.MIXER_MODE.MICROPHONE, 2, 0); // Select external microphone if any
+
+        // Extended Video format
+        // See https://github.com/jdibenes/hl2ss/blob/main/viewer/client_stream_extended_video.py for how to find the parameters for your camera
+        evcf = hl2da_user.CreateFormat_EV(1280, 720, 30, "YUY2", false, 2, 0, 0); // Select external camera if any
 
         // Synchronize to sensor (value not in hl2da_api.SENSOR_ID = no synchronization)
         sync = (hl2da_api.SENSOR_ID)(-1); // hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW;
@@ -72,6 +87,8 @@ public class HoloLens2DA : MonoBehaviour
         hl2da_user.SetFormat_PV(pvcf);
         hl2da_user.SetFormat_Microphone(mcch);
         hl2da_user.SetFormat_ExtendedEyeTracking(eefi);
+        hl2da_user.SetFormat_ExtendedAudio(eacf);
+        hl2da_user.SetFormat_ExtendedVideo(evcf);
 
         Update_Extrinsics();
 
@@ -91,6 +108,8 @@ public class HoloLens2DA : MonoBehaviour
         hl2da_user.Initialize(hl2da_api.SENSOR_ID.MICROPHONE,            125); // Buffer size limited by memory                          // 768 samples per frame equivalent to 768/48000=16 ms of audio
         hl2da_user.Initialize(hl2da_api.SENSOR_ID.SPATIAL_INPUT,          60); // Buffer size limited by memory                          // 30 Hz
         hl2da_user.Initialize(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, 180); // Buffer size limited by memory                          // 30, 60, or 90 Hz selectable
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.EXTENDED_AUDIO,        125); // Buffer size limited by memory                          // audio length per frame depends on your microphone
+        hl2da_user.Initialize(hl2da_api.SENSOR_ID.EXTENDED_VIDEO,         15); // Buffer size limited by internal buffer - Maximum is 18 // framerate depends on your camera
 
         hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT,      true);
         hl2da_user.SetEnable(hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT,       true);
@@ -105,6 +124,8 @@ public class HoloLens2DA : MonoBehaviour
         hl2da_user.SetEnable(hl2da_api.SENSOR_ID.MICROPHONE,            true);
         hl2da_user.SetEnable(hl2da_api.SENSOR_ID.SPATIAL_INPUT,         true);
         hl2da_user.SetEnable(hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING, true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.EXTENDED_AUDIO,        true);
+        hl2da_user.SetEnable(hl2da_api.SENSOR_ID.EXTENDED_VIDEO,        true);
 
         tex_vlc = new Texture2D[4];
 
@@ -119,12 +140,13 @@ public class HoloLens2DA : MonoBehaviour
         tex_lt_sigma = new Texture2D(320, 288, TextureFormat.R8,  false);
 
         tex_pv       = new Texture2D(pvcf.width, pvcf.height, TextureFormat.R8, false);
+        tex_ev       = new Texture2D(evcf.width, evcf.height, TextureFormat.R8, false);
     }
 
     // Update is called once per frame
     void Update()
     {
-        if ((sync < hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT) || (sync > hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING))
+        if ((sync < hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT) || (sync > hl2da_api.SENSOR_ID.EXTENDED_VIDEO))
         {
             Update_FFA();
         }
@@ -136,7 +158,7 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_FFA()
     {
-        for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING; ++id)
+        for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.EXTENDED_VIDEO; ++id)
         {
             // Get Frame
             // Negative index (-n): get nth most recent frame, may repeat or skip frames as necessary
@@ -162,7 +184,7 @@ public class HoloLens2DA : MonoBehaviour
         Update_Sensor_Data(fb_ref);        
         fb_ref.Destroy();
 
-        for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING; ++id)
+        for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.EXTENDED_VIDEO; ++id)
         {
             if (id == sync) { continue; }
 
@@ -183,7 +205,7 @@ public class HoloLens2DA : MonoBehaviour
         sensor_names = new Dictionary<hl2da_api.SENSOR_ID, string>();
         last_framestamp = new Dictionary<hl2da_api.SENSOR_ID, int>();
 
-        for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING; ++id)
+        for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.EXTENDED_VIDEO; ++id)
         {
             sensor_names[id] = id.ToString();
             last_framestamp[id] = -1;
@@ -245,6 +267,8 @@ public class HoloLens2DA : MonoBehaviour
         case hl2da_api.SENSOR_ID.MICROPHONE:            Update_Microphone(fb);           break;
         case hl2da_api.SENSOR_ID.SPATIAL_INPUT:         Update_SpatialInput(fb);         break;
         case hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING: Update_ExtendedEyeTracking(fb);  break;
+        case hl2da_api.SENSOR_ID.EXTENDED_AUDIO:        Update_ExtendedAudio(fb);        break;
+        case hl2da_api.SENSOR_ID.EXTENDED_VIDEO:        Update_ExtendedVideo(fb);        break;
         }
     }
 
@@ -397,6 +421,44 @@ public class HoloLens2DA : MonoBehaviour
         ee_text[2].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Right Gaze: "    + (((valid & hl2da_api.EE_VALID.RIGHT_GAZE)    != 0) ? string.Format("origin=[{0}, {1}, {2}] direction=[{3}, {4}, {5}] openness={6}", eye_data[12], eye_data[13], eye_data[14], eye_data[15], eye_data[16], eye_data[17], eye_data[19]) : "<INVALID>");
         
         poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose) + (((valid & hl2da_api.EE_VALID.CALIBRATION) != 0) ? "" : " <BAD CALIBRATION>");
+    }
+
+    void Update_ExtendedAudio(hl2da_framebuffer fb)
+    {
+        hl2da_api.ea_audioformat format = hl2da_user.UnpackFormat_EA(fb.Buffer(2));
+
+        string sample_text = string.Format(": channel_count={0}, bits_per_sample={1}, sample_rate={2}, bitrate={3}, subtype={4}, ", format.channel_count, format.bits_per_sample, format.sample_rate, format.bitrate, format.subtype);
+        if (format.bits_per_sample == 32)
+        {
+            float[] samples = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0) / sizeof(float));
+            sample_text += string.Format("ch0={0}", samples[0]);
+        }
+        else if (format.bits_per_sample == 16)
+        {
+            short[] samples = hl2da_user.Unpack1D<short>(fb.Buffer(0), fb.Length(0) / sizeof(short));
+            sample_text += string.Format("ch0={0}", samples[0]);
+        }
+        else
+        {
+            sample_text += "ch0=<U>";
+        }
+        
+        ea_text.GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + sample_text;
+    }
+
+    void Update_ExtendedVideo(hl2da_framebuffer fb)
+    {
+        hl2da_api.ev_videoformat format = hl2da_user.UnpackFormat_EV(fb.Buffer(2));
+
+        string format_text = string.Format(": width={0}, height={1}, framerate={2}, subtype={3}", format.width, format.height, format.framerate, format.subtype);
+
+        // Load frame data into textures
+        tex_ev.LoadRawTextureData(fb.Buffer(0), evcf.width * evcf.height * sizeof(byte)); // Image for realsense d435i rgb is YUY2, load Y only, use OpenCV to convert YUY2->RGB
+        tex_ev.Apply();
+
+        // Display frame
+        ev_image.GetComponent<Renderer>().material.mainTexture = tex_ev;
+        ev_text.GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + format_text;
     }
 
     string PoseToString(float[,] pose)

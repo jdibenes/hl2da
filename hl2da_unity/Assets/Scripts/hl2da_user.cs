@@ -118,6 +118,21 @@ public class hl2da_user
         hl2da_api.SetFormat_EE((int)fps_index);
     }
 
+    public static void SetFormat_ExtendedAudio(hl2da_api.ea_captureformat cf)
+    {
+        hl2da_api.SetFormat_EA(ref cf);
+    }
+
+    public static void SetFormat_ExtendedVideo(hl2da_api.ev_captureformat cf)
+    {
+        hl2da_api.SetFormat_EV(ref cf);
+    }
+
+    public static ulong GetUTCOffset(int samples = 32)
+    {
+        return hl2da_api.GetUTCOffset(samples);
+    }
+
     public static hl2da_api.pv_captureformat CreateFormat_PV(ushort width, ushort height, byte framerate, bool enable_mrc, bool shared)
     {
         hl2da_api.pv_captureformat cf = new hl2da_api.pv_captureformat();
@@ -139,6 +154,51 @@ public class hl2da_user
         cf.framerate = framerate;
 
         return cf;
+    }
+
+    public static hl2da_api.ea_captureformat CreateFormat_EA(hl2da_api.MIXER_MODE mode, byte device_index, byte source_index)
+    {
+        hl2da_api.ea_captureformat cf = new hl2da_api.ea_captureformat();
+
+        cf.mixer_mode = (((uint)mode) & 0xFF) | (((uint)device_index) << 8) | (((uint)source_index) << 16);
+        cf.loopback_gain = 1.0f;
+        cf.microphone_gain = 1.0f;
+
+        return cf;
+    }
+
+    public static hl2da_api.ev_captureformat CreateFormat_EV(ushort width, ushort height, byte framerate, string subtype, bool shared, uint group_index, uint source_index, uint profile_index)
+    {
+        hl2da_api.ev_captureformat cf = new hl2da_api.ev_captureformat();
+
+        cf.enable_mrc = 0;
+        cf.hologram_composition = 0;
+        cf.recording_indicator = 0;
+        cf.video_stabilization = 0;
+        cf.blank_protected = 0;
+        cf.show_mesh = 0;
+        cf.shared = shared ? (byte)1 : (byte)0;
+        cf.global_opacity = group_index;
+        cf.output_width = source_index;
+        cf.output_height = profile_index;
+        cf.video_stabilization_length = 0;
+        cf.hologram_perspective = 0;
+        cf.width = width;
+        cf.height = height;
+        cf.framerate = framerate;
+        cf.subtype = subtype;
+
+        return cf;
+    }
+
+    public static hl2da_api.ea_audioformat UnpackFormat_EA(IntPtr buffer)
+    {
+        return Marshal.PtrToStructure<hl2da_api.ea_audioformat>(buffer);
+    }
+
+    public static hl2da_api.ev_videoformat UnpackFormat_EV(IntPtr buffer)
+    {
+        return Marshal.PtrToStructure<hl2da_api.ev_videoformat>(buffer);
     }
 
     public static void PV_SetFocus(hl2da_api.PV_FocusMode focusmode, hl2da_api.PV_AutoFocusRange autofocusrange, hl2da_api.PV_ManualFocusDistance distance, uint value, hl2da_api.PV_DriverFallback disabledriverfallback)
