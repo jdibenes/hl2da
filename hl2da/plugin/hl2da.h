@@ -173,6 +173,13 @@ struct pv_captureformat
     uint8_t _reserved_1[3];
 };
 
+enum class MIXER_MODE : uint32_t
+{
+    MICROPHONE = 0,
+    SYSTEM = 1,
+    BOTH = 2,
+};
+
 struct ea_captureformat
 {
     uint32_t mixer_mode;
@@ -180,9 +187,18 @@ struct ea_captureformat
     float microphone_gain;
 };
 
+struct ea_audioformat
+{
+    uint32_t bitrate;
+    uint32_t bits_per_sample;
+    uint32_t channel_count;
+    uint32_t sample_rate;
+    wchar_t subtype[64];
+};
+
 struct ev_captureformat
 {
-    bool enable;
+    bool enable_mrc;
     bool hologram_composition;
     bool recording_indicator;
     bool video_stabilization;
@@ -201,6 +217,15 @@ struct ev_captureformat
     uint8_t _reserved_1;
     wchar_t subtype[64];
     uint8_t _reserved_2[2];
+};
+
+struct ev_videoformat
+{
+    uint16_t width;
+    uint16_t height;
+    uint8_t framerate;
+    uint8_t _reserved;
+    wchar_t subtype[64];
 };
 
 enum class PV_FocusMode : uint32_t
