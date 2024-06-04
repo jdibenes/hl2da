@@ -104,7 +104,7 @@ static void PV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArr
 }
 
 // OK
-static void PV_Stream()
+static void PV_Acquire()
 {
     MediaFrameReader videoFrameReader = nullptr;
     bool ok;
@@ -115,7 +115,11 @@ static void PV_Stream()
     PersonalVideo_Open(g_options);
 
     ok = PersonalVideo_SetFormat(g_format.width, g_format.height, g_format.framerate);
-    if (!ok) { return; }
+    if (!ok)
+    {
+    ResetEvent(g_event_enable);
+    return;
+    }
 
     videoFrameReader = PersonalVideo_CreateFrameReader();
 
@@ -140,7 +144,7 @@ static DWORD WINAPI PV_EntryPoint(void *param)
 {
     (void)param;
     PersonalVideo_RegisterEvent(g_event_client);
-    do { PV_Stream(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+    do { PV_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
     return 0;
 }
 
