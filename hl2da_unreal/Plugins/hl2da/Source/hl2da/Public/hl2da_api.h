@@ -25,6 +25,8 @@ public:
         MICROPHONE,
         SPATIAL_INPUT,
         EXTENDED_EYE_TRACKING,
+        EXTENDED_AUDIO,
+        EXTENDED_VIDEO,
     };
 
     enum class MICROPHONE_ARRAY_CHANNEL : int32_t
@@ -176,6 +178,61 @@ public:
         uint8_t _reserved_1[3];
     };
 
+    enum class MIXER_MODE : uint32_t
+    {
+        MICROPHONE = 0,
+        SYSTEM = 1,
+        BOTH = 2,
+    };
+
+    struct ea_captureformat
+    {
+        uint32_t mixer_mode;
+        float loopback_gain;
+        float microphone_gain;
+    };
+
+    struct ea_audioformat
+    {
+        uint32_t bitrate;
+        uint32_t bits_per_sample;
+        uint32_t channel_count;
+        uint32_t sample_rate;
+        wchar_t subtype[64];
+    };
+
+    struct ev_captureformat
+    {
+        bool enable_mrc;
+        bool hologram_composition;
+        bool recording_indicator;
+        bool video_stabilization;
+        bool blank_protected;
+        bool show_mesh;
+        bool shared;
+        uint8_t _reserved_0[1];
+        float global_opacity;
+        float output_width;
+        float output_height;
+        uint32_t video_stabilization_length;
+        uint32_t hologram_perspective;
+        uint16_t width;
+        uint16_t height;
+        uint8_t framerate;
+        uint8_t _reserved_1;
+        wchar_t subtype[64];
+        uint8_t _reserved_2[2];
+    };
+
+    struct ev_videoformat
+    {
+        uint16_t width;
+        uint16_t height;
+        uint8_t framerate;
+        uint8_t _reserved;
+        wchar_t subtype[64];
+    };
+
     enum class PV_FocusMode : uint32_t
     {
         Auto = 0,
@@ -305,6 +362,9 @@ private:
     static void* p_SetFormat_PV;
     static void* p_SetFormat_MC;
     static void* p_SetFormat_EE;
+    static void* p_SetFormat_EA;
+    static void* p_SetFormat_EV;
+    static void* p_GetUTCOffset;
     static void* p_PV_SetFocus;
     static void* p_PV_SetVideoTemporalDenoising;
     static void* p_PV_SetWhiteBalance_Preset;
@@ -336,7 +396,12 @@ public:
     static void SetFormat_PV(pv_captureformat const& cf);
     static void SetFormat_Microphone(MC_CHANNELS use);
     static void SetFormat_ExtendedEyeTracking(EE_FPS_INDEX fps_index);
+    static void SetFormat_ExtendedAudio(ea_captureformat const& cf);
+    static void SetFormat_ExtendedVideo(ev_captureformat const& cf);
+    static uint64_t GetUTCOffset(int32_t samples = 32);
     static pv_captureformat CreateFormat_PV(uint16_t width, uint16_t height, uint8_t framerate, bool enable_mrc, bool shared);
+    static ea_captureformat CreateFormat_EA(MIXER_MODE mode, uint8_t device_index, uint8_t source_index);
+    static ev_captureformat CreateFormat_EV(uint16_t width, uint16_t height, uint8_t framerate, wchar_t const* subtype, bool shared, uint32_t group_index, uint32_t source_index, uint32_t profile_index);
     static void PV_SetFocus(PV_FocusMode focusmode, PV_AutoFocusRange autofocusrange, PV_ManualFocusDistance distance, uint32_t value, PV_DriverFallback disabledriverfallback);
     static void PV_SetVideoTemporalDenoising(PV_VideoTemporalDenoisingMode mode);
     static void PV_SetWhiteBalance_Preset(PV_ColorTemperaturePreset preset);

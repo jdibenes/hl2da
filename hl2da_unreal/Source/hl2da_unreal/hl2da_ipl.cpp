@@ -24,6 +24,8 @@ void Uhl2da_ipl::BeginPlay()
 	hl2da_api::pv_captureformat pvcf = hl2da_api::CreateFormat_PV(640, 360, 30, false, false);
 	hl2da_api::MC_CHANNELS mcch = hl2da_api::MC_CHANNELS::USE_5;
 	hl2da_api::EE_FPS_INDEX eefi = hl2da_api::EE_FPS_INDEX::FPS_90;
+	hl2da_api::ea_captureformat eacf = hl2da_api::CreateFormat_EA(hl2da_api::MIXER_MODE::MICROPHONE, 2, 0); // Select external microphone if any
+	hl2da_api::ev_captureformat evcf = hl2da_api::CreateFormat_EV(1280, 720, 30, L"YUY2", false, 2, 0, 0); // Select external camera if any
 
 	hl2da_api::InitializeLibrary();
 	hl2da_api::InitializeComponents();
@@ -34,6 +36,8 @@ void Uhl2da_ipl::BeginPlay()
 	hl2da_api::SetFormat_PV(pvcf);
 	hl2da_api::SetFormat_Microphone(mcch);
 	hl2da_api::SetFormat_ExtendedEyeTracking(eefi);
+	hl2da_api::SetFormat_ExtendedAudio(eacf);
+	hl2da_api::SetFormat_ExtendedVideo(evcf);
 
 	hl2da_api::BypassDepthLock_RM(true);
 
@@ -50,6 +54,8 @@ void Uhl2da_ipl::BeginPlay()
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::MICROPHONE,            125);
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::SPATIAL_INPUT,          60);
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::EXTENDED_EYE_TRACKING, 180);
+	hl2da_api::Initialize(hl2da_api::SENSOR_ID::EXTENDED_AUDIO,        125);
+	hl2da_api::Initialize(hl2da_api::SENSOR_ID::EXTENDED_VIDEO,         15); // Maximum is 18
 
 	hl2da_api::SetEnable(hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT,      true);
 	hl2da_api::SetEnable(hl2da_api::SENSOR_ID::RM_VLC_LEFTLEFT,       true);
@@ -64,6 +70,8 @@ void Uhl2da_ipl::BeginPlay()
 	hl2da_api::SetEnable(hl2da_api::SENSOR_ID::MICROPHONE,            true);
 	hl2da_api::SetEnable(hl2da_api::SENSOR_ID::SPATIAL_INPUT,         true);
 	hl2da_api::SetEnable(hl2da_api::SENSOR_ID::EXTENDED_EYE_TRACKING, true);
+	hl2da_api::SetEnable(hl2da_api::SENSOR_ID::EXTENDED_AUDIO,        true);
+	hl2da_api::SetEnable(hl2da_api::SENSOR_ID::EXTENDED_VIDEO,        true);
 }
 
 
