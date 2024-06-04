@@ -23,6 +23,9 @@ typedef void (*pfn_BypassDepthLock_RM)(int bypass);
 typedef void (*pfn_SetFormat_PV)(hl2da_api::pv_captureformat const* cf);
 typedef void (*pfn_SetFormat_MC)(int raw);
 typedef void (*pfn_SetFormat_EE)(int fps_index);
+typedef void (*pfn_SetFormat_EA)(hl2da_api::ea_captureformat const* cf);
+typedef void (*pfn_SetFormat_EV)(hl2da_api::ev_captureformat const* cf);
+typedef uint64_t (*pfn_GetUTCOffset)(int32_t samples);
 typedef void (*pfn_PV_SetFocus)(uint32_t focusmode, uint32_t autofocusrange, uint32_t distance, uint32_t value, uint32_t disabledriverfallback);
 typedef void (*pfn_PV_SetVideoTemporalDenoising)(uint32_t mode);
 typedef void (*pfn_PV_SetWhiteBalance_Preset)(uint32_t preset);
@@ -56,6 +59,9 @@ void* hl2da_api::p_BypassDepthLock_RM;
 void* hl2da_api::p_SetFormat_PV;
 void* hl2da_api::p_SetFormat_MC;
 void* hl2da_api::p_SetFormat_EE;
+void* hl2da_api::p_SetFormat_EA;
+void* hl2da_api::p_SetFormat_EV;
+void* hl2da_api::p_GetUTCOffset;
 void* hl2da_api::p_PV_SetFocus;
 void* hl2da_api::p_PV_SetVideoTemporalDenoising;
 void* hl2da_api::p_PV_SetWhiteBalance_Preset;
@@ -100,6 +106,9 @@ int hl2da_api::Load()
     p_SetFormat_PV                      = GetProcAddress((HMODULE)hmod_hl2da, "SetFormat_PV");
     p_SetFormat_MC                      = GetProcAddress((HMODULE)hmod_hl2da, "SetFormat_MC");
     p_SetFormat_EE                      = GetProcAddress((HMODULE)hmod_hl2da, "SetFormat_EE");
+    p_SetFormat_EA                      = GetProcAddress((HMODULE)hmod_hl2da, "SetFormat_EA");
+    p_SetFormat_EV                      = GetProcAddress((HMODULE)hmod_hl2da, "SetFormat_EV");
+    p_GetUTCOffset                      = GetProcAddress((HMODULE)hmod_hl2da, "GetUTCOffset");
     p_PV_SetFocus                       = GetProcAddress((HMODULE)hmod_hl2da, "PV_SetFocus");
     p_PV_SetVideoTemporalDenoising      = GetProcAddress((HMODULE)hmod_hl2da, "PV_SetVideoTemporalDenoising");
     p_PV_SetWhiteBalance_Preset         = GetProcAddress((HMODULE)hmod_hl2da, "PV_SetWhiteBalance_Preset");
@@ -126,15 +135,18 @@ int hl2da_api::Load()
     if (p_SetFormat_PV                      == NULL) { return -18; }
     if (p_SetFormat_MC                      == NULL) { return -19; }
     if (p_SetFormat_EE                      == NULL) { return -20; }
-    if (p_PV_SetFocus                       == NULL) { return -21; }
-    if (p_PV_SetVideoTemporalDenoising      == NULL) { return -22; }
-    if (p_PV_SetWhiteBalance_Preset         == NULL) { return -23; }
-    if (p_PV_SetWhiteBalance_Value          == NULL) { return -24; }
-    if (p_PV_SetExposure                    == NULL) { return -25; }
-    if (p_PV_SetExposurePriorityVideo       == NULL) { return -26; }
-    if (p_PV_SetSceneMode                   == NULL) { return -27; }
-    if (p_PV_SetIsoSpeed                    == NULL) { return -28; }
-    if (p_PV_SetBacklightCompensation       == NULL) { return -29; }
+    if (p_SetFormat_EA                      == NULL) { return -21; }
+    if (p_SetFormat_EV                      == NULL) { return -22; }
+    if (p_GetUTCOffset                      == NULL) { return -23; }
+    if (p_PV_SetFocus                       == NULL) { return -24; }
+    if (p_PV_SetVideoTemporalDenoising      == NULL) { return -25; }
+    if (p_PV_SetWhiteBalance_Preset         == NULL) { return -26; }
+    if (p_PV_SetWhiteBalance_Value          == NULL) { return -27; }
+    if (p_PV_SetExposure                    == NULL) { return -28; }
+    if (p_PV_SetExposurePriorityVideo       == NULL) { return -29; }
+    if (p_PV_SetSceneMode                   == NULL) { return -30; }
+    if (p_PV_SetIsoSpeed                    == NULL) { return -31; }
+    if (p_PV_SetBacklightCompensation       == NULL) { return -32; }
 
     return 1;
 }
@@ -226,6 +238,21 @@ void hl2da_api::SetFormat_ExtendedEyeTracking(EE_FPS_INDEX fps_index)
     reinterpret_cast<pfn_SetFormat_EE>(p_SetFormat_EE)((int)fps_index);
 }
 
+void hl2da_api::SetFormat_ExtendedAudio(ea_captureformat const& cf)
+{
+    reinterpret_cast<pfn_SetFormat_EA>(p_SetFormat_EA)(&cf);
+}
+
+void hl2da_api::SetFormat_ExtendedVideo(ev_captureformat const& cf)
+{
+    reinterpret_cast<pfn_SetFormat_EV>(p_SetFormat_EV)(&cf);
+}
+
+uint64_t hl2da_api::GetUTCOffset(int32_t samples)
+{
+    return reinterpret_cast<pfn_GetUTCOffset>(p_GetUTCOffset)(samples);
+}
+
 hl2da_api::pv_captureformat hl2da_api::CreateFormat_PV(uint16_t width, uint16_t height, uint8_t framerate, bool enable_mrc, bool shared)
 {
     pv_captureformat cf;
@@ -245,6 +272,42 @@ hl2da_api::pv_captureformat hl2da_api::CreateFormat_PV(uint16_t width, uint16_t 
     cf.width = width;
     cf.height = height;
     cf.framerate = framerate;
+
+    return cf;
+}
+
+hl2da_api::ea_captureformat hl2da_api::CreateFormat_EA(MIXER_MODE mode, uint8_t device_index, uint8_t source_index)
+{
+    ea_captureformat cf;
+
+    cf.mixer_mode = (((uint32_t)mode) & 0xFF) | (((uint32_t)device_index) << 8) | (((uint32_t)source_index) << 16);
+    cf.loopback_gain = 1.0f;
+    cf.microphone_gain = 1.0f;
+
+    return cf;
+}
+
+hl2da_api::ev_captureformat hl2da_api::CreateFormat_EV(uint16_t width, uint16_t height, uint8_t framerate, wchar_t const* subtype, bool shared, uint32_t group_index, uint32_t source_index, uint32_t profile_index)
+{
+    ev_captureformat cf;
+
+    cf.enable_mrc = 0;
+    cf.hologram_composition = 0;
+    cf.recording_indicator = 0;
+    cf.video_stabilization = 0;
+    cf.blank_protected = 0;
+    cf.show_mesh = 0;
+    cf.shared = shared;
+    cf.global_opacity = (float)group_index;
+    cf.output_width = (float)source_index;
+    cf.output_height = (float)profile_index;
+    cf.video_stabilization_length = 0;
+    cf.hologram_perspective = 0;
+    cf.width = width;
+    cf.height = height;
+    cf.framerate = framerate;
+
+    wcscpy_s(cf.subtype, sizeof(ev_captureformat::subtype) / sizeof(wchar_t), subtype);
 
     return cf;
 }
