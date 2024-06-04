@@ -10,6 +10,7 @@
 #include "../hl2da/stream_ee.h"
 #include "../hl2da/stream_ea.h"
 #include "../hl2da/stream_ev.h"
+#include "../hl2da/timestamps.h"
 #include "../hl2da/log.h"
 
 #include <winrt/Windows.Foundation.Collections.h>
@@ -320,6 +321,13 @@ void SetFormat_EV(uint32_t width, uint32_t height, uint32_t framerate, wchar_t c
     cf.mrcvo.output_height  = (float)profile_index;
 
     EV_SetFormat(cf);
+}
+
+// OK
+PLUGIN_EXPORT
+uint64_t GetUTCOffset(int32_t samples)
+{
+    return GetQPCToUTCOffset(samples);
 }
 
 // OK
