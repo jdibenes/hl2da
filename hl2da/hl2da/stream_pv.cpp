@@ -115,12 +115,8 @@ static void PV_Acquire()
     PersonalVideo_Open(g_options);
 
     ok = PersonalVideo_SetFormat(g_format.width, g_format.height, g_format.framerate);
-    if (!ok)
+    if (ok)
     {
-    ResetEvent(g_event_enable);
-    return;
-    }
-
     videoFrameReader = PersonalVideo_CreateFrameReader();
 
     videoFrameReader.AcquisitionMode(MediaFrameReaderAcquisitionMode::Buffered);
@@ -135,8 +131,11 @@ static void PV_Acquire()
     videoFrameReader.Close();
 
     g_buffer.Clear();
+    }
 
     PersonalVideo_Close();
+
+    ResetEvent(g_event_enable);
 }
 
 // OK

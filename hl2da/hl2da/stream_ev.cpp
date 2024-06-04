@@ -109,15 +109,12 @@ static void EV_Acquire()
     WaitForSingleObject(g_event_client, 0);
 
     ExtendedVideo_Open(g_options);
-
-    winrt::hstring subtype = g_format.subtype;
-    ok = ExtendedVideo_SetFormat(g_format.width, g_format.height, g_format.framerate, subtype);
-    if (!ok) 
+    ok = ExtendedVideo_Status();
+    if (ok)
     {
-    ResetEvent(g_event_enable);
-    return;
-    }
-
+    ok = ExtendedVideo_SetFormat(g_format.width, g_format.height, g_format.framerate, g_format.subtype);
+    if (ok)
+    {
     videoFrameReader = ExtendedVideo_CreateFrameReader();
 
     videoFrameReader.AcquisitionMode(MediaFrameReaderAcquisitionMode::Buffered);
@@ -132,8 +129,12 @@ static void EV_Acquire()
     videoFrameReader.Close();
 
     g_buffer.Clear();
-    
+    }
+
     ExtendedVideo_Close();
+    }
+
+    ResetEvent(g_event_enable);
 }
 
 // OK

@@ -117,12 +117,8 @@ static void EA_Acquire()
     WaitForSingleObject(g_event_client, 0);
 
     ok = ExtendedAudio_Open(g_options);
-    if (!ok) 
+    if (ok) 
     {
-    ResetEvent(g_event_enable);
-    return;
-    }
-
     reader = ExtendedAudio_CreateFrameReader(); 
 
     reader.AcquisitionMode(MediaFrameReaderAcquisitionMode::Buffered);
@@ -139,6 +135,9 @@ static void EA_Acquire()
     g_buffer.Clear();
 
     ExtendedAudio_Close();
+    }
+
+    ResetEvent(g_event_enable);
 }
 
 // OK
