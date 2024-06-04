@@ -19,7 +19,7 @@ using namespace winrt::Windows::Media::Devices::Core;
 using namespace winrt::Windows::Media::MediaProperties;
 using namespace winrt::Windows::Foundation::Numerics;
 
-struct ea_format
+struct ea_audioformat
 {
     uint32_t bitrate;
     uint32_t bits_per_sample;
@@ -33,7 +33,7 @@ class ea_frame : public sensor_frame
 public:
     uint8_t* buffer;
     int32_t length;
-    ea_format format;
+    ea_audioformat format;
 
     ea_frame(uint8_t* b, int32_t l, AudioEncodingProperties const& aep);
     ~ea_frame();
@@ -64,7 +64,7 @@ ea_frame::ea_frame(uint8_t* b, int32_t l, AudioEncodingProperties const& aep) : 
     format.channel_count   = aep.ChannelCount();
     format.sample_rate     = aep.SampleRate();
 
-    wcscpy_s(format.subtype, sizeof(ea_format::subtype) / sizeof(wchar_t), aep.Subtype().c_str());
+    wcscpy_s(format.subtype, sizeof(ea_audioformat::subtype) / sizeof(wchar_t), aep.Subtype().c_str());
 }
 
 // OK
@@ -188,7 +188,7 @@ void EA_Extract(void* frame, void const** buffer, int32_t* length, void const** 
     *buffer = f->buffer;
     *length = (int32_t)f->length;
     *format_buffer = &f->format;
-    *format_length = sizeof(ea_frame::format) / sizeof(ea_format);
+    *format_length = sizeof(ea_frame::format) / sizeof(ea_audioformat);
 }
 
 // OK
