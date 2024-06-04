@@ -30,7 +30,7 @@ static HANDLE g_event_quit = NULL; // CloseHandle
 static HANDLE g_thread = NULL; // CloseHandle
 
 static winrt::com_ptr<MicrophoneCapture> g_microphoneCapture = nullptr;
-bool g_raw = false;
+static bool g_raw = false;
 
 //-----------------------------------------------------------------------------
 // Functions

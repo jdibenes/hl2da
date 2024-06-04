@@ -46,8 +46,8 @@ static HANDLE g_event_quit = NULL; // CloseHandle
 static HANDLE g_thread = NULL; // CloseHandle
 
 static std::atomic<bool> g_reader_status;
-pv_videoformat g_format;
-MRCVideoOptions g_options;
+static pv_videoformat g_format;
+static MRCVideoOptions g_options;
 
 //-----------------------------------------------------------------------------
 // Functions

@@ -50,7 +50,7 @@ static HANDLE g_event_quit = NULL; // CloseHandle
 static HANDLE g_thread = NULL; // CloseHandle
 
 static std::atomic<bool> g_reader_status = false;
-MRCAudioOptions g_options;
+static MRCAudioOptions g_options;
 
 //-----------------------------------------------------------------------------
 // Functions
