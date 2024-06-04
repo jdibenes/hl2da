@@ -26,6 +26,10 @@ A sample Unity project (2020.3.42f1) can be found in the [hl2da_unity](hl2da_uni
   - Eye Tracking
   - Hand Tracking
 - Extended Eye Tracking (30, 60, or 90 FPS)
+- Extended Audio
+  - External USB-C Microphone
+- Extended Video
+  - External USB-C Camera
 
 ## References
 
