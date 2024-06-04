@@ -79,8 +79,9 @@ static void MC_Acquire()
 }
 
 // OK
-static DWORD WINAPI MC_EntryPoint(void*)
+static DWORD WINAPI MC_EntryPoint(void* param)
 {
+	(void)param;
 	do { MC_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
 	return 0;
 }
