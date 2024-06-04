@@ -126,6 +126,7 @@
     <ClCompile Include="custom_video_effect.cpp" />
     <ClCompile Include="extended_audio.cpp" />
     <ClCompile Include="extended_eye_tracking.cpp" />
+    <ClCompile Include="extended_video.cpp" />
     <ClCompile Include="frame_buffer.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="locator.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="custom_video_effect.h" />
     <ClInclude Include="extended_audio.h" />
     <ClInclude Include="extended_eye_tracking.h" />
+    <ClInclude Include="extended_video.h" />
     <ClInclude Include="frame_buffer.h" />
     <ClInclude Include="microphone_capture.h" />
     <ClInclude Include="neon.h" />
@@ -149,12 +151,14 @@
     <ClInclude Include="spatial_input.h" />
     <ClInclude Include="stream_ea.h" />
     <ClInclude Include="stream_ee.h" />
+    <ClInclude Include="stream_ev.h" />
     <ClInclude Include="stream_mc.h" />
     <ClInclude Include="stream_pv.h" />
     <ClInclude Include="stream_rm.h" />
     <ClCompile Include="spatial_input.cpp" />
     <ClCompile Include="stream_ea.cpp" />
     <ClCompile Include="stream_ee.cpp" />
+    <ClCompile Include="stream_ev.cpp" />
     <ClCompile Include="stream_mc.cpp" />
     <ClCompile Include="stream_pv.cpp" />
     <ClCompile Include="stream_rm.cpp" />
