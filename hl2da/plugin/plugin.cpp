@@ -9,6 +9,7 @@
 #include "../hl2da/stream_si.h"
 #include "../hl2da/stream_ee.h"
 #include "../hl2da/stream_ea.h"
+#include "../hl2da/stream_ev.h"
 #include "../hl2da/log.h"
 
 #include <winrt/Windows.Foundation.Collections.h>
@@ -91,7 +92,7 @@ void Initialize(int id, int buffer_size)
     case 11: SI_Initialize(    buffer_size); break;
     case 12: EE_Initialize(    buffer_size); break;
     case 13: EA_Initialize(    buffer_size); break;
-    case 14: break; //
+    case 14: EV_Initialize(    buffer_size); break;
     }
 }
 
@@ -115,7 +116,7 @@ void SetEnable(int id, int enable)
     case 11: SI_SetEnable(    enable != 0); break;
     case 12: EE_SetEnable(    enable != 0); break;
     case 13: EA_SetEnable(    enable != 0); break;
-    case 14: break; //
+    case 14: EV_SetEnable(    enable != 0); break;
     }
 }
 
@@ -139,7 +140,7 @@ int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, in
     case 11: return SI_Get(    stamp, *frame, *timestamp, *framestamp);
     case 12: return EE_Get(    stamp, *frame, *timestamp, *framestamp);
     case 13: return EA_Get(    stamp, *frame, *timestamp, *framestamp);
-    case 14: break; //
+    case 14: return EV_Get(    stamp, *frame, *timestamp, *framestamp);
     }
 
     return -1;
@@ -165,7 +166,7 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
     case 11: return SI_Get(    stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
     case 12: return EE_Get(    stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
     case 13: return EA_Get(    stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
-    case 14: break; //
+    case 14: return EV_Get(    stamp, time_preference, tiebreak_right != 0, *frame, *timestamp, *framestamp);
     }
 
     return -1;
@@ -191,7 +192,7 @@ void Release(int id, void* frame)
     case 11: SI_Release(frame); break;
     case 12: EE_Release(frame); break;
     case 13: EA_Release(frame); break;
-    case 14: break; //
+    case 14: EV_Release(frame); break;
     }
 }
 
@@ -215,7 +216,7 @@ void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l)
     case 11: SI_Extract(                  frame, valid, b + 0, l + 0, b + 1, l + 1, b + 2, l + 2, b + 3, l + 3); break;
     case 12: EE_Extract(                  frame, valid, b + 0, l + 0,                             b + 3, l + 3); break;
     case 13: EA_Extract(                  frame,        b + 0, l + 0,               b + 2, l + 2              ); break;
-    case 14: break; //
+    case 14: EV_Extract(                  frame,        b + 0, l + 0,               b + 2, l + 2              ); break;
     }
 }
 
@@ -299,6 +300,26 @@ PLUGIN_EXPORT
 void SetFormat_EA(void const* cf)
 {
     EA_SetFormat(*(MRCAudioOptions*)cf);
+}
+
+// OK
+PLUGIN_EXPORT
+void SetFormat_EV(uint32_t width, uint32_t height, uint32_t framerate, wchar_t const* subtype, int32_t shared, uint32_t group_index, uint32_t source_index, uint32_t profile_index)
+{
+    ev_captureformat cf;
+
+    cf.vf.width     = (uint16_t)width;
+    cf.vf.height    = (uint16_t)height;
+    cf.vf.framerate = (uint8_t)framerate;
+
+    wcscpy_s(cf.vf.subtype, sizeof(ev_videoformat::subtype) / sizeof(wchar_t), subtype);
+
+    cf.mrcvo.shared         = shared != 0;
+    cf.mrcvo.global_opacity = (float)group_index;
+    cf.mrcvo.output_width   = (float)source_index;
+    cf.mrcvo.output_height  = (float)profile_index;
+
+    EV_SetFormat(cf);
 }
 
 // OK
