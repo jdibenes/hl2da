@@ -86,6 +86,8 @@ void Uhl2da_ipl::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	// ...
+	/*
+	// TEST 1
 	for (int id = 0; id <= 14; ++id)
 	{
 		std::shared_ptr<hl2da_framebuffer> fb = hl2da_framebuffer::GetFrame((hl2da_api::SENSOR_ID)id, -1);
@@ -113,6 +115,20 @@ void Uhl2da_ipl::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 		case 14: Update_ExtendedVideo(fb); break;
 		}
 	}
+	*/
+	/*
+	// TEST 2
+	std::shared_ptr<hl2da_framebuffer> fb = hl2da_framebuffer::GetFrame(hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT, -2);
+	if (fb->Status() != hl2da_api::STATUS::OK) { return; }
+	if (last_framestamp[(int)fb->Id()] >= fb->Framestamp()) { return; }
+	last_framestamp[(int)fb->Id()] = fb->Framestamp();
+
+	std::shared_ptr<hl2da_framebuffer> fb_s = hl2da_framebuffer::GetFrame(hl2da_api::SENSOR_ID::RM_VLC_RIGHTFRONT, fb->Timestamp(), hl2da_api::TIME_PREFERENCE::NEAREST, false);
+	if (fb_s->Status() != hl2da_api::STATUS::OK) { return; }
+
+	FString text = FString::Printf(TEXT("GOT FRAME PAIR %lld - %lld, delta: %lld"), fb_s->Timestamp(), fb->Timestamp(), fb_s->Timestamp() - fb->Timestamp());
+	hl2da_api::DebugMessage(StringCast<ANSICHAR>(*text).Get());
+	*/
 }
 
 FString Uhl2da_ipl::PoseToString(float const* pose)
