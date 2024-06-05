@@ -12,9 +12,13 @@ class HL2DA_UNREAL_API Uhl2da_ipl : public UActorComponent
 {
 	GENERATED_BODY()
 
+	void PrintDebugInfo();
+
 public:	
 	// Sets default values for this component's properties
 	Uhl2da_ipl();
+
+	static FString PoseToString(float* pose);
 
 protected:
 	// Called when the game starts

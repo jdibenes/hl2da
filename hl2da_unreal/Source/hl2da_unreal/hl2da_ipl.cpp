@@ -39,6 +39,8 @@ void Uhl2da_ipl::BeginPlay()
 	hl2da_api::SetFormat_ExtendedAudio(eacf);
 	hl2da_api::SetFormat_ExtendedVideo(evcf);
 
+	PrintDebugInfo();
+
 	hl2da_api::BypassDepthLock_RM(true);
 
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT,       60);
@@ -83,3 +85,42 @@ void Uhl2da_ipl::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 	// ...
 }
 
+FString Uhl2da_ipl::PoseToString(float* pose)
+{
+	return FString::Printf(TEXT("[[%f, %f, %f, %f], [%f, %f, %f, %f], [%f, %f, %f, %f], [%f, %f, %f, %f]]"), pose[0], pose[1], pose[2], pose[3], pose[4], pose[5], pose[6], pose[7], pose[8], pose[9], pose[10], pose[11], pose[12], pose[13], pose[14], pose[15]);
+}
+
+void Uhl2da_ipl::PrintDebugInfo()
+{
+	float extrinsics[4][4];
+	float image_points[2];
+	float camera_points[2];
+	float mpoint[2];
+	float ppoint[2];
+
+	for (int id = 0; id <= 7; ++id)
+	{
+		hl2da_api::GetExtrinsics_RM((hl2da_api::SENSOR_ID)id, &extrinsics[0][0]);
+		hl2da_api::DebugMessage(StringCast<ANSICHAR>(*(FString::Printf(TEXT("RM %d extrinsics "), id) + PoseToString(&extrinsics[0][0]))).Get());
+	}
+
+	for (int id = 0; id <= 5; ++id)
+	{
+		switch (id)
+		{
+		case 0:
+		case 1:
+		case 2:
+		case 3: image_points[0] = 320; image_points[1] = 240; camera_points[0] = 0; camera_points[1] = 0; break;
+		case 4: image_points[0] = 256; image_points[1] = 256; camera_points[0] = 0; camera_points[1] = 0; break;
+		case 5: image_points[0] = 160; image_points[1] = 144; camera_points[0] = 0; camera_points[1] = 0; break;
+		}
+
+		hl2da_api::MapImagePointToCameraUnitPlane_RM((hl2da_api::SENSOR_ID)id, image_points, mpoint, sizeof(image_points) / sizeof(float) / 2);
+		hl2da_api::MapCameraSpaceToImagePoint_RM((hl2da_api::SENSOR_ID)id, camera_points, ppoint, sizeof(camera_points) / sizeof(float) / 2);
+		hl2da_api::DebugMessage(StringCast<ANSICHAR>(*FString::Printf(TEXT("RM %d calibration %f %f %f %f"), id, mpoint[0], mpoint[1], ppoint[0], ppoint[1])).Get());
+	}
+
+	uint64_t utc_offset = hl2da_api::GetUTCOffset();
+	hl2da_api::DebugMessage(StringCast<ANSICHAR>(*FString::Printf(TEXT("utc_offset=%lld"), utc_offset)).Get());
+}
