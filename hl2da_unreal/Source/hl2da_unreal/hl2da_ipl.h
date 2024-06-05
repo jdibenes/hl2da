@@ -41,6 +41,7 @@ public:
 	hl2da_api::EE_FPS_INDEX eefi;
 	hl2da_api::ea_captureformat eacf;
 	hl2da_api::ev_captureformat evcf;
+	bool pv_settings_latch;
 
 protected:
 	// Called when the game starts

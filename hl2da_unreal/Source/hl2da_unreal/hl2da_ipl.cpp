@@ -29,6 +29,7 @@ void Uhl2da_ipl::BeginPlay()
 	evcf = hl2da_api::CreateFormat_EV(1280, 720, 30, L"YUY2", false, 2, 0, 0); // Select external camera if any  // TODO: if you change the resolution here you also have to change it in ev_viewer.cpp
 
 	for (int id = 0; id <= 14; ++id) { last_framestamp[id] = -1; }
+	pv_settings_latch = false;
 
 	hl2da_api::InitializeLibrary();
 	hl2da_api::InitializeComponents();
@@ -128,6 +129,24 @@ void Uhl2da_ipl::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 
 	FString text = FString::Printf(TEXT("GOT FRAME PAIR %lld - %lld, delta: %lld"), fb_s->Timestamp(), fb->Timestamp(), fb_s->Timestamp() - fb->Timestamp());
 	hl2da_api::DebugMessage(StringCast<ANSICHAR>(*text).Get());
+	*/
+
+	/*
+	// TEST 3
+	std::shared_ptr<hl2da_framebuffer> fb = hl2da_framebuffer::GetFrame(hl2da_api::SENSOR_ID::PV, -1);
+	if (fb->Status() != hl2da_api::STATUS::OK) { return; }
+	if (pv_settings_latch) { return; }
+	pv_settings_latch = true;
+
+	hl2da_api::PV_SetFocus(hl2da_api::PV_FocusMode::Manual, hl2da_api::PV_AutoFocusRange::Normal, hl2da_api::PV_ManualFocusDistance::Infinity, 200, hl2da_api::PV_DriverFallback::Disable);
+	hl2da_api::PV_SetVideoTemporalDenoising(hl2da_api::PV_VideoTemporalDenoisingMode::Off);
+	hl2da_api::PV_SetWhiteBalance_Preset(hl2da_api::PV_ColorTemperaturePreset::Manual);
+	hl2da_api::PV_SetWhiteBalance_Value(3000);
+	hl2da_api::PV_SetExposure(hl2da_api::PV_ExposureMode::Manual, 2000);
+	hl2da_api::PV_SetExposurePriorityVideo(hl2da_api::PV_ExposurePriorityVideo::Disabled);
+	hl2da_api::PV_SetSceneMode(hl2da_api::PV_CaptureSceneMode::Backlit);
+	hl2da_api::PV_SetIsoSpeed(hl2da_api::PV_IsoSpeedMode::Manual, 100);
+	hl2da_api::PV_SetBacklightCompensation(hl2da_api::PV_BacklightCompensationState::Enable);
 	*/
 }
 
