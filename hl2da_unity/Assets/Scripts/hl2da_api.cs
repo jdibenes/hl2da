@@ -363,6 +363,16 @@ public static class hl2da_api
         Enable = 1,
     }
 
+    public enum IMT_Format
+    {
+        Rgba8 = 30,
+        Gray16 = 57,
+        Gray8 = 62,
+        Bgra8 = 87,
+        Nv12 = 103,
+        Yuy2 = 107,
+    }
+
     [DllImport("hl2da")]
     public static extern void Copy(IntPtr source, IntPtr destination, int bytes);
 
@@ -449,4 +459,19 @@ public static class hl2da_api
 
     [DllImport("hl2da")]
     public static extern void PV_SetBacklightCompensation(uint enable);
+
+    [DllImport("hl2da")]
+    public static extern void IMT_ZHTInvalidate(IntPtr depth_in, IntPtr depth_out);
+
+    [DllImport("hl2da")]
+    public static extern void IMT_ZLTInvalidate(IntPtr sigma_in, IntPtr depth_in, IntPtr depth_out);
+
+    [DllImport("hl2da")]
+    public static extern void IMT_YUV2RGB(IntPtr image, uint stride, uint height, uint format_in, uint format_out, ref IntPtr fc);
+
+    [DllImport("hl2da")]
+    public static extern void IMT_Extract(IntPtr fc, ref IntPtr buffer, ref int length);
+
+    [DllImport("hl2da")]
+    public static extern void IMT_Release(IntPtr fc);
 }
