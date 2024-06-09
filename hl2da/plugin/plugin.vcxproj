@@ -221,6 +221,7 @@
       <SubSystem>Console</SubSystem>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <GenerateWindowsMetadata>false</GenerateWindowsMetadata>
+      <AdditionalDependencies>mfuuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -246,6 +247,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\hl2da\converter.h" />
     <ClInclude Include="..\hl2da\custom_audio_effect.h" />
     <ClInclude Include="..\hl2da\custom_video_effect.h" />
     <ClInclude Include="..\hl2da\extended_audio.h" />
@@ -274,6 +276,7 @@
     <ClInclude Include="hl2da.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\hl2da\converter.cpp" />
     <ClCompile Include="..\hl2da\custom_audio_effect.cpp" />
     <ClCompile Include="..\hl2da\custom_video_effect.cpp" />
     <ClCompile Include="..\hl2da\extended_audio.cpp" />

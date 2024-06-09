@@ -105,6 +105,7 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies Condition="'$(Configuration)|$(Platform)'=='Release|ARM64'">mfuuid.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -122,6 +123,7 @@
     <Image Include="Assets\Wide310x150Logo.scale-200.png" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="converter.cpp" />
     <ClCompile Include="custom_audio_effect.cpp" />
     <ClCompile Include="custom_video_effect.cpp" />
     <ClCompile Include="extended_audio.cpp" />
@@ -137,6 +139,7 @@
     <ClCompile Include="nfo.cpp" />
     <ClCompile Include="personal_video.cpp" />
     <ClCompile Include="research_mode.cpp" />
+    <ClInclude Include="converter.h" />
     <ClInclude Include="custom_audio_effect.h" />
     <ClInclude Include="custom_video_effect.h" />
     <ClInclude Include="extended_audio.h" />
