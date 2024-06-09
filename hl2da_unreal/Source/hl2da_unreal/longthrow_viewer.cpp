@@ -35,6 +35,9 @@ void Ulongthrow_viewer::BeginPlay()
 		tex[i] = UTexture2D::CreateTransient(320, 288, (i < 2) ? PF_G16 : PF_R8);
 		tex[i]->UpdateResource();
 		mat->SetTextureParameterValue(FName("MainTexture"), tex[i]);
+		if (i != 0) { continue; }
+		mat->SetScalarParameterValue(FName("Left"), 0.0f);
+		mat->SetScalarParameterValue(FName("Right"), 4000.0f / 65535.0f);
 	}
 
 	last_fs = -1;
