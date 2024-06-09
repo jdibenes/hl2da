@@ -4,6 +4,7 @@
 #include "pv_viewer.h"
 #include "hl2da_api.h"
 #include "hl2da_framebuffer.h"
+#include "hl2da_imt.h"
 
 // Sets default values for this component's properties
 Upv_viewer::Upv_viewer()
@@ -26,7 +27,7 @@ void Upv_viewer::BeginPlay()
 	UStaticMeshComponent* mesh = top->FindComponentByClass<UStaticMeshComponent>();
 	UMaterialInstanceDynamic* mat = mesh->CreateAndSetMaterialInstanceDynamic(0);
 
-	tex = UTexture2D::CreateTransient(640, 360, PF_R8);
+	tex = UTexture2D::CreateTransient(640, 360, PF_B8G8R8A8);
 	tex->UpdateResource();
 	mat->SetTextureParameterValue(FName("MainTexture"), tex);
 
@@ -46,6 +47,8 @@ void Upv_viewer::TickComponent(float DeltaTime, ELevelTick TickType, FActorCompo
 	if (fb->Framestamp() <= last_fs) { return; }
 	last_fs = fb->Framestamp();
 
-	tex->UpdateTextureRegions(0, 1, region.get(), 640 * 1, 1, (uint8_t*)fb->Buffer(0), [fb](uint8*, FUpdateTextureRegion2D const*) {});
+	std::shared_ptr<hl2da_imt> fc = hl2da_imt::Convert((uint8_t*)fb->Buffer(0), hl2da_imt::GetStride_PV(640), 360, hl2da_api::IMT_Format::Nv12, hl2da_api::IMT_Format::Bgra8);
+	
+	tex->UpdateTextureRegions(0, 1, region.get(), 640 * 4, 4, (uint8_t*)fc->Buffer(), [fc](uint8*, FUpdateTextureRegion2D const*) {});
 }
 

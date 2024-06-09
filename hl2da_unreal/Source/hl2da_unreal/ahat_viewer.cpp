@@ -35,6 +35,9 @@ void Uahat_viewer::BeginPlay()
 		tex[i] = UTexture2D::CreateTransient(512, 512, PF_G16);
 		tex[i]->UpdateResource();
 		mat->SetTextureParameterValue(FName("MainTexture"), tex[i]);
+		if (i != 0) { continue; }
+		mat->SetScalarParameterValue(FName("Left"), 0.0f);
+		mat->SetScalarParameterValue(FName("Right"), 1055.0f / 65535.0f);
 	}
 
 	last_fs = -1;
@@ -52,6 +55,8 @@ void Uahat_viewer::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	if (fb->Status() != hl2da_api::STATUS::OK) { return; }
 	if (fb->Framestamp() <= last_fs) { return; }
 	last_fs = fb->Framestamp();
+
+	hl2da_api::IMT_ZHTInvalidate((uint16_t*)fb->Buffer(0), (uint16_t*)fb->Buffer(0));
 
 	tex[0]->UpdateTextureRegions(0, 1, region.get(), 512 * 2, 2, (uint8_t*)fb->Buffer(0), [fb](uint8*, FUpdateTextureRegion2D const*) { });
 	tex[1]->UpdateTextureRegions(0, 1, region.get(), 512 * 2, 2, (uint8_t*)fb->Buffer(1), [fb](uint8*, FUpdateTextureRegion2D const*) { });
