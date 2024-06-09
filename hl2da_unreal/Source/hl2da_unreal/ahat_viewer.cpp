@@ -35,6 +35,9 @@ void Uahat_viewer::BeginPlay()
 		tex[i] = UTexture2D::CreateTransient(512, 512, PF_G16);
 		tex[i]->UpdateResource();
 		mat->SetTextureParameterValue(FName("MainTexture"), tex[i]);
+		if (i != 0) { continue; }
+		mat->SetScalarParameterValue(FName("Left"), 0.0f);
+		mat->SetScalarParameterValue(FName("Right"), 1055.0f / 65535.0f);
 	}
 
 	last_fs = -1;
