@@ -10,6 +10,7 @@
 #include "../hl2da/stream_ee.h"
 #include "../hl2da/stream_ea.h"
 #include "../hl2da/stream_ev.h"
+#include "../hl2da/converter.h"
 #include "../hl2da/timestamps.h"
 #include "../hl2da/log.h"
 
@@ -44,6 +45,7 @@ void InitializeComponents()
     ResearchMode_Initialize();
     PersonalVideo_Initialize();
     SpatialInput_Initialize();
+    Converter_Initialize();
 
     RM_InitializeDepthLock();
 }
@@ -378,4 +380,39 @@ PLUGIN_EXPORT
 void PV_SetBacklightCompensation(uint32_t enable)
 {
     PersonalVideo_SetBacklightCompensation(enable != 0);
+}
+
+// OK
+PLUGIN_EXPORT
+void IMT_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out)
+{
+    Converter_ZHTInvalidate(depth_in, depth_out);
+}
+
+// OK
+PLUGIN_EXPORT
+void IMT_ZLTInvalidate(uint8_t* const sigma_in, uint16_t const* depth_in, uint16_t* depth_out)
+{
+    Converter_ZLTInvalidate(sigma_in, depth_in, depth_out);
+}
+
+// OK
+PLUGIN_EXPORT
+void IMT_YUV2RGB(uint8_t* const image, uint32_t stride, uint32_t height, uint32_t format_in, uint32_t format_out, void** fc)
+{
+    Converter_YUV2RGB(image, stride, height, format_in, format_out, fc);
+}
+
+// OK
+PLUGIN_EXPORT
+void IMT_Extract(void* fc, void const** buffer, int32_t* length)
+{
+    Converter_Extract(fc, buffer, length);
+}
+
+// OK
+PLUGIN_EXPORT
+void IMT_Release(void *fc)
+{
+    Converter_Release(fc);
 }

@@ -337,6 +337,16 @@ enum class PV_BacklightCompensationState : uint32_t
     Enable = 1,
 };
 
+enum class IMT_Format : uint32_t
+{
+    Rgba8 = 30,
+    Gray16 = 57,
+    Gray8 = 62,
+    Bgra8 = 87,
+    Nv12 = 103,
+    Yuy2 = 107,
+};
+
 PLUGIN_IMPORT
 void Copy(void const* source, void* destination, int bytes);
 
@@ -426,3 +436,18 @@ void PV_SetIsoSpeed(uint32_t setauto, uint32_t value);
 
 PLUGIN_IMPORT
 void PV_SetBacklightCompensation(uint32_t enable);
+
+PLUGIN_IMPORT
+void IMT_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out);
+
+PLUGIN_IMPORT
+void IMT_ZLTInvalidate(uint8_t* const sigma_in, uint16_t const* depth_in, uint16_t* depth_out);
+
+PLUGIN_IMPORT
+void IMT_YUV2RGB(uint8_t* const image, uint32_t stride, uint32_t height, uint32_t format_in, uint32_t format_out, void** fc);
+
+PLUGIN_IMPORT
+void IMT_Extract(void* fc, void const** buffer, int32_t* length);
+
+PLUGIN_IMPORT
+void IMT_Release(void* fc);
