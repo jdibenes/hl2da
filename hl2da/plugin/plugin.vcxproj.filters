@@ -84,6 +84,9 @@
     <ClCompile Include="..\hl2da\stream_ev.cpp">
       <Filter>Libraries</Filter>
     </ClCompile>
+    <ClCompile Include="..\hl2da\converter.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hl2da.h">
@@ -162,6 +165,9 @@
       <Filter>Libraries</Filter>
     </ClInclude>
     <ClInclude Include="..\hl2da\stream_ev.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\converter.h">
       <Filter>Libraries</Filter>
     </ClInclude>
   </ItemGroup>

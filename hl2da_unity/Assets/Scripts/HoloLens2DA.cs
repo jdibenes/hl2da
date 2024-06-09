@@ -42,12 +42,16 @@ public class HoloLens2DA : MonoBehaviour
     private hl2da_api.MC_CHANNELS mcch;
     private hl2da_api.EE_FPS_INDEX eefi;
 
+    private bool invalidate_depth;
     private ulong utc_offset;
     private bool pv_settings_latch;
 
     // Start is called before the first frame update
     void Start()
     {
+        // Set invalid depth pixels to zero
+        invalidate_depth = true;
+
         // PV format
         // List of supported resolutions and framerates at https://github.com/jdibenes/hl2ss/blob/main/etc/pv_configurations.txt
         // enable_mrc: Enable Mixed Reality Capture (holograms in video)
@@ -135,18 +139,18 @@ public class HoloLens2DA : MonoBehaviour
 
         tex_vlc = new Texture2D[4];
 
-        tex_vlc[0]   = new Texture2D(640, 480, TextureFormat.R8,  false);
-        tex_vlc[1]   = new Texture2D(640, 480, TextureFormat.R8,  false);
-        tex_vlc[2]   = new Texture2D(640, 480, TextureFormat.R8,  false);
-        tex_vlc[3]   = new Texture2D(640, 480, TextureFormat.R8,  false);
-        tex_ht       = new Texture2D(512, 512, TextureFormat.R16, false);
-        tex_ht_ab    = new Texture2D(512, 512, TextureFormat.R16, false);
-        tex_lt       = new Texture2D(320, 288, TextureFormat.R16, false);
-        tex_lt_ab    = new Texture2D(320, 288, TextureFormat.R16, false);
-        tex_lt_sigma = new Texture2D(320, 288, TextureFormat.R8,  false);
+        tex_vlc[0]   = new Texture2D(640, 480, TextureFormat.BGRA32, false);
+        tex_vlc[1]   = new Texture2D(640, 480, TextureFormat.BGRA32, false);
+        tex_vlc[2]   = new Texture2D(640, 480, TextureFormat.BGRA32, false);
+        tex_vlc[3]   = new Texture2D(640, 480, TextureFormat.BGRA32, false);
+        tex_ht       = new Texture2D(512, 512, TextureFormat.BGRA32, false);
+        tex_ht_ab    = new Texture2D(512, 512, TextureFormat.BGRA32, false);
+        tex_lt       = new Texture2D(320, 288, TextureFormat.BGRA32, false);
+        tex_lt_ab    = new Texture2D(320, 288, TextureFormat.BGRA32, false);
+        tex_lt_sigma = new Texture2D(320, 288, TextureFormat.BGRA32, false);
 
-        tex_pv       = new Texture2D(pvcf.width, pvcf.height, TextureFormat.R8, false);
-        tex_ev       = new Texture2D(evcf.width, evcf.height, TextureFormat.R8, false);
+        tex_pv       = new Texture2D(pvcf.width, pvcf.height, TextureFormat.BGRA32, false);
+        tex_ev       = new Texture2D(evcf.width, evcf.height, TextureFormat.BGRA32, false);
     }
 
     // Update is called once per frame
@@ -283,8 +287,10 @@ public class HoloLens2DA : MonoBehaviour
         int index = (int)fb.Id;
 
         // Load frame data into textures
-        tex_vlc[index].LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(byte)); // Image is u8
+        hl2da_imt fc = hl2da_imt.Convert(fb.Buffer(0), 640, 480, hl2da_api.IMT_Format.Gray8, hl2da_api.IMT_Format.Bgra8); // Image is u8
+        tex_vlc[index].LoadRawTextureData(fc.Buffer, fc.Length);
         tex_vlc[index].Apply();
+        fc.Destroy();
 
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
@@ -295,11 +301,17 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_Depth_AHAT(hl2da_framebuffer fb)
     {
+        if (invalidate_depth) { hl2da_api.IMT_ZHTInvalidate(fb.Buffer(0), fb.Buffer(0)); }
+
         // Load frame data into textures
-        tex_ht.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(ushort)); // Depth is u16
-        tex_ht_ab.LoadRawTextureData(fb.Buffer(1), fb.Length(1) * sizeof(ushort)); // AB is u16
+        hl2da_imt fc_z = hl2da_imt.Convert(fb.Buffer(0), 512, 512, hl2da_api.IMT_Format.Gray16, hl2da_api.IMT_Format.Bgra8); // Depth is u16
+        hl2da_imt fc_ab = hl2da_imt.Convert(fb.Buffer(1), 512, 512, hl2da_api.IMT_Format.Gray16, hl2da_api.IMT_Format.Bgra8); // AB is u16
+        tex_ht.LoadRawTextureData(fc_z.Buffer, fc_z.Length);
+        tex_ht_ab.LoadRawTextureData(fc_ab.Buffer, fc_ab.Length);
         tex_ht.Apply();
         tex_ht_ab.Apply();
+        fc_z.Destroy();
+        fc_ab.Destroy();
 
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
@@ -311,13 +323,21 @@ public class HoloLens2DA : MonoBehaviour
 
     void Update_RM_Depth_Longthrow(hl2da_framebuffer fb)
     {
+        if (invalidate_depth) { hl2da_api.IMT_ZLTInvalidate(fb.Buffer(2), fb.Buffer(0), fb.Buffer(0)); }
+
         // Load frame data into textures
-        tex_lt.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(ushort)); // Depth is u16
-        tex_lt_ab.LoadRawTextureData(fb.Buffer(1), fb.Length(1) * sizeof(ushort)); // AB is u16
-        tex_lt_sigma.LoadRawTextureData(fb.Buffer(2), fb.Length(2) * sizeof(byte)); // Sigma is u8
+        hl2da_imt fc_z = hl2da_imt.Convert(fb.Buffer(0), 320, 288, hl2da_api.IMT_Format.Gray16, hl2da_api.IMT_Format.Bgra8); // Depth is u16
+        hl2da_imt fc_ab = hl2da_imt.Convert(fb.Buffer(1), 320, 288, hl2da_api.IMT_Format.Gray16, hl2da_api.IMT_Format.Bgra8); // AB is u16
+        hl2da_imt fc_sigma = hl2da_imt.Convert(fb.Buffer(2), 320, 288, hl2da_api.IMT_Format.Gray8, hl2da_api.IMT_Format.Bgra8); // Sigma is u8
+        tex_lt.LoadRawTextureData(fc_z.Buffer, fc_z.Length);
+        tex_lt_ab.LoadRawTextureData(fc_ab.Buffer, fc_ab.Length);
+        tex_lt_sigma.LoadRawTextureData(fc_sigma.Buffer, fc_sigma.Length);
         tex_lt.Apply();
         tex_lt_ab.Apply();
         tex_lt_sigma.Apply();
+        fc_z.Destroy();
+        fc_ab.Destroy();
+        fc_sigma.Destroy();
 
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
@@ -375,8 +395,10 @@ public class HoloLens2DA : MonoBehaviour
         */
 
         // Load frame data into textures
-        tex_pv.LoadRawTextureData(fb.Buffer(0), pvcf.width * pvcf.height * sizeof(byte)); // Image is NV12, load Y only, use OpenCV to convert NV12->RGB
+        hl2da_imt fc = hl2da_imt.Convert(fb.Buffer(0), hl2da_imt.GetStride_PV(pvcf.width), pvcf.height, hl2da_api.IMT_Format.Nv12, hl2da_api.IMT_Format.Bgra8); // PV images are NV12
+        tex_pv.LoadRawTextureData(fc.Buffer, fc.Length);
         tex_pv.Apply();
+        fc.Destroy();
 
         float[] intrinsics = hl2da_user.Unpack1D<float>(fb.Buffer(2), fb.Length(2)); // fx, fy, cx, cy
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
@@ -467,8 +489,10 @@ public class HoloLens2DA : MonoBehaviour
         string format_text = string.Format(": width={0}, height={1}, framerate={2}, subtype={3}", format.width, format.height, format.framerate, format.subtype);
 
         // Load frame data into textures
-        tex_ev.LoadRawTextureData(fb.Buffer(0), evcf.width * evcf.height * sizeof(byte)); // Image for realsense d435i rgb is YUY2, load Y only, use OpenCV to convert YUY2->RGB
+        hl2da_imt fc = hl2da_imt.Convert(fb.Buffer(0), evcf.width, evcf.height, hl2da_api.IMT_Format.Yuy2, hl2da_api.IMT_Format.Bgra8); // Images from realsense d435i rgb are YUY2
+        tex_ev.LoadRawTextureData(fc.Buffer, fc.Length);
         tex_ev.Apply();
+        fc.Destroy();
 
         // Display frame
         ev_image.GetComponent<Renderer>().material.mainTexture = tex_ev;

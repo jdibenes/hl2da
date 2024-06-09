@@ -11,6 +11,7 @@
 #include "stream_ee.h"
 #include "stream_ea.h"
 #include "stream_ev.h"
+#include "converter.h"
 #include "log.h"
 
 #include <winrt/Windows.Foundation.h>
@@ -70,6 +71,7 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
         ResearchMode_Initialize();
         PersonalVideo_Initialize();
         SpatialInput_Initialize();
+        Converter_Initialize();
 
         RM_InitializeDepthLock();
 
@@ -91,6 +93,9 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
         int32_t length;
         void const* format_buffer;
         int32_t format_length;
+        void* rgb_frame;
+        void const* rgb_image;
+        int32_t rgb_length;
 
         cf.vf.width = 1280;
         cf.vf.height = 720;
@@ -118,8 +123,12 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
                 last_fs = framestamp;
 
                 EV_Extract(frame, &buffer, &length, &format_buffer, &format_length);
+                Converter_YUV2RGB((uint8_t*)buffer, cf.vf.width, cf.vf.height, 107, 87, &rgb_frame);
+                Converter_Extract(rgb_frame, &rgb_image, &rgb_length);
 
-                ShowMessage(L"GOT EV FRAME %d %lld - %d %d %d %s", framestamp, timestamp, ((uint16_t*)format_buffer)[0], ((uint16_t*)format_buffer)[1], ((uint8_t*)format_buffer)[4], (wchar_t*)(((uint16_t*)format_buffer) + 3));
+                ShowMessage(L"GOT EV FRAME %d %lld - %d %d %d %s - as RGB %p %d", framestamp, timestamp, ((uint16_t*)format_buffer)[0], ((uint16_t*)format_buffer)[1], ((uint8_t*)format_buffer)[4], (wchar_t*)(((uint16_t*)format_buffer) + 3), rgb_image, rgb_length);
+            
+                Converter_Release(rgb_frame);
             }
 
             EV_Release(frame);
