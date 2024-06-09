@@ -35,6 +35,11 @@ typedef void (*pfn_PV_SetExposurePriorityVideo)(uint32_t enabled);
 typedef void (*pfn_PV_SetSceneMode)(uint32_t mode);
 typedef void (*pfn_PV_SetIsoSpeed)(uint32_t setauto, uint32_t value);
 typedef void (*pfn_PV_SetBacklightCompensation)(uint32_t enable);
+typedef void (*pfn_IMT_ZHTInvalidate)(uint16_t const* depth_in, uint16_t* depth_out);
+typedef void (*pfn_IMT_ZLTInvalidate)(uint8_t const* sigma_in, uint16_t const* depth_in, uint16_t* depth_out);
+typedef void (*pfn_IMT_YUV2RGB)(uint8_t const* image, uint32_t stride, uint32_t height, uint32_t format_in, uint32_t format_out, void** fc);
+typedef void (*pfn_IMT_Extract)(void* fc, void const** buffer, int32_t* length);
+typedef void (*pfn_IMT_Release)(void* fc);
 
 #if PLATFORM_HOLOLENS
 extern "C" { HMODULE LoadLibraryW(LPCWSTR lpLibFileName); }
@@ -71,6 +76,11 @@ void* hl2da_api::p_PV_SetExposurePriorityVideo;
 void* hl2da_api::p_PV_SetSceneMode;
 void* hl2da_api::p_PV_SetIsoSpeed;
 void* hl2da_api::p_PV_SetBacklightCompensation;
+void* hl2da_api::p_IMT_ZHTInvalidate;
+void* hl2da_api::p_IMT_ZLTInvalidate;
+void* hl2da_api::p_IMT_YUV2RGB;
+void* hl2da_api::p_IMT_Extract;
+void* hl2da_api::p_IMT_Release;
 
 int hl2da_api::Load()
 {
@@ -118,6 +128,11 @@ int hl2da_api::Load()
     p_PV_SetSceneMode                   = GetProcAddress((HMODULE)hmod_hl2da, "PV_SetSceneMode");
     p_PV_SetIsoSpeed                    = GetProcAddress((HMODULE)hmod_hl2da, "PV_SetIsoSpeed");
     p_PV_SetBacklightCompensation       = GetProcAddress((HMODULE)hmod_hl2da, "PV_SetBacklightCompensation");
+    p_IMT_ZHTInvalidate                 = GetProcAddress((HMODULE)hmod_hl2da, "IMT_ZHTInvalidate");
+    p_IMT_ZLTInvalidate                 = GetProcAddress((HMODULE)hmod_hl2da, "IMT_ZLTInvalidate");
+    p_IMT_YUV2RGB                       = GetProcAddress((HMODULE)hmod_hl2da, "IMT_YUV2RGB");
+    p_IMT_Extract                       = GetProcAddress((HMODULE)hmod_hl2da, "IMT_Extract");
+    p_IMT_Release                       = GetProcAddress((HMODULE)hmod_hl2da, "IMT_Release");
 
     if (p_DebugMessage                      == NULL) { return -5; }
     if (p_InitializeComponents              == NULL) { return -6; }
@@ -147,6 +162,11 @@ int hl2da_api::Load()
     if (p_PV_SetSceneMode                   == NULL) { return -30; }
     if (p_PV_SetIsoSpeed                    == NULL) { return -31; }
     if (p_PV_SetBacklightCompensation       == NULL) { return -32; }
+    if (p_IMT_ZHTInvalidate                 == NULL) { return -33; }
+    if (p_IMT_ZLTInvalidate                 == NULL) { return -34; }
+    if (p_IMT_YUV2RGB                       == NULL) { return -35; }
+    if (p_IMT_Extract                       == NULL) { return -36; }
+    if (p_IMT_Release                       == NULL) { return -37; }
 
     return 1;
 }
@@ -355,4 +375,29 @@ void hl2da_api::PV_SetIsoSpeed(PV_IsoSpeedMode setauto, uint32_t value)
 void hl2da_api::PV_SetBacklightCompensation(PV_BacklightCompensationState enable)
 {
     reinterpret_cast<pfn_PV_SetBacklightCompensation>(p_PV_SetBacklightCompensation)((uint32_t)enable);
+}
+
+void hl2da_api::IMT_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out)
+{
+    reinterpret_cast<pfn_IMT_ZHTInvalidate>(p_IMT_ZHTInvalidate)(depth_in, depth_out);
+}
+
+void hl2da_api::IMT_ZLTInvalidate(uint8_t const* sigma_in, uint16_t const* depth_in, uint16_t* depth_out)
+{
+    reinterpret_cast<pfn_IMT_ZLTInvalidate>(p_IMT_ZLTInvalidate)(sigma_in, depth_in, depth_out);
+}
+
+void hl2da_api::IMT_YUV2RGB(uint8_t const* image, uint32_t stride, uint32_t height, IMT_Format format_in, IMT_Format format_out, void** fc)
+{
+    reinterpret_cast<pfn_IMT_YUV2RGB>(p_IMT_YUV2RGB)(image, stride, height, (uint32_t)format_in, (uint32_t)format_out, fc);
+}
+
+void hl2da_api::IMT_Extract(void* fc, void const** buffer, int32_t* length)
+{
+    reinterpret_cast<pfn_IMT_Extract>(p_IMT_Extract)(fc, buffer, length);
+}
+
+void hl2da_api::IMT_Release(void* fc)
+{
+    reinterpret_cast<pfn_IMT_Release>(p_IMT_Release)(fc);
 }

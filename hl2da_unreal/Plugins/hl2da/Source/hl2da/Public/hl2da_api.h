@@ -342,6 +342,16 @@ public:
         Enable = 1,
     };
 
+    enum class IMT_Format : uint32_t
+    {
+        Rgba8 = 30,
+        Gray16 = 57,
+        Gray8 = 62,
+        Bgra8 = 87,
+        Nv12 = 103,
+        Yuy2 = 107,
+    };
+
 private:
     static void* hmod_mmret;
     static void* hmod_hl2da;
@@ -374,6 +384,11 @@ private:
     static void* p_PV_SetSceneMode;
     static void* p_PV_SetIsoSpeed;
     static void* p_PV_SetBacklightCompensation;
+    static void* p_IMT_ZHTInvalidate;
+    static void* p_IMT_ZLTInvalidate;
+    static void* p_IMT_YUV2RGB;
+    static void* p_IMT_Extract;
+    static void* p_IMT_Release;
 
     static int Load();
     
@@ -411,4 +426,9 @@ public:
     static void PV_SetSceneMode(PV_CaptureSceneMode mode);
     static void PV_SetIsoSpeed(PV_IsoSpeedMode setauto, uint32_t value);
     static void PV_SetBacklightCompensation(PV_BacklightCompensationState enable);
+    static void IMT_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out);
+    static void IMT_ZLTInvalidate(uint8_t const* sigma_in, uint16_t const* depth_in, uint16_t* depth_out);
+    static void IMT_YUV2RGB(uint8_t const* image, uint32_t stride, uint32_t height, IMT_Format format_in, IMT_Format format_out, void** fc);
+    static void IMT_Extract(void* fc, void const** buffer, int32_t* length);
+    static void IMT_Release(void* fc);
 };

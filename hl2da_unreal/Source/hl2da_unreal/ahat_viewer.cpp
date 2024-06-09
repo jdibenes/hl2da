@@ -53,6 +53,8 @@ void Uahat_viewer::TickComponent(float DeltaTime, ELevelTick TickType, FActorCom
 	if (fb->Framestamp() <= last_fs) { return; }
 	last_fs = fb->Framestamp();
 
+	hl2da_api::IMT_ZHTInvalidate((uint16_t*)fb->Buffer(0), (uint16_t*)fb->Buffer(0));
+
 	tex[0]->UpdateTextureRegions(0, 1, region.get(), 512 * 2, 2, (uint8_t*)fb->Buffer(0), [fb](uint8*, FUpdateTextureRegion2D const*) { });
 	tex[1]->UpdateTextureRegions(0, 1, region.get(), 512 * 2, 2, (uint8_t*)fb->Buffer(1), [fb](uint8*, FUpdateTextureRegion2D const*) { });
 }
