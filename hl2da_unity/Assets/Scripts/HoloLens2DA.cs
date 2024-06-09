@@ -23,6 +23,11 @@ public class HoloLens2DA : MonoBehaviour
     public GameObject ea_text;
     public GameObject ev_text;
 
+    public Texture colormap_texture;
+    public Shader colormap_shader;
+    public Shader sqrtmap_shader;
+    public Shader grayscale_shader;
+
     private Texture2D[] tex_vlc;
     private Texture2D tex_ht;
     private Texture2D tex_ht_ab;
@@ -32,19 +37,49 @@ public class HoloLens2DA : MonoBehaviour
     private Texture2D tex_pv;
     private Texture2D tex_ev;
 
+    private RenderTexture[] tex_vlc_r;
+    private RenderTexture tex_ht_r;
+    private RenderTexture tex_ht_ab_r;
+    private RenderTexture tex_lt_r;
+    private RenderTexture tex_lt_ab_r;
+    private RenderTexture tex_lt_sigma_r;
+
+    private Material colormap_mat_ht;
+    private Material colormap_mat_lt;
+    private Material sqrtmap_mat;
+    private Material grayscale_mat;
+
     private Dictionary<hl2da_api.SENSOR_ID, string> sensor_names;
     private Dictionary<hl2da_api.SENSOR_ID, int> last_framestamp;
-
     private hl2da_api.SENSOR_ID sync;
     private hl2da_api.pv_captureformat pvcf;
     private hl2da_api.ea_captureformat eacf;
     private hl2da_api.ev_captureformat evcf;
     private hl2da_api.MC_CHANNELS mcch;
     private hl2da_api.EE_FPS_INDEX eefi;
-
     private bool invalidate_depth;
     private ulong utc_offset;
     private bool pv_settings_latch;
+
+    private TextMeshPro[] tmp_vlc_pose;
+    private TextMeshPro tmp_ht_pose;
+    private TextMeshPro tmp_lt_pose;
+    private TextMeshPro tmp_acc_pose;
+    private TextMeshPro tmp_gyr_pose;
+    private TextMeshPro tmp_mag_pose;
+    private TextMeshPro tmp_pv_pose;
+    private TextMeshPro tmp_pv_k;
+    private TextMeshPro tmp_mic;
+    private TextMeshPro tmp_si_head;
+    private TextMeshPro tmp_si_eye;
+    private TextMeshPro tmp_si_left;
+    private TextMeshPro tmp_si_right;
+    private TextMeshPro tmp_ee_combined;
+    private TextMeshPro tmp_ee_left;
+    private TextMeshPro tmp_ee_right;
+    private TextMeshPro tmp_ee_pose;
+    private TextMeshPro tmp_ea;
+    private TextMeshPro tmp_ev_format;
 
     // Start is called before the first frame update
     void Start()
@@ -139,18 +174,91 @@ public class HoloLens2DA : MonoBehaviour
 
         tex_vlc = new Texture2D[4];
 
-        tex_vlc[0]   = new Texture2D(640, 480, TextureFormat.BGRA32, false);
-        tex_vlc[1]   = new Texture2D(640, 480, TextureFormat.BGRA32, false);
-        tex_vlc[2]   = new Texture2D(640, 480, TextureFormat.BGRA32, false);
-        tex_vlc[3]   = new Texture2D(640, 480, TextureFormat.BGRA32, false);
-        tex_ht       = new Texture2D(512, 512, TextureFormat.BGRA32, false);
-        tex_ht_ab    = new Texture2D(512, 512, TextureFormat.BGRA32, false);
-        tex_lt       = new Texture2D(320, 288, TextureFormat.BGRA32, false);
-        tex_lt_ab    = new Texture2D(320, 288, TextureFormat.BGRA32, false);
-        tex_lt_sigma = new Texture2D(320, 288, TextureFormat.BGRA32, false);
+        tex_vlc[0]   = new Texture2D(640, 480, TextureFormat.R8,  false);
+        tex_vlc[1]   = new Texture2D(640, 480, TextureFormat.R8,  false);
+        tex_vlc[2]   = new Texture2D(640, 480, TextureFormat.R8,  false);
+        tex_vlc[3]   = new Texture2D(640, 480, TextureFormat.R8,  false);
+        tex_ht       = new Texture2D(512, 512, TextureFormat.R16, false);
+        tex_ht_ab    = new Texture2D(512, 512, TextureFormat.R16, false);
+        tex_lt       = new Texture2D(320, 288, TextureFormat.R16, false);
+        tex_lt_ab    = new Texture2D(320, 288, TextureFormat.R16, false);
+        tex_lt_sigma = new Texture2D(320, 288, TextureFormat.R8,  false);
 
-        tex_pv       = new Texture2D(pvcf.width, pvcf.height, TextureFormat.BGRA32, false);
-        tex_ev       = new Texture2D(evcf.width, evcf.height, TextureFormat.BGRA32, false);
+        tex_pv = new Texture2D(pvcf.width, pvcf.height, TextureFormat.BGRA32, false);
+        tex_ev = new Texture2D(evcf.width, evcf.height, TextureFormat.BGRA32, false);
+
+        tex_vlc_r = new RenderTexture[4];
+
+        tex_vlc_r[0]   = new RenderTexture(640, 480, 0, RenderTextureFormat.BGRA32);
+        tex_vlc_r[1]   = new RenderTexture(640, 480, 0, RenderTextureFormat.BGRA32);
+        tex_vlc_r[2]   = new RenderTexture(640, 480, 0, RenderTextureFormat.BGRA32);
+        tex_vlc_r[3]   = new RenderTexture(640, 480, 0, RenderTextureFormat.BGRA32);
+        tex_ht_r       = new RenderTexture(512, 512, 0, RenderTextureFormat.BGRA32);
+        tex_ht_ab_r    = new RenderTexture(512, 512, 0, RenderTextureFormat.BGRA32);
+        tex_lt_r       = new RenderTexture(320, 288, 0, RenderTextureFormat.BGRA32);
+        tex_lt_ab_r    = new RenderTexture(320, 288, 0, RenderTextureFormat.BGRA32);
+        tex_lt_sigma_r = new RenderTexture(320, 288, 0, RenderTextureFormat.BGRA32);
+
+        colormap_mat_ht = new Material(colormap_shader);
+        colormap_mat_lt = new Material(colormap_shader);
+        sqrtmap_mat     = new Material(sqrtmap_shader);
+        grayscale_mat   = new Material(grayscale_shader);
+
+        colormap_mat_ht.SetTexture("_ColorMapTex", colormap_texture);
+        colormap_mat_ht.SetFloat("_Lf", 0.0f / 65535.0f);
+        colormap_mat_ht.SetFloat("_Rf", 1055.0f / 65535.0f);
+
+        colormap_mat_lt.SetTexture("_ColorMapTex", colormap_texture);
+        colormap_mat_lt.SetFloat("_Lf", 0.0f / 65535.0f);
+        colormap_mat_lt.SetFloat("_Rf", 3000.0f / 65535.0f);
+
+        rm_vlc_images[0].GetComponent<Renderer>().material.mainTexture = tex_vlc_r[0];
+        rm_vlc_images[1].GetComponent<Renderer>().material.mainTexture = tex_vlc_r[1];
+        rm_vlc_images[2].GetComponent<Renderer>().material.mainTexture = tex_vlc_r[2];
+        rm_vlc_images[3].GetComponent<Renderer>().material.mainTexture = tex_vlc_r[3];
+
+        rm_depth_ahat_images[0].GetComponent<Renderer>().material.mainTexture = tex_ht_r;
+        rm_depth_ahat_images[1].GetComponent<Renderer>().material.mainTexture = tex_ht_ab_r;
+
+        rm_depth_longthrow_images[0].GetComponent<Renderer>().material.mainTexture = tex_lt_r;
+        rm_depth_longthrow_images[1].GetComponent<Renderer>().material.mainTexture = tex_lt_ab_r;
+        rm_depth_longthrow_images[2].GetComponent<Renderer>().material.mainTexture = tex_lt_sigma_r;
+
+        pv_image.GetComponent<Renderer>().material.mainTexture = tex_pv;
+
+        ev_image.GetComponent<Renderer>().material.mainTexture = tex_ev;
+
+        tmp_vlc_pose = new TextMeshPro[4];
+
+        tmp_vlc_pose[0] = poses[0].GetComponent<TextMeshPro>();
+        tmp_vlc_pose[1] = poses[1].GetComponent<TextMeshPro>();
+        tmp_vlc_pose[2] = poses[2].GetComponent<TextMeshPro>();
+        tmp_vlc_pose[3] = poses[3].GetComponent<TextMeshPro>();
+
+        tmp_ht_pose = poses[(int)hl2da_api.SENSOR_ID.RM_DEPTH_AHAT].GetComponent<TextMeshPro>();
+        tmp_lt_pose = poses[(int)hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW].GetComponent<TextMeshPro>();
+
+        tmp_acc_pose = poses[(int)hl2da_api.SENSOR_ID.RM_IMU_ACCELEROMETER].GetComponent<TextMeshPro>();
+        tmp_gyr_pose = poses[(int)hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE].GetComponent<TextMeshPro>();
+        tmp_mag_pose = poses[(int)hl2da_api.SENSOR_ID.RM_IMU_MAGNETOMETER].GetComponent<TextMeshPro>();
+
+        tmp_pv_pose = poses[(int)hl2da_api.SENSOR_ID.PV].GetComponent<TextMeshPro>();
+        tmp_pv_k = calibrations[(int)hl2da_api.SENSOR_ID.PV].GetComponent<TextMeshPro>();
+
+        tmp_mic = mic_text.GetComponent<TextMeshPro>();
+
+        tmp_si_head  = si_text[0].GetComponent<TextMeshPro>();
+        tmp_si_eye   = si_text[1].GetComponent<TextMeshPro>();
+        tmp_si_left  = si_text[2].GetComponent<TextMeshPro>();
+        tmp_si_right = si_text[3].GetComponent<TextMeshPro>();
+
+        tmp_ee_combined = ee_text[0].GetComponent<TextMeshPro>();
+        tmp_ee_left = ee_text[1].GetComponent<TextMeshPro>();
+        tmp_ee_right = ee_text[2].GetComponent<TextMeshPro>();
+        tmp_ee_pose = poses[(int)hl2da_api.SENSOR_ID.EXTENDED_EYE_TRACKING].GetComponent<TextMeshPro>();
+
+        tmp_ea = ea_text.GetComponent<TextMeshPro>();
+        tmp_ev_format = ev_text.GetComponent<TextMeshPro>();
     }
 
     // Update is called once per frame
@@ -287,16 +395,13 @@ public class HoloLens2DA : MonoBehaviour
         int index = (int)fb.Id;
 
         // Load frame data into textures
-        hl2da_imt fc = hl2da_imt.Convert(fb.Buffer(0), 640, 480, hl2da_api.IMT_Format.Gray8, hl2da_api.IMT_Format.Bgra8); // Image is u8
-        tex_vlc[index].LoadRawTextureData(fc.Buffer, fc.Length);
+        tex_vlc[index].LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(byte));  // Image is u8
         tex_vlc[index].Apply();
-        fc.Destroy();
+        Graphics.Blit(tex_vlc[index], tex_vlc_r[index], grayscale_mat); // Apply grayscale map to Image
 
+        // Display pose
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
-
-        // Display frame
-        rm_vlc_images[index].GetComponent<Renderer>().material.mainTexture = tex_vlc[index];
-        poses[index].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        tmp_vlc_pose[index].text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
     }
 
     void Update_RM_Depth_AHAT(hl2da_framebuffer fb)
@@ -304,21 +409,16 @@ public class HoloLens2DA : MonoBehaviour
         if (invalidate_depth) { hl2da_api.IMT_ZHTInvalidate(fb.Buffer(0), fb.Buffer(0)); }
 
         // Load frame data into textures
-        hl2da_imt fc_z = hl2da_imt.Convert(fb.Buffer(0), 512, 512, hl2da_api.IMT_Format.Gray16, hl2da_api.IMT_Format.Bgra8); // Depth is u16
-        hl2da_imt fc_ab = hl2da_imt.Convert(fb.Buffer(1), 512, 512, hl2da_api.IMT_Format.Gray16, hl2da_api.IMT_Format.Bgra8); // AB is u16
-        tex_ht.LoadRawTextureData(fc_z.Buffer, fc_z.Length);
-        tex_ht_ab.LoadRawTextureData(fc_ab.Buffer, fc_ab.Length);
+        tex_ht.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(ushort));  // Depth is u16
+        tex_ht_ab.LoadRawTextureData(fb.Buffer(1), fb.Length(1) * sizeof(ushort));  // AB is u16
         tex_ht.Apply();
         tex_ht_ab.Apply();
-        fc_z.Destroy();
-        fc_ab.Destroy();
+        Graphics.Blit(tex_ht, tex_ht_r, colormap_mat_ht); // Apply color map to Depth
+        Graphics.Blit(tex_ht_ab, tex_ht_ab_r, sqrtmap_mat); // Apply sqrt map to AB for visibility
 
+        // Display pose
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
-
-        // Display frame
-        rm_depth_ahat_images[0].GetComponent<Renderer>().material.mainTexture = tex_ht;
-        rm_depth_ahat_images[1].GetComponent<Renderer>().material.mainTexture = tex_ht_ab;
-        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        tmp_ht_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
     }
 
     void Update_RM_Depth_Longthrow(hl2da_framebuffer fb)
@@ -326,26 +426,19 @@ public class HoloLens2DA : MonoBehaviour
         if (invalidate_depth) { hl2da_api.IMT_ZLTInvalidate(fb.Buffer(2), fb.Buffer(0), fb.Buffer(0)); }
 
         // Load frame data into textures
-        hl2da_imt fc_z = hl2da_imt.Convert(fb.Buffer(0), 320, 288, hl2da_api.IMT_Format.Gray16, hl2da_api.IMT_Format.Bgra8); // Depth is u16
-        hl2da_imt fc_ab = hl2da_imt.Convert(fb.Buffer(1), 320, 288, hl2da_api.IMT_Format.Gray16, hl2da_api.IMT_Format.Bgra8); // AB is u16
-        hl2da_imt fc_sigma = hl2da_imt.Convert(fb.Buffer(2), 320, 288, hl2da_api.IMT_Format.Gray8, hl2da_api.IMT_Format.Bgra8); // Sigma is u8
-        tex_lt.LoadRawTextureData(fc_z.Buffer, fc_z.Length);
-        tex_lt_ab.LoadRawTextureData(fc_ab.Buffer, fc_ab.Length);
-        tex_lt_sigma.LoadRawTextureData(fc_sigma.Buffer, fc_sigma.Length);
+        tex_lt.LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(ushort)); // Depth is u16
+        tex_lt_ab.LoadRawTextureData(fb.Buffer(1), fb.Length(1) * sizeof(ushort)); // AB is u16
+        tex_lt_sigma.LoadRawTextureData(fb.Buffer(2), fb.Length(2) * sizeof(byte)); // Sigma is u8
         tex_lt.Apply();
         tex_lt_ab.Apply();
         tex_lt_sigma.Apply();
-        fc_z.Destroy();
-        fc_ab.Destroy();
-        fc_sigma.Destroy();
+        Graphics.Blit(tex_lt, tex_lt_r, colormap_mat_lt); // Apply color map to Depth
+        Graphics.Blit(tex_lt_ab, tex_lt_ab_r, sqrtmap_mat); // Apply sqrt map to AB for visibility
+        Graphics.Blit(tex_lt_sigma, tex_lt_sigma_r, grayscale_mat); // Apply grayscale map to sigma
 
-        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
-
-        // Display frame
-        rm_depth_longthrow_images[0].GetComponent<Renderer>().material.mainTexture = tex_lt;
-        rm_depth_longthrow_images[1].GetComponent<Renderer>().material.mainTexture = tex_lt_ab;
-        rm_depth_longthrow_images[2].GetComponent<Renderer>().material.mainTexture = tex_lt_sigma;
-        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        // Display pose
+        float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);        
+        tmp_lt_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
     }
 
     void Update_RM_IMU_Accelerometer(hl2da_framebuffer fb)
@@ -357,7 +450,7 @@ public class HoloLens2DA : MonoBehaviour
         // Display first sample in the batch
         hl2da_api.AccelDataStruct sample_0 = samples[0];
         acc_text.GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(": VinylHupTicks={0}, SocTicks={1}, x={2}, y={3}, z={4}, temperature={5}", sample_0.VinylHupTicks, sample_0.SocTicks, sample_0.x, sample_0.y, sample_0.z, sample_0.temperature);
-        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        tmp_acc_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
     }
 
     void Update_RM_IMU_Gyroscope(hl2da_framebuffer fb)
@@ -369,7 +462,7 @@ public class HoloLens2DA : MonoBehaviour
         // Display first sample in the batch
         hl2da_api.GyroDataStruct sample_0 = samples[0];
         gyr_text.GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(": VinylHupTicks={0}, SocTicks={1}, x={2}, y={3}, z={4}, temperature={5}", sample_0.VinylHupTicks, sample_0.SocTicks, sample_0.x, sample_0.y, sample_0.z, sample_0.temperature);
-        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        tmp_gyr_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
     }
 
     void Update_RM_IMU_Magnetometer(hl2da_framebuffer fb)
@@ -381,7 +474,7 @@ public class HoloLens2DA : MonoBehaviour
         // Display first sample in the batch
         hl2da_api.MagDataStruct sample_0 = samples[0];
         mag_text.GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(": VinylHupTicks={0}, SocTicks={1}, x={2}, y={3}, z={4}", sample_0.VinylHupTicks, sample_0.SocTicks, sample_0.x, sample_0.y, sample_0.z);
-        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        tmp_mag_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
     }
 
     void Update_PV(hl2da_framebuffer fb)
@@ -403,10 +496,9 @@ public class HoloLens2DA : MonoBehaviour
         float[] intrinsics = hl2da_user.Unpack1D<float>(fb.Buffer(2), fb.Length(2)); // fx, fy, cx, cy
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
-        // Display frame
-        pv_image.GetComponent<Renderer>().material.mainTexture = tex_pv;
-        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
-        calibrations[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + string.Format(" Calibration: fx={0}, fy={1}, cx={2}, cy={3}", intrinsics[0], intrinsics[1], intrinsics[2], intrinsics[3]);
+        // Display frame        
+        tmp_pv_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        tmp_pv_k.text = sensor_names[fb.Id] + string.Format(" Calibration: fx={0}, fy={1}, cx={2}, cy={3}", intrinsics[0], intrinsics[1], intrinsics[2], intrinsics[3]);
     }
 
     void Update_Microphone(hl2da_framebuffer fb)
@@ -422,7 +514,7 @@ public class HoloLens2DA : MonoBehaviour
             _ => ": INVALID CONFIGURATION",
         };
 
-        mic_text.GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + text;
+        tmp_mic.text = sensor_names[fb.Id] + text;
     }
 
     void Update_SpatialInput(hl2da_framebuffer fb)
@@ -438,10 +530,10 @@ public class HoloLens2DA : MonoBehaviour
         hl2da_api.JointPose left_wrist = left_hand[(int)hl2da_api.SI_HandJointKind.Wrist];
         hl2da_api.JointPose right_wrist = right_hand[(int)hl2da_api.SI_HandJointKind.Wrist];
 
-        si_text[0].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Head: "        + (((valid & hl2da_api.SI_VALID.HEAD)  != 0) ? string.Format("position=[{0}, {1}, {2}], forward=[{3}, {4}, {5}], up=[{6}, {7}, {8}]", head_pose[0], head_pose[1], head_pose[2], head_pose[3], head_pose[4], head_pose[5], head_pose[6], head_pose[7], head_pose[8]) : "<INVALID>");
-        si_text[1].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Eye: "         + (((valid & hl2da_api.SI_VALID.EYE)   != 0) ? string.Format("origin=[{0}, {1}, {2}], direction=[{3}, {4}, {5}]", eye_ray[0], eye_ray[1], eye_ray[2], eye_ray[3], eye_ray[4], eye_ray[5]) : "<INVALID>");
-        si_text[2].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Left Wrist: "  + (((valid & hl2da_api.SI_VALID.LEFT)  != 0) ? string.Format("orientation=[{0}, {1}, {2}, {3}], position=[{4}, {5}, {6}], radius={7}, accuracy={8}", left_wrist.rx, left_wrist.ry, left_wrist.rz, left_wrist.rw, left_wrist.tx, left_wrist.ty, left_wrist.tz, left_wrist.radius, left_wrist.accuracy) : "<INVALID>");
-        si_text[3].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Right Wrist: " + (((valid & hl2da_api.SI_VALID.RIGHT) != 0) ? string.Format("orientation=[{0}, {1}, {2}, {3}], position=[{4}, {5}, {6}], radius={7}, accuracy={8}", right_wrist.rx, right_wrist.ry, right_wrist.rz, right_wrist.rw, right_wrist.tx, right_wrist.ty, right_wrist.tz, right_wrist.radius, right_wrist.accuracy) : "<INVALID>");
+        tmp_si_head.text  = sensor_names[fb.Id] + " Head: "        + (((valid & hl2da_api.SI_VALID.HEAD)  != 0) ? string.Format("position=[{0}, {1}, {2}], forward=[{3}, {4}, {5}], up=[{6}, {7}, {8}]", head_pose[0], head_pose[1], head_pose[2], head_pose[3], head_pose[4], head_pose[5], head_pose[6], head_pose[7], head_pose[8]) : "<INVALID>");
+        tmp_si_eye.text   = sensor_names[fb.Id] + " Eye: "         + (((valid & hl2da_api.SI_VALID.EYE)   != 0) ? string.Format("origin=[{0}, {1}, {2}], direction=[{3}, {4}, {5}]", eye_ray[0], eye_ray[1], eye_ray[2], eye_ray[3], eye_ray[4], eye_ray[5]) : "<INVALID>");
+        tmp_si_left.text  = sensor_names[fb.Id] + " Left Wrist: "  + (((valid & hl2da_api.SI_VALID.LEFT)  != 0) ? string.Format("orientation=[{0}, {1}, {2}, {3}], position=[{4}, {5}, {6}], radius={7}, accuracy={8}", left_wrist.rx, left_wrist.ry, left_wrist.rz, left_wrist.rw, left_wrist.tx, left_wrist.ty, left_wrist.tz, left_wrist.radius, left_wrist.accuracy) : "<INVALID>");
+        tmp_si_right.text = sensor_names[fb.Id] + " Right Wrist: " + (((valid & hl2da_api.SI_VALID.RIGHT) != 0) ? string.Format("orientation=[{0}, {1}, {2}, {3}], position=[{4}, {5}, {6}], radius={7}, accuracy={8}", right_wrist.rx, right_wrist.ry, right_wrist.rz, right_wrist.rw, right_wrist.tx, right_wrist.ty, right_wrist.tz, right_wrist.radius, right_wrist.accuracy) : "<INVALID>");
     }
 
     void Update_ExtendedEyeTracking(hl2da_framebuffer fb)
@@ -452,18 +544,19 @@ public class HoloLens2DA : MonoBehaviour
         hl2da_api.EE_VALID valid = fb.Valid_EE;
 
         // Display data
-        ee_text[0].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Combined Gaze: " + (((valid & hl2da_api.EE_VALID.COMBINED_GAZE) != 0) ? string.Format("origin=[{0}, {1}, {2}], direction=[{3}, {4}, {5}], vergence={6}, utc_offset={7}", eye_data[ 0], eye_data[ 1], eye_data[ 2], eye_data[ 3], eye_data[ 4], eye_data[ 5], eye_data[20], utc_offset) : "<INVALID>");
-        ee_text[1].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Left Gaze: "     + (((valid & hl2da_api.EE_VALID.LEFT_GAZE)     != 0) ? string.Format("origin=[{0}, {1}, {2}], direction=[{3}, {4}, {5}], openness={6}", eye_data[ 6], eye_data[ 7], eye_data[ 8], eye_data[ 9], eye_data[10], eye_data[11], eye_data[18]) : "<INVALID>");
-        ee_text[2].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Right Gaze: "    + (((valid & hl2da_api.EE_VALID.RIGHT_GAZE)    != 0) ? string.Format("origin=[{0}, {1}, {2}], direction=[{3}, {4}, {5}], openness={6}", eye_data[12], eye_data[13], eye_data[14], eye_data[15], eye_data[16], eye_data[17], eye_data[19]) : "<INVALID>");
+        tmp_ee_combined.text = sensor_names[fb.Id] + " Combined Gaze: " + (((valid & hl2da_api.EE_VALID.COMBINED_GAZE) != 0) ? string.Format("origin=[{0}, {1}, {2}], direction=[{3}, {4}, {5}], vergence={6}, utc_offset={7}", eye_data[ 0], eye_data[ 1], eye_data[ 2], eye_data[ 3], eye_data[ 4], eye_data[ 5], eye_data[20], utc_offset) : "<INVALID>");
+        tmp_ee_left.text     = sensor_names[fb.Id] + " Left Gaze: "     + (((valid & hl2da_api.EE_VALID.LEFT_GAZE)     != 0) ? string.Format("origin=[{0}, {1}, {2}], direction=[{3}, {4}, {5}], openness={6}", eye_data[ 6], eye_data[ 7], eye_data[ 8], eye_data[ 9], eye_data[10], eye_data[11], eye_data[18]) : "<INVALID>");
+        tmp_ee_right.text    = sensor_names[fb.Id] + " Right Gaze: "    + (((valid & hl2da_api.EE_VALID.RIGHT_GAZE)    != 0) ? string.Format("origin=[{0}, {1}, {2}], direction=[{3}, {4}, {5}], openness={6}", eye_data[12], eye_data[13], eye_data[14], eye_data[15], eye_data[16], eye_data[17], eye_data[19]) : "<INVALID>");
         
-        poses[(int)fb.Id].GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose) + (((valid & hl2da_api.EE_VALID.CALIBRATION) != 0) ? "" : " <BAD CALIBRATION>");
+        tmp_ee_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose) + (((valid & hl2da_api.EE_VALID.CALIBRATION) != 0) ? "" : " <BAD CALIBRATION>");
     }
 
     void Update_ExtendedAudio(hl2da_framebuffer fb)
     {
+        // Get audio format
         hl2da_api.ea_audioformat format = hl2da_user.UnpackFormat_EA(fb.Buffer(2));
-
         string sample_text = string.Format(": channel_count={0}, bits_per_sample={1}, sample_rate={2}, bitrate={3}, subtype={4}, ", format.channel_count, format.bits_per_sample, format.sample_rate, format.bitrate, format.subtype);
+        
         if (format.bits_per_sample == 32)
         {
             float[] samples = hl2da_user.Unpack1D<float>(fb.Buffer(0), fb.Length(0) / sizeof(float));
@@ -479,13 +572,14 @@ public class HoloLens2DA : MonoBehaviour
             sample_text += "ch0=<U>";
         }
         
-        ea_text.GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + sample_text;
+        // Display first sample and format
+        tmp_ea.text = sensor_names[fb.Id] + sample_text;
     }
 
     void Update_ExtendedVideo(hl2da_framebuffer fb)
     {
+        // Get video format
         hl2da_api.ev_videoformat format = hl2da_user.UnpackFormat_EV(fb.Buffer(2));
-
         string format_text = string.Format(": width={0}, height={1}, framerate={2}, subtype={3}", format.width, format.height, format.framerate, format.subtype);
 
         // Load frame data into textures
@@ -494,9 +588,8 @@ public class HoloLens2DA : MonoBehaviour
         tex_ev.Apply();
         fc.Destroy();
 
-        // Display frame
-        ev_image.GetComponent<Renderer>().material.mainTexture = tex_ev;
-        ev_text.GetComponent<TextMeshPro>().text = sensor_names[fb.Id] + format_text;
+        // Display format
+        tmp_ev_format.text = sensor_names[fb.Id] + format_text;
     }
 
     string PoseToString(float[,] pose)

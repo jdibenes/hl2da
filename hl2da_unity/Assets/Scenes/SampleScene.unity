@@ -3379,6 +3379,10 @@ MonoBehaviour:
   - {fileID: 950979795}
   ea_text: {fileID: 449800324}
   ev_text: {fileID: 228086835}
+  colormap_texture: {fileID: 2800000, guid: f8823966125179643958b389d1e178fb, type: 3}
+  colormap_shader: {fileID: 4800000, guid: f017371a9afcd7d458e607a958b44462, type: 3}
+  sqrtmap_shader: {fileID: 4800000, guid: e9261f668a804d84cbe7919251fd9c15, type: 3}
+  grayscale_shader: {fileID: 4800000, guid: cbd4fe558a47f1f4a8a4ce6a2dcb771a, type: 3}
 --- !u!114 &963194232
 MonoBehaviour:
   m_ObjectHideFlags: 0
