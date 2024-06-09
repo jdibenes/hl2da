@@ -2,6 +2,9 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <malloc.h>
+#include <combaseapi.h>
+
+#include <winrt/Windows.Foundation.h>
 
 //-----------------------------------------------------------------------------
 // Functions 
@@ -41,4 +44,13 @@ void ShowMessage(const wchar_t* format, ...)
 	text[len - 1] = L'\0';
 	OutputDebugStringW(text);
 	free(text);
+}
+
+// OK
+winrt::hstring GUIDToString(GUID const& iid)
+{
+	wchar_t buffer[39];
+	StringFromGUID2(iid, buffer, sizeof(buffer) / sizeof(wchar_t));
+	buffer[38] = L'\0';
+	return buffer;
 }
