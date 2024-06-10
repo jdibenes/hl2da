@@ -4,6 +4,8 @@ Unified HoloLens 2 plugin for acquiring sensor data.
 The plugin enables access to most of the HoloLens sensors through a common interface and allows associating data from multiple streams via timestamps.
 It is compatible with Unity, Unreal, and native UWP applications.
 
+![demo](hl2da_unity.jpg)
+
 **Supported interfaces**
 
 - Research Mode Visible Light Cameras (640x480 @ 30 FPS, Grayscale)
