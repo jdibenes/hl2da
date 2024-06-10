@@ -57,7 +57,7 @@ Please note that enabling Research Mode on the HoloLens increases battery usage.
 
 For accessing sensor data from a Unity application.
 A sample Unity project (2020.3.42f1) can be found in the [hl2da_unity](hl2da_unity) directory.
-Refer to the HoloLens2DA.cs script for how to use the plugin in Unity.
+Refer to the [HoloLens2DA](hl2da_unity/Assets/Scripts/HoloLens2DA.cs) script for how to use the plugin in Unity.
 
 **Build and run the sample project**
 
@@ -88,7 +88,7 @@ Refer to the HoloLens2DA.cs script for how to use the plugin in Unity.
 
 For accessing sensor data from an Unreal application.
 A sample Unreal project (4.27.2) can be found in the [hl2da_unreal](hl2da_unreal) directory.
-Refer to the hl2da_ipl, vlc_viewer, ahat_viewer, longthrow_viewer, pv_viewer, and ev_viewer classes for how to use the plugin in Unreal.
+Refer to the [hl2da_ipl](hl2da_unreal/Source/hl2da_unreal/hl2da_ipl.cpp), [vlc_viewer](hl2da_unreal/Source/hl2da_unreal/vlc_viewer.cpp), [ahat_viewer](hl2da_unreal/Source/hl2da_unreal/ahat_viewer.cpp), [longthrow_viewer](hl2da_unreal/Source/hl2da_unreal/longthrow_viewer.cpp), [pv_viewer](hl2da_unreal/Source/hl2da_unreal/pv_viewer.cpp), and [ev_viewer](hl2da_unreal/Source/hl2da_unreal/ev_viewer.cpp) classes for how to use the plugin in Unreal.
 
 **Build and run the sample project**
 
