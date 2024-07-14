@@ -27,10 +27,11 @@ It is compatible with Unity, Unreal, and native UWP applications.
   - Eye Tracking
   - Hand Tracking
 - Extended Eye Tracking (30, 60, or 90 FPS)
-- Extended Audio
-  - Application Audio
+- Extended Audio (Microphone + Application Audio)
+  - Internal Microphone mirror
   - External USB-C Microphone
 - Extended Video
+  - Internal Front Camera mirror
   - External USB-C Camera
 
 **Additional features**
