@@ -20,7 +20,7 @@ It is compatible with Unity, Unreal, and native UWP applications.
   - Accelerometer
   - Gyroscope
   - Magnetometer
-- Front Camera (Configurable resolution and framerate, NV12)
+- Front Camera (Configurable resolution and framerate, NV12, See [here](etc/pv_configurations.txt) for a list of supported configurations)
 - Microphone (2 or 5 channels @ 48000 Hz, 32-bit Float)
 - Spatial Input (30 Hz)
   - Head Tracking
@@ -111,7 +111,7 @@ Refer to the [hl2da_ipl](hl2da_unreal/Source/hl2da_unreal/hl2da_ipl.cpp), [vlc_v
    - Webcam
    - Gaze Input
    - Spatial Perception
-5. Add `+DeviceCapabilityList=backgroundSpatialPerception` to Config/HoloLens/HoloLensEngine.ini (see [here](hl2da_unreal/Config/HoloLens/HoloLensEngine.ini) for an example).
+5. Add `+DeviceCapabilityList=backgroundSpatialPerception` to Config/HoloLens/HoloLensEngine.ini. See [here](hl2da_unreal/Config/HoloLens/HoloLensEngine.ini) for an example.
 
 ## Permissions
 
