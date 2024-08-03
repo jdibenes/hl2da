@@ -94,9 +94,7 @@ static void EV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArr
 
     g_buffer.Insert(new ev_frame(frame), timestamp);
 
-    if (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0) { return; }
-    SetEvent(g_event_client);
-    g_reader_status = false;
+    if (WaitForSingleObject(g_event_enable, 0) != WAIT_OBJECT_0) { SetEvent(g_event_client); }
 }
 
 // OK
