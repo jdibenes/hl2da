@@ -109,7 +109,7 @@ static DWORD WINAPI RM_EntryPoint(void* param)
 
     locator = ResearchMode_GetLocator();
 
-    do { RM_Acquire(sensor, type, locator); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+    do { RM_Acquire(sensor, type, locator); } while (WaitForSingleObject(g_event_quit[type], 0) == WAIT_TIMEOUT);
 
     return 0;
 }
