@@ -5,21 +5,21 @@
 
 enum INTERFACE_ID
 {
-    ID_RM_VLF =  0,
-    ID_RM_VLL =  1,
-    ID_RM_VRF =  2,
-    ID_RM_VRR =  3,
-    ID_RM_ZHT =  4,
-    ID_RM_ZLT =  5,
-    ID_RM_ACC =  6,
-    ID_RM_GYR =  7,
-    ID_RM_MAG =  8,
-    ID_PV     = 10,
-    ID_MC     = 11,
-    ID_SI     = 12,
-    ID_EET    = 17,
-    ID_EA     = 18,
-    ID_EV     = 19,
+    ID_RM_VLF,
+    ID_RM_VLL,
+    ID_RM_VRF,
+    ID_RM_VRR,
+    ID_RM_ZHT,
+    ID_RM_ZLT,
+    ID_RM_ACC,
+    ID_RM_GYR,
+    ID_RM_MAG,
+    ID_PV,
+    ID_MC,
+    ID_SI,
+    ID_EET,
+    ID_EA,
+    ID_EV,
 };
 
 void ExtendedExecution_Request();
