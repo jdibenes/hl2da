@@ -103,6 +103,11 @@ public class hl2da_user
         hl2da_api.BypassDepthLock_RM(bypass ? 1 : 0);
     }
 
+    public static void SetConstantFactor_RM_VLC(long factor = -125000)
+    {
+        hl2da_api.SetConstantFactor_RM_VLC(factor);
+    }
+
     public static void SetFormat_PV(hl2da_api.pv_captureformat cf)
     {
         hl2da_api.SetFormat_PV(ref cf);
@@ -131,6 +136,11 @@ public class hl2da_user
     public static ulong GetUTCOffset(int samples = 32)
     {
         return hl2da_api.GetUTCOffset(samples);
+    }
+
+    public static void RM_SetEyeSelection(bool enable)
+    {
+        hl2da_api.RM_SetEyeSelection(enable ? 1 : 0);
     }
 
     public static hl2da_api.pv_captureformat CreateFormat_PV(ushort width, ushort height, byte framerate, bool enable_mrc, bool shared)
@@ -191,6 +201,16 @@ public class hl2da_user
         return cf;
     }
 
+    public static hl2da_api.vlc_metadata UnpackMetadata_RM_VLC(IntPtr buffer)
+    {
+        return Marshal.PtrToStructure<hl2da_api.vlc_metadata>(buffer);
+    }
+
+    public static hl2da_api.pv_metadata UnpackMetadata_PV(IntPtr buffer)
+    {
+        return Marshal.PtrToStructure<hl2da_api.pv_metadata>(buffer);
+    }
+
     public static hl2da_api.ea_audioformat UnpackFormat_EA(IntPtr buffer)
     {
         return Marshal.PtrToStructure<hl2da_api.ea_audioformat>(buffer);
@@ -244,5 +264,40 @@ public class hl2da_user
     public static void PV_SetBacklightCompensation(hl2da_api.PV_BacklightCompensationState enable)
     {
         hl2da_api.PV_SetBacklightCompensation((uint)enable);
+    }
+
+    public static void PV_SetDesiredOptimization(hl2da_api.PV_MediaCaptureOptimization mode)
+    {
+        hl2da_api.PV_SetDesiredOptimization((uint)mode);
+    }
+
+    public static void PV_SetPrimaryUse(hl2da_api.PV_CaptureUse mode)
+    {
+        hl2da_api.PV_SetPrimaryUse((uint)mode);
+    }
+
+    public static void PV_SetOpticalImageStabilization(hl2da_api.PV_OpticalImageStabilizationMode mode)
+    {
+        hl2da_api.PV_SetOpticalImageStabilization((uint)mode);
+    }
+
+    public static void PV_SetHdrVideo(hl2da_api.PV_HdrVideoMode mode)
+    {
+        hl2da_api.PV_SetHdrVideo((uint)mode);
+    }
+
+    public static void PV_SetRegionsOfInterest(bool clear, bool set, bool auto_exposure, bool auto_focus, bool bounds_normalized, float x, float y, float w, float h, hl2da_api.PV_RegionOfInterestType type, uint weight)
+    {
+        hl2da_api.PV_SetRegionsOfInterest(clear ? 1 : 0, set ? 1 : 0, auto_exposure ? 1 : 0, auto_focus ? 1 : 0, bounds_normalized ? 1 : 0, x, y, w, h, (uint)type, weight);
+    }
+
+    public static void EX_SetInterfacePriority(hl2da_api.InterfaceID id, hl2da_api.InterfacePriority priority)
+    {
+        hl2da_api.EX_SetInterfacePriority((uint)id, (int)priority);
+    }
+
+    public static int EX_GetInterfacePriority(hl2da_api.InterfaceID id)
+    {
+        return hl2da_api.EX_GetInterfacePriority((uint)id);
     }
 }
