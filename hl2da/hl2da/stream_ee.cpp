@@ -1,6 +1,7 @@
 
 #include "extended_eye_tracking.h"
 #include "locator.h"
+#include "extended_execution.h"
 #include "frame_buffer.h"
 #include "timestamps.h"
 #include "log.h"
@@ -69,7 +70,7 @@ ee_frame::~ee_frame()
 }
 
 // OK
-static void EE_Acquire(SpatialLocator const &locator, uint64_t utc_offset)
+static void EE_Acquire(SpatialLocator const &locator, uint64_t utc_offset, int base_priority)
 {
     PerceptionTimestamp ts = nullptr;
     EyeGazeTrackerReading egtr = nullptr;
@@ -88,6 +89,7 @@ static void EE_Acquire(SpatialLocator const &locator, uint64_t utc_offset)
     bool ec_valid;
 
     WaitForSingleObject(g_event_enable, INFINITE);
+    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(INTERFACE_ID::ID_EET));
 
     switch (g_fps_index & 3)
     {
@@ -140,6 +142,8 @@ static void EE_Acquire(SpatialLocator const &locator, uint64_t utc_offset)
     while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0);
 
     g_buffer.Clear();
+
+    SetThreadPriority(GetCurrentThread(), base_priority);
 }
 
 // OK
@@ -149,13 +153,15 @@ static DWORD WINAPI EE_EntryPoint(void* param)
 
     SpatialLocator locator = nullptr;
     uint64_t utc_offset;
+    int base_priority;
 
     ExtendedEyeTracking_Initialize();
 
     locator = ExtendedEyeTracking_CreateLocator();
     utc_offset = GetQPCToUTCOffset(32);
+    base_priority = GetThreadPriority(GetCurrentThread());
 
-    do { EE_Acquire(locator, utc_offset); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+    do { EE_Acquire(locator, utc_offset, base_priority); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
 
     return 0;
 }
