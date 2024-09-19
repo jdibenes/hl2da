@@ -1,5 +1,6 @@
 
 #include "microphone_capture.h"
+#include "extended_execution.h"
 #include "frame_buffer.h"
 #include "log.h"
 
@@ -53,11 +54,12 @@ static void MC_Insert(uint8_t* buffer, int32_t length, uint64_t timestamp)
 }
 
 // OK
-static void MC_Acquire()
+static void MC_Acquire(int base_priority)
 {
 	bool ok;
 
 	WaitForSingleObject(g_event_enable, INFINITE);
+	SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(INTERFACE_ID::ID_MC));
 
 	g_microphoneCapture = winrt::make_self<MicrophoneCapture>();
 	g_microphoneCapture->Initialize(g_raw);
@@ -76,13 +78,16 @@ static void MC_Acquire()
 	g_buffer.Clear();
 
 	g_microphoneCapture->Stop();
+
+	SetThreadPriority(GetCurrentThread(), base_priority);
 }
 
 // OK
 static DWORD WINAPI MC_EntryPoint(void* param)
 {
 	(void)param;
-	do { MC_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+	int base_priority = GetThreadPriority(GetCurrentThread());
+	do { MC_Acquire(base_priority); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
 	return 0;
 }
 
