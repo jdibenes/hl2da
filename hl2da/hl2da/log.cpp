@@ -49,8 +49,5 @@ void ShowMessage(const wchar_t* format, ...)
 // OK
 winrt::hstring GUIDToString(GUID const& iid)
 {
-	wchar_t buffer[39];
-	StringFromGUID2(iid, buffer, sizeof(buffer) / sizeof(wchar_t));
-	buffer[38] = L'\0';
-	return buffer;
+	return winrt::to_hstring(iid);
 }
