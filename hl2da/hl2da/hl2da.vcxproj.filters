@@ -145,6 +145,9 @@
     <ClCompile Include="converter.cpp">
       <Filter>Source Files\devices</Filter>
     </ClCompile>
+    <ClCompile Include="extended_execution.cpp">
+      <Filter>Source Files\devices</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="log.h">
@@ -223,6 +226,9 @@
       <Filter>Header Files\devices</Filter>
     </ClInclude>
     <ClInclude Include="converter.h">
+      <Filter>Header Files\devices</Filter>
+    </ClInclude>
+    <ClInclude Include="extended_execution.h">
       <Filter>Header Files\devices</Filter>
     </ClInclude>
   </ItemGroup>
