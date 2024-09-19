@@ -1,6 +1,7 @@
 
 #include "stream_ev.h"
 #include "extended_video.h"
+#include "extended_execution.h"
 #include "frame_buffer.h"
 #include "timestamps.h"
 #include "log.h"
@@ -98,13 +99,15 @@ static void EV_OnVideoFrameArrived(MediaFrameReader const& sender, MediaFrameArr
 }
 
 // OK
-static void EV_Acquire()
+static void EV_Acquire(int base_priority)
 {
     MediaFrameReader videoFrameReader = nullptr;
     bool ok;
 
     WaitForSingleObject(g_event_enable, INFINITE);
     WaitForSingleObject(g_event_client, 0);
+
+    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(INTERFACE_ID::ID_EV));
 
     ExtendedVideo_Open(g_options);
     ok = ExtendedVideo_Status();
@@ -132,7 +135,9 @@ static void EV_Acquire()
     ExtendedVideo_Close();
     }
 
-    ResetEvent(g_event_enable);
+    SetThreadPriority(GetCurrentThread(), base_priority);
+
+    while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0) { Sleep(1); }
 }
 
 // OK
@@ -140,7 +145,8 @@ static DWORD WINAPI EV_EntryPoint(void *param)
 {
     (void)param;
     ExtendedVideo_RegisterEvent(g_event_client);
-    do { EV_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+    int base_priority = GetThreadPriority(GetCurrentThread());
+    do { EV_Acquire(base_priority); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
     return 0;
 }
 
