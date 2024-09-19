@@ -384,10 +384,10 @@ PLUGIN_IMPORT
 void GetExtrinsics_RM(int id, float* out);
 
 PLUGIN_IMPORT
-void MapImagePointToCameraUnitPlane_RM(int id, float const* in, float* out, int point_count);
+void MapImagePointToCameraUnitPlane_RM(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
 
 PLUGIN_IMPORT
-void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int point_count);
+void MapCameraSpaceToImagePoint_RM(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
 
 PLUGIN_IMPORT
 void BypassDepthLock_RM(int bypass);

@@ -307,7 +307,7 @@ void RM_GetExtrinsics(int id, float* out)
 }
 
 // OK
-void RM_MapImagePointToCameraUnitPlane(int id, float const* in, float* out, int point_count)
+void RM_MapImagePointToCameraUnitPlane(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
 {
     IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
     IResearchModeCameraSensor* pCameraSensor; // Release
@@ -316,20 +316,20 @@ void RM_MapImagePointToCameraUnitPlane(int id, float const* in, float* out, int 
 
     for (int i = 0; i < point_count; ++i)
     {
-    float uv[2] = { in[2 * i], in[(2 * i) + 1] };
+    float uv[2] = { in[in_pitch * i], in[(in_pitch * i) + 1] };
     float xy[2];
 
     pCameraSensor->MapImagePointToCameraUnitPlane(uv, xy);
 
-    out[2 * i] = xy[0];
-    out[(2 * i) + 1] = xy[1];
+    out[out_pitch * i] = xy[0];
+    out[(out_pitch * i) + 1] = xy[1];
     }
 
     pCameraSensor->Release();
 }
 
 // OK
-void RM_MapCameraSpaceToImagePoint(int id, float const* in, float* out, int point_count)
+void RM_MapCameraSpaceToImagePoint(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
 {
     IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
     IResearchModeCameraSensor* pCameraSensor; // Release
@@ -338,13 +338,13 @@ void RM_MapCameraSpaceToImagePoint(int id, float const* in, float* out, int poin
 
     for (int i = 0; i < point_count; ++i)
     {
-    float xy[2] = { in[2 * i], in[(2 * i) + 1] };
+    float xy[2] = { in[in_pitch * i], in[(in_pitch * i) + 1] };
     float uv[2];
 
     pCameraSensor->MapCameraSpaceToImagePoint(xy, uv);
 
-    out[2 * i] = uv[0];
-    out[(2 * i) + 1] = uv[1];
+    out[out_pitch * i] = uv[0];
+    out[(out_pitch * i) + 1] = uv[1];
     }
 
     pCameraSensor->Release();

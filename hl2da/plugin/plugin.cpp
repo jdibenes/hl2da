@@ -243,7 +243,7 @@ void GetExtrinsics_RM(int id, float* out)
 
 // OK
 PLUGIN_EXPORT
-void MapImagePointToCameraUnitPlane_RM(int id, float const* in, float* out, int point_count)
+void MapImagePointToCameraUnitPlane_RM(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
 {
     switch (id)
     {
@@ -252,13 +252,13 @@ void MapImagePointToCameraUnitPlane_RM(int id, float const* in, float* out, int 
     case 2:
     case 3:
     case 4:
-    case 5: RM_MapImagePointToCameraUnitPlane(id, in, out, point_count); break;
+    case 5: RM_MapImagePointToCameraUnitPlane(id, in, in_pitch, out, out_pitch, point_count); break;
     }    
 }
 
 // OK
 PLUGIN_EXPORT
-void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int point_count)
+void MapCameraSpaceToImagePoint_RM(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
 {
     switch (id)
     {
@@ -267,7 +267,7 @@ void MapCameraSpaceToImagePoint_RM(int id, float const* in, float* out, int poin
     case 2:
     case 3:
     case 4:
-    case 5: RM_MapCameraSpaceToImagePoint(id, in, out, point_count); break;
+    case 5: RM_MapCameraSpaceToImagePoint(id, in, in_pitch, out, out_pitch, point_count); break;
     }    
 }
 
