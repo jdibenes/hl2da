@@ -17,10 +17,6 @@ void RM_Extract_IMU_Accelerometer(void* frame, void const** buffer, int32_t* len
 void RM_Extract_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length);
 void RM_Extract_IMU_Magnetometer(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length);
 
-void RM_GetExtrinsics(int id, float* out);
-void RM_MapImagePointToCameraUnitPlane(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
-void RM_MapCameraSpaceToImagePoint(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
-
 void RM_InitializeDepthLock();
 void RM_CleanupDepthLock();
 void RM_BypassDepthLock(bool bypass);

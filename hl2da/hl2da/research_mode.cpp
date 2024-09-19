@@ -342,3 +342,73 @@ void ResearchMode_SetEyeSelection(bool enable)
 {
 	if (enable) { g_pSensorDevice->EnableEyeSelection(); } else { g_pSensorDevice->DisableEyeSelection(); }
 }
+
+// OK
+void ResearchMode_GetIntrinsics(int id, float* uv2xy, float* mapxy, float* k)
+{
+	IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
+	std::vector<float> uv2x;
+	std::vector<float> uv2y;
+	std::vector<float> mapx;
+	std::vector<float> mapy;
+	float K[4];
+
+	ResearchMode_GetIntrinsics(sensor, uv2x, uv2y, mapx, mapy, K);
+
+	memcpy(uv2xy,               uv2x.data(), uv2x.size() * sizeof(float));
+	memcpy(uv2xy + uv2x.size(), uv2y.data(), uv2y.size() * sizeof(float));
+	memcpy(mapxy,               mapx.data(), mapx.size() * sizeof(float));
+	memcpy(mapxy + mapx.size(), mapy.data(), mapy.size() * sizeof(float));
+	memcpy(k,                   K,                         sizeof(K));
+}
+
+// OK
+void ResearchMode_GetExtrinsics(int id, float* out)
+{
+	IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
+	ResearchMode_GetExtrinsics(sensor, *(DirectX::XMFLOAT4X4*)out);
+}
+
+// OK
+void ResearchMode_MapImagePointToCameraUnitPlane(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
+{
+	IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
+	IResearchModeCameraSensor* pCameraSensor; // Release
+
+	sensor->QueryInterface(IID_PPV_ARGS(&pCameraSensor));
+
+	for (int i = 0; i < point_count; ++i)
+	{
+	float uv[2] = { in[in_pitch * i], in[(in_pitch * i) + 1] };
+	float xy[2];
+
+	pCameraSensor->MapImagePointToCameraUnitPlane(uv, xy);
+
+	out[out_pitch * i] = xy[0];
+	out[(out_pitch * i) + 1] = xy[1];
+	}
+
+	pCameraSensor->Release();
+}
+
+// OK
+void ResearchMode_MapCameraSpaceToImagePoint(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
+{
+	IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
+	IResearchModeCameraSensor* pCameraSensor; // Release
+
+	sensor->QueryInterface(IID_PPV_ARGS(&pCameraSensor));
+
+	for (int i = 0; i < point_count; ++i)
+	{
+	float xy[2] = { in[in_pitch * i], in[(in_pitch * i) + 1] };
+	float uv[2];
+
+	pCameraSensor->MapCameraSpaceToImagePoint(xy, uv);
+
+	out[out_pitch * i] = uv[0];
+	out[(out_pitch * i) + 1] = uv[1];
+	}
+
+	pCameraSensor->Release();
+}
