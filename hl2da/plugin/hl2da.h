@@ -381,6 +381,9 @@ PLUGIN_IMPORT
 void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l);
 
 PLUGIN_IMPORT
+void GetIntrinsics_RM(int id, float* uv2xy, float* mapxy, float* k);
+
+PLUGIN_IMPORT
 void GetExtrinsics_RM(int id, float* out);
 
 PLUGIN_IMPORT

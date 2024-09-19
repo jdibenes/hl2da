@@ -226,6 +226,21 @@ void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l)
 
 // OK
 PLUGIN_EXPORT
+void GetIntrinsics_RM(int id, float* uv2xy, float* mapxy, float* k)
+{
+    switch (id)
+    {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+    case 4:
+    case 5: ResearchMode_GetIntrinsics(id, uv2xy, mapxy, k); break;
+    }
+}
+
+// OK
+PLUGIN_EXPORT
 void GetExtrinsics_RM(int id, float* out)
 {
     switch (id)
@@ -237,7 +252,7 @@ void GetExtrinsics_RM(int id, float* out)
     case 4:
     case 5:
     case 6:
-    case 7: RM_GetExtrinsics(id, out); break;
+    case 7: ResearchMode_GetExtrinsics(id, out); break;
     }
 }
 
@@ -252,7 +267,7 @@ void MapImagePointToCameraUnitPlane_RM(int id, float const* in, int in_pitch, fl
     case 2:
     case 3:
     case 4:
-    case 5: RM_MapImagePointToCameraUnitPlane(id, in, in_pitch, out, out_pitch, point_count); break;
+    case 5: ResearchMode_MapImagePointToCameraUnitPlane(id, in, in_pitch, out, out_pitch, point_count); break;
     }    
 }
 
@@ -267,7 +282,7 @@ void MapCameraSpaceToImagePoint_RM(int id, float const* in, int in_pitch, float*
     case 2:
     case 3:
     case 4:
-    case 5: RM_MapCameraSpaceToImagePoint(id, in, in_pitch, out, out_pitch, point_count); break;
+    case 5: ResearchMode_MapCameraSpaceToImagePoint(id, in, in_pitch, out, out_pitch, point_count); break;
     }    
 }
 
