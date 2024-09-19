@@ -1,6 +1,7 @@
 
 #include "spatial_input.h"
 #include "locator.h"
+#include "extended_execution.h"
 #include "frame_buffer.h"
 #include "timestamps.h"
 #include "log.h"
@@ -54,7 +55,7 @@ si_frame::~si_frame()
 }
 
 // OK
-static void SI_Acquire()
+static void SI_Acquire(int base_priority)
 {
     PerceptionTimestamp ts = nullptr;
     SpatialCoordinateSystem world = nullptr;
@@ -64,6 +65,7 @@ static void SI_Acquire()
     int status2;
 
     WaitForSingleObject(g_event_enable, INFINITE);
+    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(INTERFACE_ID::ID_SI));
 
     do
     {
@@ -85,6 +87,8 @@ static void SI_Acquire()
     while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0);
     
     g_buffer.Clear();
+
+    SetThreadPriority(GetCurrentThread(), base_priority);
 }
 
 // OK
@@ -92,7 +96,8 @@ static DWORD WINAPI SI_EntryPoint(void *param)
 {
     (void)param;
     SpatialInput_WaitForEyeConsent();
-    do { SI_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+    int base_priority = GetThreadPriority(GetCurrentThread());
+    do { SI_Acquire(base_priority); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
     return 0;
 }
 
