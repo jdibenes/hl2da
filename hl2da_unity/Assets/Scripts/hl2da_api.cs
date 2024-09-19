@@ -253,7 +253,43 @@ public static class hl2da_api
         [FieldOffset(6), MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string subtype;
         // 134
     }
-    
+
+    [StructLayout(LayoutKind.Explicit)]
+    public struct vlc_metadata
+    {
+        [FieldOffset( 0)] public ulong exposure;
+        [FieldOffset( 8)] public uint gain;
+        [FieldOffset(12)] public uint _reserved;
+    };
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct pv_metadata
+    {
+        public float fx;
+        public float fy;
+        public float cx;
+        public float cy;
+        public ulong exposure_time;
+        public ulong exposure_compensation_0;
+        public ulong exposure_compensation_1;
+        public uint lens_position;
+        public uint focus_state;
+        public uint iso_speed;
+        public uint white_balance;
+        public float analog_gain;
+        public float digital_gain;
+        public float r_gain;
+        public float g_gain;
+        public float b_gain;
+        public float extrinsics_mf_tx;
+        public float extrinsics_mf_ty;
+        public float extrinsics_mf_tz;
+        public float extrinsics_mf_rx;
+        public float extrinsics_mf_ry;
+        public float extrinsics_mf_rz;
+        public float extrinsics_mf_tw;
+    };
+
     public enum PV_FocusMode
     {
         Auto = 0,
@@ -363,6 +399,71 @@ public static class hl2da_api
         Enable = 1,
     }
 
+    public enum PV_MediaCaptureOptimization
+    {
+        Default = 0,
+        Quality = 1,
+        Latency = 2,
+        Power = 3,
+        LatencyThenQuality = 4,
+        LatencyThenPower = 5,
+        PowerAndQuality = 6,
+    }
+
+    public enum PV_CaptureUse
+    {
+        NotSet = 0,
+        Photo = 1,
+        Video = 2,
+    }
+
+    public enum PV_OpticalImageStabilizationMode
+    {
+        Off = 0,
+        On = 1,
+    }
+
+    public enum PV_HdrVideoMode
+    {
+        Off = 0,
+        On = 1,
+        Auto = 2,
+    }
+
+    public enum PV_RegionOfInterestType
+    {
+        Unknown = 0,
+        Face = 1,
+    }
+
+    public enum InterfaceID
+    {
+        ID_RM_VLF = 0,
+        ID_RM_VLL = 1,
+        ID_RM_VRF = 2,
+        ID_RM_VRR = 3,
+        ID_RM_ZHT = 4,
+        ID_RM_ZLT = 5,
+        ID_RM_ACC = 6,
+        ID_RM_GYR = 7,
+        ID_RM_MAG = 8,
+        ID_PV = 10,
+        ID_MC = 11,
+        ID_SI = 12,
+        ID_EET = 17,
+        ID_EA = 18,
+        ID_EV = 19,
+    };
+
+    public enum InterfacePriority
+    {
+        LOWEST = -2,
+        BELOW_NORMAL = -1,
+        NORMAL = 0,
+        ABOVE_NORMAL = 1,
+        HIGHEST = 2,
+    }
+
     public enum IMT_Format
     {
         Rgba8 = 30,
@@ -416,6 +517,9 @@ public static class hl2da_api
     public static extern void BypassDepthLock_RM(int bypass);
 
     [DllImport("hl2da")]
+    public static extern void SetConstantFactor_RM_VLC(long factor);
+
+    [DllImport("hl2da")]
     public static extern void SetFormat_PV(ref pv_captureformat cf);
 
     [DllImport("hl2da")]
@@ -432,6 +536,9 @@ public static class hl2da_api
 
     [DllImport("hl2da")]
     public static extern ulong GetUTCOffset(int samples);
+
+    [DllImport("hl2da")]
+    public static extern void RM_SetEyeSelection(int enable);
 
     [DllImport("hl2da")]
     public static extern void PV_SetFocus(uint focusmode, uint autofocusrange, uint distance, uint value, uint disabledriverfallback);
@@ -459,6 +566,33 @@ public static class hl2da_api
 
     [DllImport("hl2da")]
     public static extern void PV_SetBacklightCompensation(uint enable);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetDesiredOptimization(uint mode);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetPrimaryUse(uint mode);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetOpticalImageStabilization(uint mode);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetHdrVideo(uint mode);
+
+    [DllImport("hl2da")]
+    public static extern void PV_SetRegionsOfInterest(int clear, int set, int auto_exposure, int auto_focus, int bounds_normalized, float x, float y, float w, float h, uint type, uint weight);
+
+    [DllImport("hl2da")]
+    public static extern void EX_Request();
+
+    [DllImport("hl2da")]
+    public static extern uint EX_Status();
+
+    [DllImport("hl2da")]
+    public static extern void EX_SetInterfacePriority(uint id, int priority);
+
+    [DllImport("hl2da")]
+    public static extern int EX_GetInterfacePriority(uint id);
 
     [DllImport("hl2da")]
     public static extern void IMT_ZHTInvalidate(IntPtr depth_in, IntPtr depth_out);
