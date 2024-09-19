@@ -1,5 +1,6 @@
 
 #include "extended_audio.h"
+#include "extended_execution.h"
 #include "frame_buffer.h"
 #include "timestamps.h"
 #include "log.h"
@@ -106,13 +107,15 @@ static void EA_OnAudioFrameArrived(MediaFrameReader const& sender, MediaFrameArr
 }
 
 // OK
-static void EA_Acquire()
+static void EA_Acquire(int base_priority)
 {
     MediaFrameReader reader = nullptr;
     bool ok;
 
     WaitForSingleObject(g_event_enable, INFINITE);
     WaitForSingleObject(g_event_client, 0);
+
+    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(INTERFACE_ID::ID_EA));
 
     ok = ExtendedAudio_Open(g_options);
     if (ok) 
@@ -135,7 +138,9 @@ static void EA_Acquire()
     ExtendedAudio_Close();
     }
 
-    ResetEvent(g_event_enable);
+    SetThreadPriority(GetCurrentThread(), base_priority);
+
+    while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0) { Sleep(1); }
 }
 
 // OK
@@ -143,7 +148,8 @@ static DWORD WINAPI EA_EntryPoint(void* param)
 {
     (void)param;
     ExtendedAudio_RegisterEvent(g_event_client);
-    do { EA_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+    int base_priority = GetThreadPriority(GetCurrentThread());
+    do { EA_Acquire(base_priority); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
     return 0;
 }
 
