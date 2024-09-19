@@ -78,6 +78,13 @@ int OverrideWorldCoordinateSystem(void* scs_ptr)
 
 // OK
 PLUGIN_EXPORT
+uint64_t GetUTCOffset(int32_t samples)
+{
+    return GetQPCToUTCOffset(samples);
+}
+
+// OK
+PLUGIN_EXPORT
 void Initialize(int id, int buffer_size)
 {
     switch (id)
@@ -98,6 +105,55 @@ void Initialize(int id, int buffer_size)
     case 13: EA_Initialize(    buffer_size); break;
     case 14: EV_Initialize(    buffer_size); break;
     }
+}
+
+// OK
+PLUGIN_EXPORT
+void SetConstantFactorVLC_RM(int64_t factor)
+{
+    RM_VLC_SetConstantFactor(factor);
+}
+
+// OK
+PLUGIN_EXPORT
+void BypassDepthLock_RM(int bypass)
+{
+    RM_BypassDepthLock(bypass != 0);
+}
+
+// OK
+PLUGIN_EXPORT
+void SetFormat_PV(void const* cf)
+{
+    PV_SetFormat(*(pv_captureformat*)cf);
+}
+
+// OK
+PLUGIN_EXPORT
+void SetFormat_MC(int raw)
+{
+    MC_SetFormat(raw != 0);
+}
+
+// OK
+PLUGIN_EXPORT
+void SetFormat_EE(int fps_index)
+{
+    EE_SetFormat(fps_index);
+}
+
+// OK
+PLUGIN_EXPORT
+void SetFormat_EA(void const* cf)
+{
+    EA_SetFormat(*(MRCAudioOptions*)cf);
+}
+
+// OK
+PLUGIN_EXPORT
+void SetFormat_EV(void const* cf)
+{
+    EV_SetFormat(*(ev_captureformat*)cf);
 }
 
 // OK
@@ -178,30 +234,6 @@ int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_rig
 
 // OK
 PLUGIN_EXPORT
-void Release(int id, void* frame)
-{
-    switch (id)
-    {
-    case  0:
-    case  1:
-    case  2:
-    case  3:
-    case  4:
-    case  5:
-    case  6:
-    case  7:
-    case  8: RM_Release(frame); break;
-    case  9: PV_Release(frame); break;
-    case 10: MC_Release(frame); break;
-    case 11: SI_Release(frame); break;
-    case 12: EE_Release(frame); break;
-    case 13: EA_Release(frame); break;
-    case 14: EV_Release(frame); break;
-    }
-}
-
-// OK
-PLUGIN_EXPORT
 void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l)
 {
     switch (id)
@@ -226,7 +258,38 @@ void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l)
 
 // OK
 PLUGIN_EXPORT
-void GetIntrinsics_RM(int id, float* uv2xy, float* mapxy, float* k)
+void Release(int id, void* frame)
+{
+    switch (id)
+    {
+    case  0:
+    case  1:
+    case  2:
+    case  3:
+    case  4:
+    case  5:
+    case  6:
+    case  7:
+    case  8: RM_Release(frame); break;
+    case  9: PV_Release(frame); break;
+    case 10: MC_Release(frame); break;
+    case 11: SI_Release(frame); break;
+    case 12: EE_Release(frame); break;
+    case 13: EA_Release(frame); break;
+    case 14: EV_Release(frame); break;
+    }
+}
+
+// OK
+PLUGIN_EXPORT
+void RM_SetEyeSelection(uint32_t enable)
+{
+    ResearchMode_SetEyeSelection(enable != 0);
+}
+
+// OK
+PLUGIN_EXPORT
+void RM_GetIntrinsics(int id, float* uv2xy, float* mapxy, float* k)
 {
     switch (id)
     {
@@ -241,7 +304,7 @@ void GetIntrinsics_RM(int id, float* uv2xy, float* mapxy, float* k)
 
 // OK
 PLUGIN_EXPORT
-void GetExtrinsics_RM(int id, float* out)
+void RM_GetExtrinsics(int id, float* out)
 {
     switch (id)
     {
@@ -258,7 +321,7 @@ void GetExtrinsics_RM(int id, float* out)
 
 // OK
 PLUGIN_EXPORT
-void MapImagePointToCameraUnitPlane_RM(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
+void RM_MapImagePointToCameraUnitPlane(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
 {
     switch (id)
     {
@@ -273,7 +336,7 @@ void MapImagePointToCameraUnitPlane_RM(int id, float const* in, int in_pitch, fl
 
 // OK
 PLUGIN_EXPORT
-void MapCameraSpaceToImagePoint_RM(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
+void RM_MapCameraSpaceToImagePoint(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
 {
     switch (id)
     {
@@ -284,69 +347,6 @@ void MapCameraSpaceToImagePoint_RM(int id, float const* in, int in_pitch, float*
     case 4:
     case 5: ResearchMode_MapCameraSpaceToImagePoint(id, in, in_pitch, out, out_pitch, point_count); break;
     }    
-}
-
-// OK
-PLUGIN_EXPORT
-void BypassDepthLock_RM(int bypass)
-{
-    RM_BypassDepthLock(bypass != 0);
-}
-
-// OK
-PLUGIN_EXPORT
-void SetConstantFactor_RM_VLC(int64_t factor)
-{
-    RM_VLC_SetConstantFactor(factor);
-}
-
-// OK
-PLUGIN_EXPORT
-void SetFormat_PV(void const* cf)
-{
-    PV_SetFormat(*(pv_captureformat*)cf);
-}
-
-// OK
-PLUGIN_EXPORT
-void SetFormat_MC(int raw)
-{
-    MC_SetFormat(raw != 0);
-}
-
-// OK
-PLUGIN_EXPORT
-void SetFormat_EE(int fps_index)
-{
-    EE_SetFormat(fps_index);
-}
-
-// OK
-PLUGIN_EXPORT
-void SetFormat_EA(void const* cf)
-{
-    EA_SetFormat(*(MRCAudioOptions*)cf);
-}
-
-// OK
-PLUGIN_EXPORT
-void SetFormat_EV(void const* cf)
-{
-    EV_SetFormat(*(ev_captureformat*)cf);
-}
-
-// OK
-PLUGIN_EXPORT
-uint64_t GetUTCOffset(int32_t samples)
-{
-    return GetQPCToUTCOffset(samples);
-}
-
-// OK
-PLUGIN_EXPORT
-void RM_SetEyeSelection(uint32_t enable)
-{
-    ResearchMode_SetEyeSelection(enable != 0);
 }
 
 // OK

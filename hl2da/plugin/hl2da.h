@@ -337,6 +337,52 @@ enum class PV_BacklightCompensationState : uint32_t
     Enable = 1,
 };
 
+enum class PV_MediaCaptureOptimization : uint32_t
+{
+    Default = 0,
+    Quality = 1,
+    Latency = 2,
+    Power = 3,
+    LatencyThenQuality = 4,
+    LatencyThenPower = 5,
+    PowerAndQuality = 6,
+};
+
+enum class PV_CaptureUse : uint32_t
+{
+    NotSet = 0,
+    Photo = 1,
+    Video = 2,
+};
+
+enum class PV_OpticalImageStabilizationMode : uint32_t
+{
+    Off = 0,
+    On = 1,
+};
+
+enum class PV_HdrVideoMode : uint32_t
+{
+    Off = 0,
+    On = 1,
+    Auto = 2,
+};
+
+enum class PV_RegionOfInterestType : uint32_t
+{
+    Unknown = 0,
+    Face = 1,
+};
+
+enum class InterfacePriority : int32_t
+{
+    LOWEST = -2,
+    BELOW_NORMAL = -1,
+    NORMAL = 0,
+    ABOVE_NORMAL = 1,
+    HIGHEST = 2,
+};
+
 enum class IMT_Format : uint32_t
 {
     Rgba8 = 30,
@@ -363,40 +409,16 @@ PLUGIN_IMPORT
 int OverrideWorldCoordinateSystem(void* scs_ptr);
 
 PLUGIN_IMPORT
+uint64_t GetUTCOffset(int32_t samples);
+
+PLUGIN_IMPORT
 void Initialize(int id, int buffer_size);
 
 PLUGIN_IMPORT
-void SetEnable(int id, int enable);
-
-PLUGIN_IMPORT
-int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, int32_t* framestamp);
-
-PLUGIN_IMPORT
-int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_right, void** frame, uint64_t* timestamp, int32_t* framestamp);
-
-PLUGIN_IMPORT
-void Release(int id, void* frame);
-
-PLUGIN_IMPORT
-void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l);
-
-PLUGIN_IMPORT
-void GetIntrinsics_RM(int id, float* uv2xy, float* mapxy, float* k);
-
-PLUGIN_IMPORT
-void GetExtrinsics_RM(int id, float* out);
-
-PLUGIN_IMPORT
-void MapImagePointToCameraUnitPlane_RM(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
-
-PLUGIN_IMPORT
-void MapCameraSpaceToImagePoint_RM(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
+void SetConstantFactorVLC_RM(int64_t factor);
 
 PLUGIN_IMPORT
 void BypassDepthLock_RM(int bypass);
-
-PLUGIN_IMPORT
-void SetConstantFactor_RM_VLC(int64_t factor);
 
 PLUGIN_IMPORT
 void SetFormat_PV(void const* cf);
@@ -414,10 +436,34 @@ PLUGIN_IMPORT
 void SetFormat_EV(void const* cf);
 
 PLUGIN_IMPORT
-uint64_t GetUTCOffset(int32_t samples);
+void SetEnable(int id, int enable);
+
+PLUGIN_IMPORT
+int GetByFramestamp(int id, int32_t stamp, void** frame, uint64_t* timestamp, int32_t* framestamp);
+
+PLUGIN_IMPORT
+int GetByTimestamp(int id, uint64_t stamp, int time_preference, int tiebreak_right, void** frame, uint64_t* timestamp, int32_t* framestamp);
+
+PLUGIN_IMPORT
+void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l);
+
+PLUGIN_IMPORT
+void Release(int id, void* frame);
 
 PLUGIN_IMPORT
 void RM_SetEyeSelection(uint32_t enable);
+
+PLUGIN_IMPORT
+void RM_GetIntrinsics(int id, float* uv2xy, float* mapxy, float* k);
+
+PLUGIN_IMPORT
+void RM_GetExtrinsics(int id, float* out);
+
+PLUGIN_IMPORT
+void RM_MapImagePointToCameraUnitPlane(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
+
+PLUGIN_IMPORT
+void RM_MapCameraSpaceToImagePoint(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
 
 PLUGIN_IMPORT
 void PV_SetFocus(uint32_t focusmode, uint32_t autofocusrange, uint32_t distance, uint32_t value, uint32_t disabledriverfallback);
