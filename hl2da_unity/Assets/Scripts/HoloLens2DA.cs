@@ -91,7 +91,7 @@ public class HoloLens2DA : MonoBehaviour
         // List of supported resolutions and framerates at https://github.com/jdibenes/hl2ss/blob/main/etc/pv_configurations.txt
         // enable_mrc: Enable Mixed Reality Capture (holograms in video)
         // shared: Enable Shared Mode (for when other apps or modules are already using the PV camera, resolution and framerate parameters are ignored)
-        pvcf = hl2da_user.CreateFormat_PV(640, 360, 30, false, false);
+        pvcf = hl2da_user.CreateFormat_PV(760, 428, 30, false, false);
 
         // Additional PV capture settings
         // To change the focus mode, temporal denoising, white balance, exposure, scene mode, iso speed, or backlight compensation,
@@ -184,7 +184,7 @@ public class HoloLens2DA : MonoBehaviour
         tex_lt_ab    = new Texture2D(320, 288, TextureFormat.R16, false);
         tex_lt_sigma = new Texture2D(320, 288, TextureFormat.R8,  false);
 
-        tex_pv = new Texture2D(pvcf.width, pvcf.height, TextureFormat.BGRA32, false);
+        tex_pv = new Texture2D((int)hl2da_imt.GetStride_PV(pvcf.width), pvcf.height, TextureFormat.BGRA32, false);
         tex_ev = new Texture2D(evcf.width, evcf.height, TextureFormat.BGRA32, false);
 
         tex_vlc_r = new RenderTexture[4];
@@ -399,6 +399,10 @@ public class HoloLens2DA : MonoBehaviour
         tex_vlc[index].Apply();
         Graphics.Blit(tex_vlc[index], tex_vlc_r[index], grayscale_mat); // Apply grayscale map to Image
 
+        var metadata = hl2da_user.UnpackMetadata_RM_VLC(fb.Buffer(2));
+        //metadata.exposure
+        //metadata.gain
+
         // Display pose
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
         tmp_vlc_pose[index].text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
@@ -486,19 +490,19 @@ public class HoloLens2DA : MonoBehaviour
             pv_settings_latch = true;
         }
         */
-
+        
         // Load frame data into textures
         hl2da_imt fc = hl2da_imt.Convert(fb.Buffer(0), hl2da_imt.GetStride_PV(pvcf.width), pvcf.height, hl2da_api.IMT_Format.Nv12, hl2da_api.IMT_Format.Bgra8); // PV images are NV12
         tex_pv.LoadRawTextureData(fc.Buffer, fc.Length);
         tex_pv.Apply();
         fc.Destroy();
 
-        float[] intrinsics = hl2da_user.Unpack1D<float>(fb.Buffer(2), fb.Length(2)); // fx, fy, cx, cy
+        var metadata = hl2da_user.UnpackMetadata_PV(fb.Buffer(2));
         float[,] pose = hl2da_user.Unpack2D<float>(fb.Buffer(3), hl2da_user.POSE_ROWS, hl2da_user.POSE_COLS);
 
         // Display frame        
         tmp_pv_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
-        tmp_pv_k.text = sensor_names[fb.Id] + string.Format(" Calibration: fx={0}, fy={1}, cx={2}, cy={3}", intrinsics[0], intrinsics[1], intrinsics[2], intrinsics[3]);
+        tmp_pv_k.text = sensor_names[fb.Id] + string.Format(" Calibration: fx={0}, fy={1}, cx={2}, cy={3}", metadata.fx, metadata.fy, metadata.cx, metadata.cy);
     }
 
     void Update_Microphone(hl2da_framebuffer fb)
