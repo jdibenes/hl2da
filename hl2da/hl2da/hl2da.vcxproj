@@ -127,6 +127,7 @@
     <ClCompile Include="custom_audio_effect.cpp" />
     <ClCompile Include="custom_video_effect.cpp" />
     <ClCompile Include="extended_audio.cpp" />
+    <ClCompile Include="extended_execution.cpp" />
     <ClCompile Include="extended_eye_tracking.cpp" />
     <ClCompile Include="extended_video.cpp" />
     <ClCompile Include="frame_buffer.cpp" />
@@ -143,6 +144,7 @@
     <ClInclude Include="custom_audio_effect.h" />
     <ClInclude Include="custom_video_effect.h" />
     <ClInclude Include="extended_audio.h" />
+    <ClInclude Include="extended_execution.h" />
     <ClInclude Include="extended_eye_tracking.h" />
     <ClInclude Include="extended_video.h" />
     <ClInclude Include="frame_buffer.h" />
