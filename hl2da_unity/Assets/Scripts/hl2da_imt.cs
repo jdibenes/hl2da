@@ -46,6 +46,6 @@ public class hl2da_imt
 
     public static uint GetStride_PV(uint width)
     {
-        return width + ((64 - (width & 63)) & 63);
+        return (width + 63U) & ~63U;
     }
 }
