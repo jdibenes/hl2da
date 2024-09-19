@@ -3,6 +3,7 @@
 #include "../hl2da/research_mode.h"
 #include "../hl2da/personal_video.h"
 #include "../hl2da/spatial_input.h"
+#include "../hl2da/extended_execution.h"
 #include "../hl2da/stream_rm.h"
 #include "../hl2da/stream_pv.h"
 #include "../hl2da/stream_mc.h"
@@ -208,7 +209,7 @@ void Extract(int id, void* frame, int32_t* valid, void const** b, int32_t* l)
     case  0:
     case  1:
     case  2:
-    case  3: RM_Extract_VLC(              frame,        b + 0, l + 0,                             b + 3, l + 3); break;
+    case  3: RM_Extract_VLC(              frame,        b + 0, l + 0,               b + 2, l + 2, b + 3, l + 3); break;
     case  4: RM_Extract_Depth_AHAT(       frame,        b + 0, l + 0, b + 1, l + 1,               b + 3, l + 3); break;
     case  5: RM_Extract_Depth_Longthrow(  frame,        b + 0, l + 0, b + 1, l + 1, b + 2, l + 2, b + 3, l + 3); break;
     case  6: RM_Extract_IMU_Accelerometer(frame,        b + 0, l + 0,                             b + 3, l + 3); break;
@@ -279,6 +280,13 @@ void BypassDepthLock_RM(int bypass)
 
 // OK
 PLUGIN_EXPORT
+void SetConstantFactor_RM_VLC(int64_t factor)
+{
+    RM_VLC_SetConstantFactor(factor);
+}
+
+// OK
+PLUGIN_EXPORT
 void SetFormat_PV(void const* cf)
 {
     PV_SetFormat(*(pv_captureformat*)cf);
@@ -317,6 +325,13 @@ PLUGIN_EXPORT
 uint64_t GetUTCOffset(int32_t samples)
 {
     return GetQPCToUTCOffset(samples);
+}
+
+// OK
+PLUGIN_EXPORT
+void RM_SetEyeSelection(uint32_t enable)
+{
+    ResearchMode_SetEyeSelection(enable != 0);
 }
 
 // OK
@@ -380,6 +395,69 @@ PLUGIN_EXPORT
 void PV_SetBacklightCompensation(uint32_t enable)
 {
     PersonalVideo_SetBacklightCompensation(enable != 0);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetDesiredOptimization(uint32_t mode)
+{
+    PersonalVideo_SetDesiredOptimization(mode);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetPrimaryUse(uint32_t mode)
+{
+    PersonalVideo_SetPrimaryUse(mode);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetOpticalImageStabilization(uint32_t mode)
+{
+    PersonalVideo_SetOpticalImageStabilization(mode);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetHdrVideo(uint32_t mode)
+{
+    PersonalVideo_SetHdrVideo(mode);
+}
+
+// OK
+PLUGIN_EXPORT
+void PV_SetRegionsOfInterest(uint32_t clear, uint32_t set, uint32_t auto_exposure, uint32_t auto_focus, uint32_t bounds_normalized, float x, float y, float w, float h, uint32_t type, uint32_t weight)
+{
+    PersonalVideo_SetRegionsOfInterest(clear != 0, set != 0, auto_exposure != 0, auto_focus != 0, bounds_normalized != 0, x, y, w, h, type, weight);
+}
+
+// OK
+PLUGIN_EXPORT
+void EX_Request()
+{
+    ExtendedExecution_Request();
+}
+
+// OK
+PLUGIN_EXPORT
+uint32_t EX_Status()
+{
+    return ExtendedExecution_Status();
+}
+
+// OK
+PLUGIN_EXPORT
+void EX_SetInterfacePriority(uint32_t id, int32_t priority)
+{
+    ExtendedExecution_SetInterfacePriority(id, priority);
+}
+
+// OK
+PLUGIN_EXPORT
+int32_t EX_GetInterfacePriority(uint32_t id)
+{
+    return ExtendedExecution_GetInterfacePriority(id);
 }
 
 // OK
