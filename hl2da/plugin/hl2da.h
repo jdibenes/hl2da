@@ -393,6 +393,9 @@ PLUGIN_IMPORT
 void BypassDepthLock_RM(int bypass);
 
 PLUGIN_IMPORT
+void SetConstantFactor_RM_VLC(int64_t factor);
+
+PLUGIN_IMPORT
 void SetFormat_PV(void const* cf);
 
 PLUGIN_IMPORT
@@ -409,6 +412,9 @@ void SetFormat_EV(void const* cf);
 
 PLUGIN_IMPORT
 uint64_t GetUTCOffset(int32_t samples);
+
+PLUGIN_IMPORT
+void RM_SetEyeSelection(uint32_t enable);
 
 PLUGIN_IMPORT
 void PV_SetFocus(uint32_t focusmode, uint32_t autofocusrange, uint32_t distance, uint32_t value, uint32_t disabledriverfallback);
@@ -436,6 +442,33 @@ void PV_SetIsoSpeed(uint32_t setauto, uint32_t value);
 
 PLUGIN_IMPORT
 void PV_SetBacklightCompensation(uint32_t enable);
+
+PLUGIN_IMPORT
+void PV_SetDesiredOptimization(uint32_t mode);
+
+PLUGIN_IMPORT
+void PV_SetPrimaryUse(uint32_t mode);
+
+PLUGIN_IMPORT
+void PV_SetOpticalImageStabilization(uint32_t mode);
+
+PLUGIN_IMPORT
+void PV_SetHdrVideo(uint32_t mode);
+
+PLUGIN_IMPORT
+void PV_SetRegionsOfInterest(uint32_t clear, uint32_t set, uint32_t auto_exposure, uint32_t auto_focus, uint32_t bounds_normalized, float x, float y, float w, float h, uint32_t type, uint32_t weight);
+
+PLUGIN_IMPORT
+void EX_Request();
+
+PLUGIN_IMPORT
+uint32_t EX_Status();
+
+PLUGIN_IMPORT
+void EX_SetInterfacePriority(uint32_t id, int32_t priority);
+
+PLUGIN_IMPORT
+int32_t EX_GetInterfacePriority(uint32_t id);
 
 PLUGIN_IMPORT
 void IMT_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out);
