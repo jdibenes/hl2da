@@ -23,4 +23,4 @@ struct SpatialInput_Ray
 bool SpatialInput_WaitForEyeConsent();
 void SpatialInput_Initialize();
 int SpatialInput_GetHeadPoseAndEyeRay(winrt::Windows::Perception::Spatial::SpatialCoordinateSystem const& world, winrt::Windows::Perception::PerceptionTimestamp const& ts, SpatialInput_Frame& head_pose, SpatialInput_Ray& eye_ray);
-int SpatialInput_GetHandPose(winrt::Windows::Perception::Spatial::SpatialCoordinateSystem const& world, winrt::Windows::Perception::PerceptionTimestamp const& ts, winrt::Windows::Perception::People::JointPose* left_poses, winrt::Windows::Perception::People::JointPose* right_poses);
+int SpatialInput_GetHandPose(winrt::Windows::Perception::Spatial::SpatialCoordinateSystem const& world, winrt::Windows::Perception::PerceptionTimestamp const& ts, std::vector<winrt::Windows::Perception::People::JointPose>& left_poses, std::vector<winrt::Windows::Perception::People::JointPose>& right_poses);
