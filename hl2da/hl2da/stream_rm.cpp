@@ -1,6 +1,7 @@
 
 #include "research_mode.h"
 #include "locator.h"
+#include "extended_execution.h"
 #include "frame_buffer.h"
 #include "timestamps.h"
 #include "log.h"
@@ -17,10 +18,18 @@ using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Windows::Perception::Spatial;
 using namespace winrt::Windows::Perception::Spatial::Preview;
 
+struct vlc_metadata
+{
+    uint64_t exposure;
+    uint32_t gain;
+    uint32_t _reserved;
+};
+
 class rm_frame : public sensor_frame
 {
 public:
     IResearchModeSensorFrame* rmsf;
+    vlc_metadata vlc;
     winrt::Windows::Foundation::Numerics::float4x4 pose;
 
     rm_frame(IResearchModeSensorFrame* f, winrt::Windows::Foundation::Numerics::float4x4 const& p);
@@ -35,6 +44,7 @@ constexpr int SENSOR_COUNT = 9;
 
 static CRITICAL_SECTION g_depth_lock;
 static bool g_bypass_lock;
+static int64_t g_vlc_constant_factor = -125000;
 
 static frame_buffer g_buffer[SENSOR_COUNT];
 static HANDLE g_event_enable[SENSOR_COUNT]; // CloseHandle
@@ -57,9 +67,10 @@ rm_frame::~rm_frame()
 }
 
 // OK
-static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const& locator)
+static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const& locator, int base_priority)
 {
     bool is_depth_camera = ((id == DEPTH_AHAT) || (id == DEPTH_LONG_THROW)) && !g_bypass_lock;
+    bool is_vlc = (id >= LEFT_FRONT) && (id <= RIGHT_RIGHT);
     PerceptionTimestamp perception_timestamp = nullptr;
     HANDLE event_enable = g_event_enable[id];
     IResearchModeSensorFrame* pSensorFrame; // Release
@@ -68,6 +79,7 @@ static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const
     float4x4 pose;
 
     WaitForSingleObject(event_enable, INFINITE);
+    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(id));
 
     if (is_depth_camera) { EnterCriticalSection(&g_depth_lock); }
 
@@ -78,7 +90,7 @@ static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const
     sensor->GetNextBuffer(&pSensorFrame); // block
 
     pSensorFrame->GetTimeStamp(&timestamp);
-    host_ticks = timestamp.HostTicks;
+    host_ticks = timestamp.HostTicks + (is_vlc ? g_vlc_constant_factor : 0); // workaround for https://github.com/microsoft/HoloLens2ForCV/issues/134
     perception_timestamp = QPCTimestampToPerceptionTimestamp(host_ticks);
     pose = Locator_Locate(perception_timestamp, locator, Locator_GetWorldCoordinateSystem(perception_timestamp));
 
@@ -91,6 +103,8 @@ static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const
     sensor->CloseStream();
 
     if (is_depth_camera) { LeaveCriticalSection(&g_depth_lock); }
+
+    SetThreadPriority(GetCurrentThread(), base_priority);
 }
 
 // OK
@@ -99,6 +113,7 @@ static DWORD WINAPI RM_EntryPoint(void* param)
     SpatialLocator locator = nullptr;
     IResearchModeSensor* sensor;
     ResearchModeSensorType type;
+    int base_priority;
     bool ok;
 
     sensor = (IResearchModeSensor*)param;
@@ -108,8 +123,9 @@ static DWORD WINAPI RM_EntryPoint(void* param)
     if (!ok) { return false; }
 
     locator = ResearchMode_GetLocator();
+    base_priority = GetThreadPriority(GetCurrentThread());
 
-    do { RM_Acquire(sensor, type, locator); } while (WaitForSingleObject(g_event_quit[type], 0) == WAIT_TIMEOUT);
+    do { RM_Acquire(sensor, type, locator, base_priority); } while (WaitForSingleObject(g_event_quit[type], 0) == WAIT_TIMEOUT);
 
     return 0;
 }
@@ -140,7 +156,7 @@ void RM_Release(void* frame)
 }
 
 // OK
-void RM_Extract_VLC(void* frame, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length)
+void RM_Extract_VLC(void* frame, void const** buffer, int32_t* length, void const** metadata_buffer, int32_t* metadata_length, void const** pose_buffer, int32_t* pose_length)
 {
     rm_frame* f = (rm_frame*)frame;
     IResearchModeSensorVLCFrame* pVLCFrame; // Release
@@ -149,12 +165,16 @@ void RM_Extract_VLC(void* frame, void const** buffer, int32_t* length, void cons
 
     f->rmsf->QueryInterface(IID_PPV_ARGS(&pVLCFrame));
     pVLCFrame->GetBuffer(&b, &l);
+    pVLCFrame->GetExposure(&f->vlc.exposure);
+    pVLCFrame->GetGain(&f->vlc.gain);
     pVLCFrame->Release();
 
     *buffer = b;
     *length = (int32_t)l;
-    *pose_buffer = &(f->pose);
+    *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+    *metadata_buffer = &f->vlc;
+    *metadata_length = sizeof(rm_frame::vlc) / sizeof(vlc_metadata);
 }
 
 // OK
@@ -346,6 +366,12 @@ void RM_CleanupDepthLock()
 void RM_BypassDepthLock(bool bypass)
 {
     g_bypass_lock = bypass;
+}
+
+// OK
+void RM_VLC_SetConstantFactor(int64_t factor)
+{
+    g_vlc_constant_factor = factor;
 }
 
 // OK
