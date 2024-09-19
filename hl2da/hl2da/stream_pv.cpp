@@ -174,6 +174,8 @@ static void PV_Acquire(int base_priority)
     g_buffer.Clear();
     }
 
+    PersonalVideo_Close();
+
     SetThreadPriority(GetCurrentThread(), base_priority);
 
     while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0) { Sleep(1); }
