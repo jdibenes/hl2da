@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Runtime.InteropServices;
 
 public class HoloLens2DA : MonoBehaviour
 {
@@ -80,6 +81,10 @@ public class HoloLens2DA : MonoBehaviour
     private TextMeshPro tmp_ee_pose;
     private TextMeshPro tmp_ea;
     private TextMeshPro tmp_ev_format;
+
+    private Dictionary<hl2da_api.SENSOR_ID, float[,]> rm_uv2xy = new Dictionary<hl2da_api.SENSOR_ID, float[,]>();
+    private Dictionary<hl2da_api.SENSOR_ID, float[,]> rm_mapxy = new Dictionary<hl2da_api.SENSOR_ID, float[,]>();
+    private Dictionary<hl2da_api.SENSOR_ID, float[]> rm_intrinsics = new Dictionary<hl2da_api.SENSOR_ID, float[]>();
 
     // Start is called before the first frame update
     void Start()
@@ -376,6 +381,11 @@ public class HoloLens2DA : MonoBehaviour
         }
 
         hl2da_user.RM_GetIntrinsics(id, out float[,] uv2xy, out float[,] mapxy, out float[] k);
+
+        rm_uv2xy[id] = uv2xy;
+        rm_mapxy[id] = mapxy;
+        rm_intrinsics[id] = k;
+
         return string.Format(" fx={0}, fy={1}, cx={2}, cy={3}", k[0], k[1], k[2], k[3]);
     }
 
@@ -419,6 +429,10 @@ public class HoloLens2DA : MonoBehaviour
         int index = (int)fb.Id;
 
         // Load frame data into textures
+        //byte[,] undistorted_image = hl2da_coprocessor.RM_Undistort<byte>(fb.Id, rm_mapxy[fb.Id], 1, 0, 0, fb.Buffer(0));
+        //GCHandle h2 = GCHandle.Alloc(undistorted_image, GCHandleType.Pinned);
+        //tex_vlc[index].LoadRawTextureData(h2.AddrOfPinnedObject(), fb.Length(0) * sizeof(byte));
+        //h2.Free();
         tex_vlc[index].LoadRawTextureData(fb.Buffer(0), fb.Length(0) * sizeof(byte));  // Image is u8
         tex_vlc[index].Apply();
         Graphics.Blit(tex_vlc[index], tex_vlc_r[index], grayscale_mat); // Apply grayscale map to Image
