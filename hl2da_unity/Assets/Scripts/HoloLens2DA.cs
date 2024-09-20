@@ -126,6 +126,7 @@ public class HoloLens2DA : MonoBehaviour
         hl2da_user.InitializeComponents();
         hl2da_user.OverrideWorldCoordinateSystem(); // Link Unity and plugin coordinate systems
 
+        hl2da_user.RM_SetEyeSelection(true); // ???
         hl2da_user.SetFormat_PV(pvcf);
         hl2da_user.SetFormat_Microphone(mcch);
         hl2da_user.SetFormat_ExtendedEyeTracking(eefi);
@@ -135,9 +136,15 @@ public class HoloLens2DA : MonoBehaviour
         utc_offset = hl2da_user.GetUTCOffset();
         pv_settings_latch = false;
 
-        Update_Extrinsics();
+        Update_Calibration();
 
+        hl2da_user.SetConstantFactorVLC_RM(); // Workaround for https://github.com/microsoft/HoloLens2ForCV/issues/134
         hl2da_user.BypassDepthLock_RM(true); // Allows simultaneous access to AHAT and longthrow depth
+
+        // Test, not required
+        hl2da_user.EX_SetInterfacePriority(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT, hl2da_api.InterfacePriority.ABOVE_NORMAL);
+        hl2da_user.EX_SetInterfacePriority(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT, hl2da_api.InterfacePriority.ABOVE_NORMAL);
+        int pv_prio = hl2da_user.EX_GetInterfacePriority(hl2da_api.SENSOR_ID.PV);
 
         // Use a buffer size of 2 seconds (except longthrow and PV)
         hl2da_user.Initialize(hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT,       60); // Buffer size limited by memory                          // 30 Hz
@@ -349,18 +356,35 @@ public class HoloLens2DA : MonoBehaviour
         camera_points[0, 0] = 0.0f;
         camera_points[0, 1] = 0.0f;
 
-        float[,] mpoint = hl2da_user.MapImagePointToCameraUnitPlane_RM(id, image_points); // get image center in camera space
-        float[,] ppoint = hl2da_user.MapCameraSpaceToImagePoint_RM(id, camera_points); // get image principal point
+        float[,] mpoint = hl2da_user.RM_MapImagePointToCameraUnitPlane(id, image_points); // get image center in camera space
+        float[,] ppoint = hl2da_user.RM_MapCameraSpaceToImagePoint(id, camera_points); // get image principal point
 
         return string.Format(" c'=[{0}, {1}], c=[{2}, {3}]", mpoint[0, 0], mpoint[0, 1], ppoint[0, 0], ppoint[0, 1]);
     }
 
-    void Update_Extrinsics()
+    string Calibration(hl2da_api.SENSOR_ID id)
+    {
+        switch (id)
+        {
+        case hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT:
+        case hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT:
+        case hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT:
+        case hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT:
+        case hl2da_api.SENSOR_ID.RM_DEPTH_AHAT:
+        case hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW: break;
+        default: return "";
+        }
+
+        hl2da_user.RM_GetIntrinsics(id, out float[,] uv2xy, out float[,] mapxy, out float[] k);
+        return string.Format(" fx={0}, fy={1}, cx={2}, cy={3}", k[0], k[1], k[2], k[3]);
+    }
+
+    void Update_Calibration()
     {
         for (hl2da_api.SENSOR_ID id = hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da_api.SENSOR_ID.RM_IMU_GYROSCOPE; ++id)
         {
-            float[,] extrinsics = hl2da_user.GetExtrinsics_RM(id);
-            string text = sensor_names[id] + " Calibration: extrinsics=" + PoseToString(extrinsics) + CentralPoints(id);
+            float[,] extrinsics = hl2da_user.RM_GetExtrinsics(id);
+            string text = sensor_names[id] + " Calibration: extrinsics=" + PoseToString(extrinsics) + CentralPoints(id) + Calibration(id);
             calibrations[(int)id].GetComponent<TextMeshPro>().text = text;
         }
     }
@@ -612,5 +636,10 @@ public class HoloLens2DA : MonoBehaviour
         hl2da_user.PV_SetSceneMode(hl2da_api.PV_CaptureSceneMode.Backlit);
         hl2da_user.PV_SetIsoSpeed(hl2da_api.PV_IsoSpeedMode.Manual, 100);
         hl2da_user.PV_SetBacklightCompensation(hl2da_api.PV_BacklightCompensationState.Enable);
+        hl2da_user.PV_SetDesiredOptimization(hl2da_api.PV_MediaCaptureOptimization.LatencyThenPower);
+        hl2da_user.PV_SetPrimaryUse(hl2da_api.PV_CaptureUse.Video);
+        hl2da_user.PV_SetOpticalImageStabilization(hl2da_api.PV_OpticalImageStabilizationMode.On);
+        hl2da_user.PV_SetHdrVideo(hl2da_api.PV_HdrVideoMode.Off);
+        hl2da_user.PV_SetRegionsOfInterest(false, true, true, true, true, 0, 0, 1, 1, hl2da_api.PV_RegionOfInterestType.Unknown, 100);
     }
 }
