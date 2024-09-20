@@ -49,64 +49,25 @@ public class hl2da_user
         return ret;
     }
 
+    public static ulong GetUTCOffset(int samples = 32)
+    {
+        return hl2da_api.GetUTCOffset(samples);
+    }
+
     public static void Initialize(hl2da_api.SENSOR_ID id, int buffer_size)
     {
         hl2da_api.Initialize((int)id, buffer_size);
     }
 
-    public static void SetEnable(hl2da_api.SENSOR_ID id, bool enable)
+    public static void SetConstantFactorVLC_RM(long factor = -125000)
     {
-        hl2da_api.SetEnable((int)id, enable ? 1 : 0);
-    }
-
-    public static float[,] GetExtrinsics_RM(hl2da_api.SENSOR_ID id)
-    {
-        float[,] extrinsics = new float[POSE_ROWS, POSE_COLS];
-        GCHandle h = GCHandle.Alloc(extrinsics, GCHandleType.Pinned);
-        hl2da_api.GetExtrinsics_RM((int)id, h.AddrOfPinnedObject());
-        h.Free();
-        return extrinsics;
-    }
-
-    public static float[,] MapImagePointToCameraUnitPlane_RM(hl2da_api.SENSOR_ID id, float[,] image_points)
-    {
-        float[,] camera_points = new float[image_points.GetLength(0), image_points.GetLength(1)];
-
-        GCHandle hi = GCHandle.Alloc(image_points, GCHandleType.Pinned);
-        GCHandle ho = GCHandle.Alloc(camera_points, GCHandleType.Pinned);
-
-        hl2da_api.MapImagePointToCameraUnitPlane_RM((int)id, hi.AddrOfPinnedObject(), ho.AddrOfPinnedObject(), image_points.Length / 2);
-
-        hi.Free();
-        ho.Free();
-
-        return camera_points;
-    }
-
-    public static float[,] MapCameraSpaceToImagePoint_RM(hl2da_api.SENSOR_ID id, float[,] camera_points)
-    {
-        float[,] image_points = new float[camera_points.GetLength(0), camera_points.GetLength(1)];
-
-        GCHandle hi = GCHandle.Alloc(camera_points, GCHandleType.Pinned);
-        GCHandle ho = GCHandle.Alloc(image_points, GCHandleType.Pinned);
-
-        hl2da_api.MapCameraSpaceToImagePoint_RM((int)id, hi.AddrOfPinnedObject(), ho.AddrOfPinnedObject(), camera_points.Length / 2);
-
-        hi.Free();
-        ho.Free();
-
-        return image_points;
+        hl2da_api.SetConstantFactorVLC_RM(factor);
     }
 
     public static void BypassDepthLock_RM(bool bypass)
     {
         hl2da_api.BypassDepthLock_RM(bypass ? 1 : 0);
-    }
-
-    public static void SetConstantFactor_RM_VLC(long factor = -125000)
-    {
-        hl2da_api.SetConstantFactor_RM_VLC(factor);
-    }
+    }    
 
     public static void SetFormat_PV(hl2da_api.pv_captureformat cf)
     {
@@ -133,14 +94,84 @@ public class hl2da_user
         hl2da_api.SetFormat_EV(ref cf);
     }
 
-    public static ulong GetUTCOffset(int samples = 32)
+    public static void SetEnable(hl2da_api.SENSOR_ID id, bool enable)
     {
-        return hl2da_api.GetUTCOffset(samples);
+        hl2da_api.SetEnable((int)id, enable ? 1 : 0);
     }
-
+    
     public static void RM_SetEyeSelection(bool enable)
     {
         hl2da_api.RM_SetEyeSelection(enable ? 1 : 0);
+    }
+
+    public static void RM_GetIntrinsics(hl2da_api.SENSOR_ID id, out float[,] uv2xy, out float[,] mapxy, out float[] k)
+    {
+        int w;
+        int h;
+
+        switch (id)
+        {
+        case hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT: 
+        case hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT:
+        case hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT:
+        case hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT:  w = 640; h = 480; break;
+        case hl2da_api.SENSOR_ID.RM_DEPTH_AHAT:      w = 512; h = 512; break;
+        case hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW: w = 320; h = 288; break;
+        default:                                     w = 0;   h = 0;   break;
+        }
+
+        uv2xy = new float[2 * h, w];
+        mapxy = new float[2 * h, w];
+        k     = new float[4];
+
+        GCHandle h1 = GCHandle.Alloc(uv2xy, GCHandleType.Pinned);
+        GCHandle h2 = GCHandle.Alloc(mapxy, GCHandleType.Pinned);
+        GCHandle h3 = GCHandle.Alloc(k,     GCHandleType.Pinned);
+
+        hl2da_api.RM_GetIntrinsics((int)id, h1.AddrOfPinnedObject(), h2.AddrOfPinnedObject(), h3.AddrOfPinnedObject());
+
+        h1.Free();
+        h2.Free();
+        h3.Free();
+    }
+
+    public static float[,] RM_GetExtrinsics(hl2da_api.SENSOR_ID id)
+    {
+        float[,] extrinsics = new float[POSE_ROWS, POSE_COLS];
+        GCHandle h = GCHandle.Alloc(extrinsics, GCHandleType.Pinned);
+        hl2da_api.RM_GetExtrinsics((int)id, h.AddrOfPinnedObject());
+        h.Free();
+        return extrinsics;
+    }
+
+    public static float[,] RM_MapImagePointToCameraUnitPlane(hl2da_api.SENSOR_ID id, float[,] image_points)
+    {
+        float[,] camera_points = new float[image_points.GetLength(0), image_points.GetLength(1)];
+
+        GCHandle hi = GCHandle.Alloc(image_points, GCHandleType.Pinned);
+        GCHandle ho = GCHandle.Alloc(camera_points, GCHandleType.Pinned);
+
+        hl2da_api.RM_MapImagePointToCameraUnitPlane((int)id, hi.AddrOfPinnedObject(), 2, ho.AddrOfPinnedObject(), 2, image_points.Length / 2);
+
+        hi.Free();
+        ho.Free();
+
+        return camera_points;
+    }
+
+    public static float[,] RM_MapCameraSpaceToImagePoint(hl2da_api.SENSOR_ID id, float[,] camera_points)
+    {
+        float[,] image_points = new float[camera_points.GetLength(0), camera_points.GetLength(1)];
+
+        GCHandle hi = GCHandle.Alloc(camera_points, GCHandleType.Pinned);
+        GCHandle ho = GCHandle.Alloc(image_points, GCHandleType.Pinned);
+
+        hl2da_api.RM_MapCameraSpaceToImagePoint((int)id, hi.AddrOfPinnedObject(), 2, ho.AddrOfPinnedObject(), 2, camera_points.Length / 2);
+
+        hi.Free();
+        ho.Free();
+
+        return image_points;
     }
 
     public static hl2da_api.pv_captureformat CreateFormat_PV(ushort width, ushort height, byte framerate, bool enable_mrc, bool shared)
@@ -291,12 +322,12 @@ public class hl2da_user
         hl2da_api.PV_SetRegionsOfInterest(clear ? 1 : 0, set ? 1 : 0, auto_exposure ? 1 : 0, auto_focus ? 1 : 0, bounds_normalized ? 1 : 0, x, y, w, h, (uint)type, weight);
     }
 
-    public static void EX_SetInterfacePriority(hl2da_api.InterfaceID id, hl2da_api.InterfacePriority priority)
+    public static void EX_SetInterfacePriority(hl2da_api.SENSOR_ID id, hl2da_api.InterfacePriority priority)
     {
         hl2da_api.EX_SetInterfacePriority((uint)id, (int)priority);
     }
 
-    public static int EX_GetInterfacePriority(hl2da_api.InterfaceID id)
+    public static int EX_GetInterfacePriority(hl2da_api.SENSOR_ID id)
     {
         return hl2da_api.EX_GetInterfacePriority((uint)id);
     }
