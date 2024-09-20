@@ -474,7 +474,7 @@ public static class hl2da_api
     public static extern void Initialize(int id, int buffer_size);
 
     [DllImport("hl2da")]
-    public static extern void SetConstantFactor_RM_VLC(long factor);
+    public static extern void SetConstantFactorVLC_RM(long factor);
 
     [DllImport("hl2da")]
     public static extern void BypassDepthLock_RM(int bypass);
