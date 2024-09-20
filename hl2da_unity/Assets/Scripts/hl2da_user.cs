@@ -104,21 +104,25 @@ public class hl2da_user
         hl2da_api.RM_SetEyeSelection(enable ? 1 : 0);
     }
 
-    public static void RM_GetIntrinsics(hl2da_api.SENSOR_ID id, out float[,] uv2xy, out float[,] mapxy, out float[] k)
+    public static bool RM_GetResolution(hl2da_api.SENSOR_ID id, out int w, out int h)
     {
-        int w;
-        int h;
-
         switch (id)
         {
-        case hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT: 
+        case hl2da_api.SENSOR_ID.RM_VLC_LEFTFRONT:
         case hl2da_api.SENSOR_ID.RM_VLC_LEFTLEFT:
         case hl2da_api.SENSOR_ID.RM_VLC_RIGHTFRONT:
         case hl2da_api.SENSOR_ID.RM_VLC_RIGHTRIGHT:  w = 640; h = 480; break;
         case hl2da_api.SENSOR_ID.RM_DEPTH_AHAT:      w = 512; h = 512; break;
         case hl2da_api.SENSOR_ID.RM_DEPTH_LONGTHROW: w = 320; h = 288; break;
-        default:                                     w = 0;   h = 0;   break;
+        default:                                     w =   0; h =   0; return false;
         }
+
+        return true;
+    }
+
+    public static void RM_GetIntrinsics(hl2da_api.SENSOR_ID id, out float[,] uv2xy, out float[,] mapxy, out float[] k)
+    {
+        RM_GetResolution(id, out int w, out int h);
 
         uv2xy = new float[2 * h, w];
         mapxy = new float[2 * h, w];
