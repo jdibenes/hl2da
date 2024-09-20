@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{97147093-fe43-436f-b01e-812af63a3060}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{a2a11c4d-f829-4c91-8532-d30bcbe2a489}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Libraries">
+      <UniqueIdentifier>{da2d4563-d134-47f7-916d-fc87be4ff154}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Cores">
+      <UniqueIdentifier>{9e30dc58-c97b-4295-9869-9ed147d58951}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Cores">
+      <UniqueIdentifier>{2c088c5e-3817-49f5-8e2b-5ab37c924cb1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\hl2da\converter.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\custom_audio_effect.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\custom_video_effect.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\extended_audio.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\extended_execution.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\extended_eye_tracking.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\extended_video.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\frame_buffer.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\locator.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\lock.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\log.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\microphone_capture.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\neon.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\nfo.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\personal_video.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\research_mode.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\ring_buffer.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\spatial_input.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_ea.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_ee.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_ev.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_mc.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_pv.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_rm.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\stream_si.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\timestamps.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="..\hl2da\types.h">
+      <Filter>Libraries</Filter>
+    </ClInclude>
+    <ClInclude Include="hl2da_itc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="depth.h">
+      <Filter>Header Files\Cores</Filter>
+    </ClInclude>
+    <ClInclude Include="transform.h">
+      <Filter>Header Files\Cores</Filter>
+    </ClInclude>
+    <ClInclude Include="effect.h">
+      <Filter>Header Files\Cores</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\hl2da\converter.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\custom_audio_effect.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\custom_video_effect.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\extended_audio.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\extended_execution.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\extended_eye_tracking.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\extended_video.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\frame_buffer.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\locator.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\lock.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\log.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\microphone_capture.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\neon.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\nfo.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\personal_video.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\research_mode.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\spatial_input.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_ea.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_ee.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_ev.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_mc.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_pv.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_rm.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\stream_si.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="..\hl2da\timestamps.cpp">
+      <Filter>Libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="coprocessor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="depth.cpp">
+      <Filter>Source Files\Cores</Filter>
+    </ClCompile>
+    <ClCompile Include="transform.cpp">
+      <Filter>Source Files\Cores</Filter>
+    </ClCompile>
+    <ClCompile Include="effect.cpp">
+      <Filter>Source Files\Cores</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
