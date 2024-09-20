@@ -468,37 +468,16 @@ public static class hl2da_api
     public static extern int OverrideWorldCoordinateSystem(IntPtr scs);
 
     [DllImport("hl2da")]
+    public static extern ulong GetUTCOffset(int samples);
+
+    [DllImport("hl2da")]
     public static extern void Initialize(int id, int buffer_size);
 
     [DllImport("hl2da")]
-    public static extern void SetEnable(int id, int enable);
-
-    [DllImport("hl2da")]
-    public static extern int GetByFramestamp(int id, int stamp, ref IntPtr frame, ref ulong timestamp, ref int framestamp);
-
-    [DllImport("hl2da")]
-    public static extern int GetByTimestamp(int id, ulong stamp, int time_preference, int tiebreak_right, ref IntPtr frame, ref ulong timestamp, ref int framestamp);
-
-    [DllImport("hl2da")]
-    public static extern void Release(int id, IntPtr frame);
-
-    [DllImport("hl2da")]
-    public static extern void Extract(int id, IntPtr frame, ref int valid, IntPtr[] b, int[] l);
-
-    [DllImport("hl2da")]
-    public static extern void GetExtrinsics_RM(int id, IntPtr extrinsics);
-
-    [DllImport("hl2da")]
-    public static extern void MapImagePointToCameraUnitPlane_RM(int id, IntPtr image_points, IntPtr camera_points, int point_count);
-
-    [DllImport("hl2da")]
-    public static extern void MapCameraSpaceToImagePoint_RM(int id, IntPtr camera_points, IntPtr image_points, int point_count);
+    public static extern void SetConstantFactor_RM_VLC(long factor);
 
     [DllImport("hl2da")]
     public static extern void BypassDepthLock_RM(int bypass);
-
-    [DllImport("hl2da")]
-    public static extern void SetConstantFactor_RM_VLC(long factor);
 
     [DllImport("hl2da")]
     public static extern void SetFormat_PV(ref pv_captureformat cf);
@@ -516,10 +495,34 @@ public static class hl2da_api
     public static extern void SetFormat_EV(ref ev_captureformat cf);
 
     [DllImport("hl2da")]
-    public static extern ulong GetUTCOffset(int samples);
+    public static extern void SetEnable(int id, int enable);
+
+    [DllImport("hl2da")]
+    public static extern int GetByFramestamp(int id, int stamp, ref IntPtr frame, ref ulong timestamp, ref int framestamp);
+
+    [DllImport("hl2da")]
+    public static extern int GetByTimestamp(int id, ulong stamp, int time_preference, int tiebreak_right, ref IntPtr frame, ref ulong timestamp, ref int framestamp);
+
+    [DllImport("hl2da")]
+    public static extern void Extract(int id, IntPtr frame, ref int valid, IntPtr[] b, int[] l);
+
+    [DllImport("hl2da")]
+    public static extern void Release(int id, IntPtr frame);
 
     [DllImport("hl2da")]
     public static extern void RM_SetEyeSelection(int enable);
+
+    [DllImport("hl2da")]
+    public static extern void RM_GetIntrinsics(int id, IntPtr uv2xy, IntPtr mapxy, IntPtr k);
+
+    [DllImport("hl2da")]
+    public static extern void RM_GetExtrinsics(int id, IntPtr extrinsics);
+
+    [DllImport("hl2da")]
+    public static extern void RM_MapImagePointToCameraUnitPlane(int id, IntPtr image_points, int in_pitch, IntPtr camera_points, int out_pitch, int point_count);
+
+    [DllImport("hl2da")]
+    public static extern void RM_MapCameraSpaceToImagePoint(int id, IntPtr camera_points, int in_pitch, IntPtr image_points, int out_pitch, int point_count);
 
     [DllImport("hl2da")]
     public static extern void PV_SetFocus(uint focusmode, uint autofocusrange, uint distance, uint value, uint disabledriverfallback);
