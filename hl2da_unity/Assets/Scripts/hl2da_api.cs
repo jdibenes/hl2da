@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-public static partial class hl2da_api
+public static partial class hl2da
 {
     public enum SENSOR_ID
     {
@@ -288,7 +288,7 @@ public static partial class hl2da_api
         [FieldOffset(88)] public float extrinsics_mf_rx;
         [FieldOffset(92)] public float extrinsics_mf_ry;
         [FieldOffset(96)] public float extrinsics_mf_rz;
-        [FieldOffset(100)] public float extrinsics_mf_tw;
+        [FieldOffset(100)] public float extrinsics_mf_rw;
         // 104
     };
 
