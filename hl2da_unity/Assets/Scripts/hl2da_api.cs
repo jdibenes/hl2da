@@ -2,7 +2,7 @@
 using System;
 using System.Runtime.InteropServices;
 
-public static class hl2da_api
+public static partial class hl2da_api
 {
     public enum SENSOR_ID
     {
@@ -260,34 +260,36 @@ public static class hl2da_api
         [FieldOffset( 0)] public ulong exposure;
         [FieldOffset( 8)] public uint gain;
         [FieldOffset(12)] public uint _reserved;
+        // 16
     };
 
-    [StructLayout(LayoutKind.Sequential)]
+    [StructLayout(LayoutKind.Explicit)]
     public struct pv_metadata
     {
-        public float fx;
-        public float fy;
-        public float cx;
-        public float cy;
-        public ulong exposure_time;
-        public ulong exposure_compensation_0;
-        public ulong exposure_compensation_1;
-        public uint lens_position;
-        public uint focus_state;
-        public uint iso_speed;
-        public uint white_balance;
-        public float analog_gain;
-        public float digital_gain;
-        public float r_gain;
-        public float g_gain;
-        public float b_gain;
-        public float extrinsics_mf_tx;
-        public float extrinsics_mf_ty;
-        public float extrinsics_mf_tz;
-        public float extrinsics_mf_rx;
-        public float extrinsics_mf_ry;
-        public float extrinsics_mf_rz;
-        public float extrinsics_mf_tw;
+        [FieldOffset(0)] public float fx;
+        [FieldOffset(4)] public float fy;
+        [FieldOffset(8)] public float cx;
+        [FieldOffset(12)] public float cy;
+        [FieldOffset(16)] public ulong exposure_time;
+        [FieldOffset(24)] public ulong exposure_compensation_0;
+        [FieldOffset(32)] public ulong exposure_compensation_1;
+        [FieldOffset(40)] public uint lens_position;
+        [FieldOffset(44)] public uint focus_state;
+        [FieldOffset(48)] public uint iso_speed;
+        [FieldOffset(52)] public uint white_balance;
+        [FieldOffset(56)] public float analog_gain;
+        [FieldOffset(60)] public float digital_gain;
+        [FieldOffset(64)] public float r_gain;
+        [FieldOffset(68)] public float g_gain;
+        [FieldOffset(72)] public float b_gain;
+        [FieldOffset(76)] public float extrinsics_mf_tx;
+        [FieldOffset(80)] public float extrinsics_mf_ty;
+        [FieldOffset(84)] public float extrinsics_mf_tz;
+        [FieldOffset(88)] public float extrinsics_mf_rx;
+        [FieldOffset(92)] public float extrinsics_mf_ry;
+        [FieldOffset(96)] public float extrinsics_mf_rz;
+        [FieldOffset(100)] public float extrinsics_mf_tw;
+        // 104
     };
 
     public enum PV_FocusMode
@@ -453,6 +455,43 @@ public static class hl2da_api
         Bgra8 = 87,
         Nv12 = 103,
         Yuy2 = 107,
+    }
+
+    public class pointer : IDisposable
+    {
+        protected GCHandle h;
+        protected IntPtr p;
+
+        protected pointer(GCHandle o)
+        {
+            h = o;
+            p = h.AddrOfPinnedObject();
+        }
+
+        public static pointer get<T>(T o)
+        {
+            return new pointer(GCHandle.Alloc(o, GCHandleType.Pinned));
+        }
+
+        public IntPtr value { get { return p; } }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (p == IntPtr.Zero) { return; }
+            p = IntPtr.Zero;
+            h.Free();
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        ~pointer()
+        {
+            Dispose(false);
+        }
     }
 
     [DllImport("hl2da")]
