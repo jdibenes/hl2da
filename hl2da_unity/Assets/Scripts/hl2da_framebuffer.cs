@@ -1,7 +1,7 @@
 
 using System;
 
-public static partial class hl2da_api
+public static partial class hl2da
 {
     public class framebuffer : IDisposable
     {
@@ -9,8 +9,8 @@ public static partial class hl2da_api
 
         private IntPtr frame;
 
-        private hl2da_api.STATUS status;
-        private hl2da_api.SENSOR_ID id;
+        private hl2da.STATUS status;
+        private hl2da.SENSOR_ID id;
         private ulong timestamp;
         private int framestamp;
         private int valid;
@@ -28,9 +28,9 @@ public static partial class hl2da_api
             Dispose(false);
         }
 
-        public hl2da_api.STATUS Status { get { return status; } }
+        public hl2da.STATUS Status { get { return status; } }
 
-        public hl2da_api.SENSOR_ID Id { get { return id; } }
+        public hl2da.SENSOR_ID Id { get { return id; } }
 
         public ulong Timestamp { get { return timestamp; } }
 
@@ -38,9 +38,9 @@ public static partial class hl2da_api
 
         public int Valid { get { return valid; } }
 
-        public hl2da_api.SI_VALID Valid_SI { get { return (hl2da_api.SI_VALID)valid; } }
+        public hl2da.SI_VALID Valid_SI { get { return (hl2da.SI_VALID)valid; } }
 
-        public hl2da_api.EE_VALID Valid_EE { get { return (hl2da_api.EE_VALID)valid; } }
+        public hl2da.EE_VALID Valid_EE { get { return (hl2da.EE_VALID)valid; } }
 
         public IntPtr Buffer(uint index)
         {
@@ -57,8 +57,8 @@ public static partial class hl2da_api
         private void Reset()
         {
             frame = IntPtr.Zero;
-            status = hl2da_api.STATUS.DISCARDED;
-            id = (hl2da_api.SENSOR_ID)(-1);
+            status = hl2da.STATUS.DISCARDED;
+            id = (hl2da.SENSOR_ID)(-1);
             timestamp = 0;
             framestamp = 0;
             valid = 0;
@@ -69,7 +69,7 @@ public static partial class hl2da_api
         protected virtual void Dispose(bool disposing)
         {
             if (frame == IntPtr.Zero) { return; }
-            hl2da_api.Release((int)id, frame);
+            hl2da.Release((int)id, frame);
             Reset();
         }
 
@@ -81,23 +81,23 @@ public static partial class hl2da_api
 
         private static void Extract(framebuffer fb)
         {
-            hl2da_api.Extract((int)fb.id, fb.frame, ref fb.valid, fb.buffer, fb.length);
+            hl2da.Extract((int)fb.id, fb.frame, ref fb.valid, fb.buffer, fb.length);
         }
 
-        public static framebuffer GetFrame(hl2da_api.SENSOR_ID id, int framestamp)
+        public static framebuffer GetFrame(hl2da.SENSOR_ID id, int framestamp)
         {
             framebuffer fb = new framebuffer();
             fb.id = id;
-            fb.status = (hl2da_api.STATUS)hl2da_api.GetByFramestamp((int)id, framestamp, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
+            fb.status = (hl2da.STATUS)hl2da.GetByFramestamp((int)id, framestamp, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
             if (fb.frame != IntPtr.Zero) { Extract(fb); }
             return fb;
         }
 
-        public static framebuffer GetFrame(hl2da_api.SENSOR_ID id, ulong timestamp, hl2da_api.TIME_PREFERENCE time_preference, bool tiebreak_right)
+        public static framebuffer GetFrame(hl2da.SENSOR_ID id, ulong timestamp, hl2da.TIME_PREFERENCE time_preference, bool tiebreak_right)
         {
             framebuffer fb = new framebuffer();
             fb.id = id;
-            fb.status = (hl2da_api.STATUS)hl2da_api.GetByTimestamp((int)id, timestamp, (int)time_preference, tiebreak_right ? 1 : 0, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
+            fb.status = (hl2da.STATUS)hl2da.GetByTimestamp((int)id, timestamp, (int)time_preference, tiebreak_right ? 1 : 0, ref fb.frame, ref fb.timestamp, ref fb.framestamp);
             if (fb.frame != IntPtr.Zero) { Extract(fb); }
             return fb;
         }
