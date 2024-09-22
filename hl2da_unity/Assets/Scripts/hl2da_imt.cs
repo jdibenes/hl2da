@@ -1,21 +1,21 @@
 
 using System;
 
-public static partial class hl2da_api
+public static partial class hl2da
 {
-    public class imt
+    public class converter : IDisposable
     {
         private IntPtr container;
 
         private IntPtr buffer;
         private int length;
 
-        public imt()
+        public converter()
         {
             Reset();
         }
 
-        ~imt()
+        ~converter()
         {
             Dispose(false);
         }
@@ -34,7 +34,7 @@ public static partial class hl2da_api
         protected virtual void Dispose(bool disposing)
         {
             if (container == IntPtr.Zero) { return; }
-            hl2da_api.IMT_Release(container);
+            hl2da.IMT_Release(container);
             Reset();
         }
 
@@ -44,11 +44,11 @@ public static partial class hl2da_api
             GC.SuppressFinalize(this);
         }
 
-        public static imt Convert(IntPtr image, uint stride, uint height, hl2da_api.IMT_Format format_in, hl2da_api.IMT_Format format_out)
+        public static converter Convert(IntPtr image, uint stride, uint height, hl2da.IMT_Format format_in, hl2da.IMT_Format format_out)
         {
-            imt fc = new imt();
-            hl2da_api.IMT_YUV2RGB(image, stride, height, (uint)format_in, (uint)format_out, ref fc.container);
-            if (fc.container != IntPtr.Zero) { hl2da_api.IMT_Extract(fc.container, ref fc.buffer, ref fc.length); }
+            converter fc = new converter();
+            hl2da.IMT_YUV2RGB(image, stride, height, (uint)format_in, (uint)format_out, ref fc.container);
+            if (fc.container != IntPtr.Zero) { hl2da.IMT_Extract(fc.container, ref fc.buffer, ref fc.length); }
             return fc;
         }
 
