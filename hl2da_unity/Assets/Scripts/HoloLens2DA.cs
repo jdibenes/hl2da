@@ -396,7 +396,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         for (hl2da.SENSOR_ID id = hl2da.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da.SENSOR_ID.RM_IMU_GYROSCOPE; ++id)
         {
-            float[,] extrinsics = hl2da.user.RM_GetExtrinsics(id);
+            float[,] extrinsics = hl2da.user.RM_GetExtrinsics(id, new float[4,4]);
             string text = sensor_names[id] + " Calibration: extrinsics=" + PoseToString(extrinsics) + CentralPoints(id) + Calibration(id);
             calibrations[(int)id].GetComponent<TextMeshPro>().text = text;
         }
@@ -440,7 +440,7 @@ public class HoloLens2DA : MonoBehaviour
         tex_vlc[index].Apply();
         Graphics.Blit(tex_vlc[index], tex_vlc_r[index], grayscale_mat); // Apply grayscale map to Image
 
-        var metadata = hl2da.user.UnpackMetadata_RM_VLC(fb.Buffer(2));
+        var metadata = hl2da.user.Unpack<hl2da.vlc_metadata>(fb.Buffer(2));
         //metadata.exposure
         //metadata.gain
 
@@ -539,7 +539,7 @@ public class HoloLens2DA : MonoBehaviour
             tex_pv.Apply();
         }
 
-        var metadata = hl2da.user.UnpackMetadata_PV(fb.Buffer(2));
+        var metadata = hl2da.user.Unpack<hl2da.pv_metadata>(fb.Buffer(2));
         float[,] pose = hl2da.user.Unpack2D<float>(fb.Buffer(3), hl2da.user.POSE_ROWS, hl2da.user.POSE_COLS);
 
         // Display frame        
@@ -600,7 +600,7 @@ public class HoloLens2DA : MonoBehaviour
     void Update_ExtendedAudio(hl2da.framebuffer fb)
     {
         // Get audio format
-        hl2da.ea_audioformat format = hl2da.user.UnpackFormat_EA(fb.Buffer(2));
+        hl2da.ea_audioformat format = hl2da.user.Unpack<hl2da.ea_audioformat>(fb.Buffer(2));
         string sample_text = string.Format(": channel_count={0}, bits_per_sample={1}, sample_rate={2}, bitrate={3}, subtype={4}, ", format.channel_count, format.bits_per_sample, format.sample_rate, format.bitrate, format.subtype);
         
         if (format.bits_per_sample == 32)
@@ -625,7 +625,7 @@ public class HoloLens2DA : MonoBehaviour
     void Update_ExtendedVideo(hl2da.framebuffer fb)
     {
         // Get video format
-        hl2da.ev_videoformat format = hl2da.user.UnpackFormat_EV(fb.Buffer(2));
+        hl2da.ev_videoformat format = hl2da.user.Unpack<hl2da.ev_videoformat>(fb.Buffer(2));
         string format_text = string.Format(": width={0}, height={1}, framerate={2}, subtype={3}", format.width, format.height, format.framerate, format.subtype);
 
         // Load frame data into textures
