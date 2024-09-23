@@ -20,6 +20,11 @@ public static partial class hl2da
             using (var p = pointer.get(destination)) { Copy<T>(source, p.value, length); }
         }
 
+        public static T Unpack<T>(IntPtr p)
+        {
+            return Marshal.PtrToStructure<T>(p);
+        }
+
         public static T[] Unpack1D<T>(IntPtr source, int length)
         {
             T[] destination = new T[length];
@@ -131,11 +136,10 @@ public static partial class hl2da
             using (pointer h1 = pointer.get(uv2xy), h2 = pointer.get(mapxy), h3 = pointer.get(k)) { hl2da.RM_GetIntrinsics((int)id, h1.value, h2.value, h3.value); }
         }
 
-        public static float[,] RM_GetExtrinsics(hl2da.SENSOR_ID id)
+        public static T RM_GetExtrinsics<T>(hl2da.SENSOR_ID id, T dst)
         {
-            float[,] extrinsics = new float[POSE_ROWS, POSE_COLS];
-            using (pointer h = pointer.get(extrinsics)) { hl2da.RM_GetExtrinsics((int)id, h.value); }
-            return extrinsics;
+            using (pointer h = pointer.get(dst)) { hl2da.RM_GetExtrinsics((int)id, h.value); }
+            return dst;
         }
 
         public static float[,] RM_MapImagePointToCameraUnitPlane(hl2da.SENSOR_ID id, float[,] image_points, int pitch = 2)
@@ -208,26 +212,6 @@ public static partial class hl2da
             cf.subtype = subtype;
 
             return cf;
-        }
-
-        public static hl2da.vlc_metadata UnpackMetadata_RM_VLC(IntPtr buffer)
-        {
-            return Marshal.PtrToStructure<hl2da.vlc_metadata>(buffer);
-        }
-
-        public static hl2da.pv_metadata UnpackMetadata_PV(IntPtr buffer)
-        {
-            return Marshal.PtrToStructure<hl2da.pv_metadata>(buffer);
-        }
-
-        public static hl2da.ea_audioformat UnpackFormat_EA(IntPtr buffer)
-        {
-            return Marshal.PtrToStructure<hl2da.ea_audioformat>(buffer);
-        }
-
-        public static hl2da.ev_videoformat UnpackFormat_EV(IntPtr buffer)
-        {
-            return Marshal.PtrToStructure<hl2da.ev_videoformat>(buffer);
         }
 
         public static void PV_SetFocus(hl2da.PV_FocusMode focusmode, hl2da.PV_AutoFocusRange autofocusrange, hl2da.PV_ManualFocusDistance distance, uint value, hl2da.PV_DriverFallback disabledriverfallback)
