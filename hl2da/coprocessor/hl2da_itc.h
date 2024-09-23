@@ -6,43 +6,40 @@
 #define PLUGIN_IMPORT extern "C" __declspec(dllimport)
 
 PLUGIN_IMPORT
-void ITC_Crop(void* image_in, int32_t width_in, int32_t height_in, int32_t bpp_in, void* image_out, int32_t x_out, int32_t y_out, int32_t width_out, int32_t height_out);
+void Crop(void* image_in, int width_in, int height_in, int bpp_in, void* image_out, int x_out, int y_out, int width_out, int height_out);
 
 PLUGIN_IMPORT
-void ITC_RMUndistort(int32_t id, float* mapxy, int32_t interpolation, int32_t border_mode, uint16_t border_value, void* image_in, void* image_out);
+void RM_Undistort(int id, float* mapxy, int interpolation, int border_mode, uint16_t border_value, void* image_in, void* image_out);
 
 PLUGIN_IMPORT
-void ITC_RMToBGRX(int32_t id, void* image_in, int32_t alpha, void* image_out);
+void RM_ToBGRX(int id, void* image_in, bool alpha, void* image_out);
 
 PLUGIN_IMPORT
-void ITC_RMDepthInitializeRays(int32_t id, float* uv2xy);
+void RM_DepthInitializeRays(int id, float* uv2xy);
 
 PLUGIN_IMPORT
-void ITC_RMDepthNormalize(int32_t id, uint16_t* depth_in, float* depth_out);
+void RM_DepthNormalize(int id, uint16_t* depth_in, float* depth_out);
 
 PLUGIN_IMPORT
-void ITC_RMDepthTo3D(int32_t id, float* depth, float* points);
+void RM_DepthRepeat(int id, float* depth, float* depth3);
 
 PLUGIN_IMPORT
-void ITC_RMDepthFill1(int32_t id, float* depth, float* image_points, float* local_depths, float* out, int32_t width, int32_t height);
+void RM_DepthTo3D(int id, float* depth3, float* points);
 
 PLUGIN_IMPORT
-void ITC_TransformIdentity(float* transform_out);
+void RM_DepthFill2Build(int id, float* depth3, float* points_ul, float* points_br);
 
 PLUGIN_IMPORT
-void ITC_TranformInvert(float* transform_in, float* transform_out);
+void RM_DepthFill1(int id, float* depth, float* image_points, float* local_depths, float* out, int width, int height);
 
 PLUGIN_IMPORT
-void ITC_TransformMultiply(float* transform_in_A, float* transform_in_B, float* transform_out);
+void RM_DepthFill2(int id, float* depth, float* image_points_ul, float* image_points_br, float* local_depths, float* out, int width, int height);
 
 PLUGIN_IMPORT
-void ITC_TransformPoints3(float* transform, float* points_in, int32_t count, float* points_out);
+void TransformPoints3(float* transform, float* points_in, int count, float* points_out);
 
 PLUGIN_IMPORT
-void ITC_GetPoints2Channel(float* points_in, int32_t count, int32_t channel, float* points_out);
+void GetPoints3Channel(float* points_in, int count, int channel, float* points_out);
 
 PLUGIN_IMPORT
-void ITC_GetPoints3Channel(float* points_in, int32_t count, int32_t channel, float* points_out);
-
-PLUGIN_IMPORT
-void ITC_ProjectPoints3(float* intrinsics, float* transform, float* points_in, int32_t count, float* points_out);
+void ProjectPoints3(float* intrinsics, float* transform, float* points_in, int count, float* points_out);

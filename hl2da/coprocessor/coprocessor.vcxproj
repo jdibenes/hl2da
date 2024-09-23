@@ -62,10 +62,8 @@
     <ClInclude Include="..\hl2da\stream_si.h" />
     <ClInclude Include="..\hl2da\timestamps.h" />
     <ClInclude Include="..\hl2da\types.h" />
-    <ClInclude Include="depth.h" />
+    <ClInclude Include="export.h" />
     <ClInclude Include="hl2da_itc.h" />
-    <ClInclude Include="transform.h" />
-    <ClInclude Include="effect.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\hl2da\converter.cpp" />
@@ -93,7 +91,6 @@
     <ClCompile Include="..\hl2da\stream_rm.cpp" />
     <ClCompile Include="..\hl2da\stream_si.cpp" />
     <ClCompile Include="..\hl2da\timestamps.cpp" />
-    <ClCompile Include="coprocessor.cpp" />
     <ClCompile Include="depth.cpp" />
     <ClCompile Include="transform.cpp" />
     <ClCompile Include="effect.cpp" />

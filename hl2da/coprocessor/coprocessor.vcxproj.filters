@@ -10,12 +10,6 @@
     <Filter Include="Libraries">
       <UniqueIdentifier>{da2d4563-d134-47f7-916d-fc87be4ff154}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Cores">
-      <UniqueIdentifier>{9e30dc58-c97b-4295-9869-9ed147d58951}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Cores">
-      <UniqueIdentifier>{2c088c5e-3817-49f5-8e2b-5ab37c924cb1}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\hl2da\converter.h">
@@ -102,14 +96,8 @@
     <ClInclude Include="hl2da_itc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="depth.h">
-      <Filter>Header Files\Cores</Filter>
-    </ClInclude>
-    <ClInclude Include="transform.h">
-      <Filter>Header Files\Cores</Filter>
-    </ClInclude>
-    <ClInclude Include="effect.h">
-      <Filter>Header Files\Cores</Filter>
+    <ClInclude Include="export.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -188,17 +176,14 @@
     <ClCompile Include="..\hl2da\timestamps.cpp">
       <Filter>Libraries</Filter>
     </ClCompile>
-    <ClCompile Include="coprocessor.cpp">
+    <ClCompile Include="depth.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="depth.cpp">
-      <Filter>Source Files\Cores</Filter>
-    </ClCompile>
     <ClCompile Include="transform.cpp">
-      <Filter>Source Files\Cores</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="effect.cpp">
-      <Filter>Source Files\Cores</Filter>
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

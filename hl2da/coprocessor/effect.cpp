@@ -1,15 +1,18 @@
 
 #include <opencv2/opencv.hpp>
 #include "../hl2da/research_mode.h"
+#include "export.h"
 
+PLUGIN_EXPORT
 void Crop(void* image_in, int width_in, int height_in, int bpp_in, void* image_out, int x_out, int y_out, int width_out, int height_out)
 {
-    cv::Mat p = cv::Mat(height_in,  width_in,  CV_8UC(bpp_in), image_in);
+    cv::Mat p = cv::Mat(height_in, width_in, CV_8UC(bpp_in), image_in);
     cv::Mat q = cv::Mat(height_out, width_out, CV_8UC(bpp_in), image_out);
 
     p(cv::Range(y_out, y_out + height_out), cv::Range(x_out, x_out + width_out)).copyTo(q);
 }
 
+PLUGIN_EXPORT
 void RM_Undistort(int id, float* mapxy, int interpolation, int border_mode, uint16_t border_value, void* image_in, void* image_out)
 {
     int width;
@@ -27,7 +30,7 @@ void RM_Undistort(int id, float* mapxy, int interpolation, int border_mode, uint
     default: return;
     }
 
-    cv::Mat in  = cv::Mat(height, width, type, image_in);
+    cv::Mat in = cv::Mat(height, width, type, image_in);
     cv::Mat out = cv::Mat(height, width, type, image_out);
 
     cv::Mat x = cv::Mat(height, width, CV_32FC1, mapxy);
@@ -36,6 +39,7 @@ void RM_Undistort(int id, float* mapxy, int interpolation, int border_mode, uint
     cv::remap(in, out, x, y, interpolation, border_mode, cv::Scalar(border_value));
 }
 
+PLUGIN_EXPORT
 void RM_ToBGRX(int id, void* image_in, bool alpha, void* image_out)
 {
     int c = alpha ? 4 : 3;
@@ -55,7 +59,7 @@ void RM_ToBGRX(int id, void* image_in, bool alpha, void* image_out)
     default: return;
     }
 
-    cv::Mat in  = cv::Mat(height, width, type_in,  image_in);
+    cv::Mat in = cv::Mat(height, width, type_in, image_in);
     cv::Mat out = cv::Mat(height, width, type_out, image_out);
 
     cv::cvtColor(in, out, alpha ? cv::COLOR_GRAY2BGRA : cv::COLOR_GRAY2BGR);
