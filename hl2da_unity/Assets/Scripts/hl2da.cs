@@ -494,6 +494,22 @@ public static partial class hl2da
         }
     }
 
+    public static bool RM_GetResolution(hl2da.SENSOR_ID id, out int w, out int h)
+    {
+        switch (id)
+        {
+        case hl2da.SENSOR_ID.RM_VLC_LEFTFRONT:
+        case hl2da.SENSOR_ID.RM_VLC_LEFTLEFT:
+        case hl2da.SENSOR_ID.RM_VLC_RIGHTFRONT:
+        case hl2da.SENSOR_ID.RM_VLC_RIGHTRIGHT:  w = 640; h = 480; break;
+        case hl2da.SENSOR_ID.RM_DEPTH_AHAT:      w = 512; h = 512; break;
+        case hl2da.SENSOR_ID.RM_DEPTH_LONGTHROW: w = 320; h = 288; break;
+        default:                                 w = 0;   h = 0;   return false;
+        }
+
+        return true;
+    }
+
     [DllImport("hl2da")]
     public static extern void Copy(IntPtr source, IntPtr destination, int bytes);
 
