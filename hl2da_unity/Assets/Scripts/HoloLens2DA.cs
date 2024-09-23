@@ -441,12 +441,10 @@ public class HoloLens2DA : MonoBehaviour
         Graphics.Blit(tex_vlc[index], tex_vlc_r[index], grayscale_mat); // Apply grayscale map to Image
 
         var metadata = hl2da.user.Unpack<hl2da.vlc_metadata>(fb.Buffer(2));
-        //metadata.exposure
-        //metadata.gain
 
         // Display pose
         float[,] pose = hl2da.user.Unpack2D<float>(fb.Buffer(3), hl2da.user.POSE_ROWS, hl2da.user.POSE_COLS);
-        tmp_vlc_pose[index].text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
+        tmp_vlc_pose[index].text = sensor_names[fb.Id] + string.Format(" exposure={0}, gain={1}", metadata.exposure, metadata.gain) + " Pose: " + PoseToString(pose);
     }
 
     void Update_RM_Depth_AHAT(hl2da.framebuffer fb)
@@ -540,7 +538,8 @@ public class HoloLens2DA : MonoBehaviour
         }
 
         var metadata = hl2da.user.Unpack<hl2da.pv_metadata>(fb.Buffer(2));
-        float[,] pose = hl2da.user.Unpack2D<float>(fb.Buffer(3), hl2da.user.POSE_ROWS, hl2da.user.POSE_COLS);
+        //float[,] pose = hl2da.user.Unpack2D<float>(fb.Buffer(3), hl2da.user.POSE_ROWS, hl2da.user.POSE_COLS);
+        Matrix4x4 pose = hl2da.user.Unpack<Matrix4x4>(fb.Buffer(3));
 
         // Display frame        
         tmp_pv_pose.text = sensor_names[fb.Id] + " Pose: " + PoseToString(pose);
@@ -640,6 +639,11 @@ public class HoloLens2DA : MonoBehaviour
     }
 
     string PoseToString(float[,] pose)
+    {
+        return string.Format("[[{0}, {1}, {2}, {3}], [{4}, {5}, {6}, {7}], [{8}, {9}, {10}, {11}], [{12}, {13}, {14}, {15}]]", pose[0, 0], pose[0, 1], pose[0, 2], pose[0, 3], pose[1, 0], pose[1, 1], pose[1, 2], pose[1, 3], pose[2, 0], pose[2, 1], pose[2, 2], pose[2, 3], pose[3, 0], pose[3, 1], pose[3, 2], pose[3, 3]);
+    }
+
+    string PoseToString(Matrix4x4 pose)
     {
         return string.Format("[[{0}, {1}, {2}, {3}], [{4}, {5}, {6}, {7}], [{8}, {9}, {10}, {11}], [{12}, {13}, {14}, {15}]]", pose[0, 0], pose[0, 1], pose[0, 2], pose[0, 3], pose[1, 0], pose[1, 1], pose[1, 2], pose[1, 3], pose[2, 0], pose[2, 1], pose[2, 2], pose[2, 3], pose[3, 0], pose[3, 1], pose[3, 2], pose[3, 3]);
     }
