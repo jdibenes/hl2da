@@ -46,6 +46,13 @@ void Uhl2da_ipl::BeginPlay()
 	hl2da_api::SetFormat_ExtendedAudio(eacf);
 	hl2da_api::SetFormat_ExtendedVideo(evcf);
 
+	std::unique_ptr<float[]> zlt_uv2xy = std::make_unique<float[]>(320 * 288 * 2);
+	std::unique_ptr<float[]> zlt_mapxy = std::make_unique<float[]>(320 * 288 * 2);
+	std::unique_ptr<float[]> zlt_k = std::make_unique<float[]>(4);
+	hl2da_api::RM_GetIntrinsics(hl2da_api::SENSOR_ID::RM_DEPTH_LONGTHROW, zlt_uv2xy.get(), zlt_mapxy.get(), zlt_k.get());
+
+	hl2da_itc::RM_DepthInitializeRays((int)hl2da_api::SENSOR_ID::RM_DEPTH_LONGTHROW, zlt_uv2xy.get());
+
 	PrintDebugInfo();
 
 	hl2da_api::BypassDepthLock_RM(true);
