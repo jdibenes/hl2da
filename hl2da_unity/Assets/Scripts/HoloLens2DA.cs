@@ -395,7 +395,7 @@ public class HoloLens2DA : MonoBehaviour
     {
         for (hl2da.SENSOR_ID id = hl2da.SENSOR_ID.RM_VLC_LEFTFRONT; id <= hl2da.SENSOR_ID.RM_IMU_GYROSCOPE; ++id)
         {
-            float[,] extrinsics = hl2da.user.RM_GetExtrinsics(id, new float[4,4]);
+            float[,] extrinsics = hl2da.user.RM_GetExtrinsics(id);
             string text = sensor_names[id] + " Calibration: extrinsics=" + PoseToString(extrinsics) + CentralPoints(id) + Calibration(id);
             calibrations[(int)id].GetComponent<TextMeshPro>().text = text;
         }

@@ -120,8 +120,9 @@ public static partial class hl2da
             using (pointer h1 = pointer.get(uv2xy), h2 = pointer.get(mapxy), h3 = pointer.get(k)) { hl2da.RM_GetIntrinsics((int)id, h1.value, h2.value, h3.value); }
         }
 
-        public static T RM_GetExtrinsics<T>(hl2da.SENSOR_ID id, T dst)
+        public static float[,] RM_GetExtrinsics(hl2da.SENSOR_ID id)
         {
+            float[,] dst = new float[4, 4];
             using (pointer h = pointer.get(dst)) { hl2da.RM_GetExtrinsics((int)id, h.value); }
             return dst;
         }
