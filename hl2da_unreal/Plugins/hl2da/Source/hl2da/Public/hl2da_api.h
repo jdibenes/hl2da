@@ -342,6 +342,52 @@ public:
         Enable = 1,
     };
 
+    enum class PV_MediaCaptureOptimization : uint32_t
+    {
+        Default = 0,
+        Quality = 1,
+        Latency = 2,
+        Power = 3,
+        LatencyThenQuality = 4,
+        LatencyThenPower = 5,
+        PowerAndQuality = 6,
+    };
+
+    enum class PV_CaptureUse : uint32_t
+    {
+        NotSet = 0,
+        Photo = 1,
+        Video = 2,
+    };
+
+    enum class PV_OpticalImageStabilizationMode : uint32_t
+    {
+        Off = 0,
+        On = 1,
+    };
+
+    enum class PV_HdrVideoMode : uint32_t
+    {
+        Off = 0,
+        On = 1,
+        Auto = 2,
+    };
+
+    enum class PV_RegionOfInterestType : uint32_t
+    {
+        Unknown = 0,
+        Face = 1,
+    };
+
+    enum class InterfacePriority : int32_t
+    {
+        LOWEST = -2,
+        BELOW_NORMAL = -1,
+        NORMAL = 0,
+        ABOVE_NORMAL = 1,
+        HIGHEST = 2,
+    };
+
     enum class IMT_Format : uint32_t
     {
         Rgba8 = 30,
@@ -359,22 +405,25 @@ private:
     static void* p_DebugMessage;
     static void* p_InitializeComponents;
     static void* p_OverrideWorldCoordinateSystem;
+    static void* p_GetUTCOffset;
     static void* p_Initialize;
-    static void* p_SetEnable;
-    static void* p_GetByFramestamp;
-    static void* p_GetByTimestamp;
-    static void* p_Release;
-    static void* p_Extract;
-    static void* p_GetExtrinsics_RM;
-    static void* p_MapImagePointToCameraUnitPlane_RM;
-    static void* p_MapCameraSpaceToImagePoint_RM;
+    static void* p_SetConstantFactorVLC_RM;
     static void* p_BypassDepthLock_RM;
     static void* p_SetFormat_PV;
     static void* p_SetFormat_MC;
     static void* p_SetFormat_EE;
     static void* p_SetFormat_EA;
     static void* p_SetFormat_EV;
-    static void* p_GetUTCOffset;
+    static void* p_SetEnable;
+    static void* p_GetByFramestamp;
+    static void* p_GetByTimestamp;
+    static void* p_Extract;
+    static void* p_Release;
+    static void* p_RM_SetEyeSelection;
+    static void* p_RM_GetIntrinsics;
+    static void* p_RM_GetExtrinsics;
+    static void* p_RM_MapImagePointToCameraUnitPlane;
+    static void* p_RM_MapCameraSpaceToImagePoint;
     static void* p_PV_SetFocus;
     static void* p_PV_SetVideoTemporalDenoising;
     static void* p_PV_SetWhiteBalance_Preset;
@@ -384,6 +433,15 @@ private:
     static void* p_PV_SetSceneMode;
     static void* p_PV_SetIsoSpeed;
     static void* p_PV_SetBacklightCompensation;
+    static void* p_PV_SetDesiredOptimization;
+    static void* p_PV_SetPrimaryUse;
+    static void* p_PV_SetOpticalImageStabilization;
+    static void* p_PV_SetHdrVideo;
+    static void* p_PV_SetRegionsOfInterest;
+    static void* p_EX_Request;
+    static void* p_EX_Status;
+    static void* p_EX_SetInterfacePriority;
+    static void* p_EX_GetInterfacePriority;
     static void* p_IMT_ZHTInvalidate;
     static void* p_IMT_ZLTInvalidate;
     static void* p_IMT_YUV2RGB;
@@ -395,28 +453,32 @@ private:
 public:
     static int InitializeLibrary();
 
+    static pv_captureformat CreateFormat_PV(uint16_t width, uint16_t height, uint8_t framerate, bool enable_mrc, bool shared);
+    static ea_captureformat CreateFormat_EA(MIXER_MODE mode, uint8_t device_index, uint8_t source_index);
+    static ev_captureformat CreateFormat_EV(uint16_t width, uint16_t height, uint8_t framerate, wchar_t const* subtype, bool shared, uint32_t group_index, uint32_t source_index, uint32_t profile_index);
+
     static void DebugMessage(char const* str);
     static void InitializeComponents();
     static int OverrideWorldCoordinateSystem(void* scs);
+    static uint64_t GetUTCOffset(int32_t samples = 32);
     static void Initialize(SENSOR_ID id, int buffer_size);
-    static void SetEnable(SENSOR_ID id, bool enable);
-    static int GetByFramestamp(SENSOR_ID id, int stamp, void** frame, uint64_t* timestamp, int32_t* framestamp);
-    static int GetByTimestamp(SENSOR_ID id, uint64_t stamp, TIME_PREFERENCE time_preference, bool tiebreak_right, void** frame, uint64_t* timestamp, int32_t* framestamp);
-    static void Release(SENSOR_ID id, void* frame);
-    static void Extract(SENSOR_ID id, void* frame, int32_t* valid, void const** b, int32_t* l);
-    static void GetExtrinsics_RM(SENSOR_ID id, float* extrinsics);
-    static void MapImagePointToCameraUnitPlane_RM(SENSOR_ID id, float const* image_points, float* camera_points, int point_count);
-    static void MapCameraSpaceToImagePoint_RM(SENSOR_ID id, float const* camera_points, float* image_points, int point_count);
+    static void SetConstantFactorVLC_RM(int64_t factor = -125000);
     static void BypassDepthLock_RM(bool bypass);
     static void SetFormat_PV(pv_captureformat const& cf);
     static void SetFormat_Microphone(MC_CHANNELS use);
     static void SetFormat_ExtendedEyeTracking(EE_FPS_INDEX fps_index);
     static void SetFormat_ExtendedAudio(ea_captureformat const& cf);
     static void SetFormat_ExtendedVideo(ev_captureformat const& cf);
-    static uint64_t GetUTCOffset(int32_t samples = 32);
-    static pv_captureformat CreateFormat_PV(uint16_t width, uint16_t height, uint8_t framerate, bool enable_mrc, bool shared);
-    static ea_captureformat CreateFormat_EA(MIXER_MODE mode, uint8_t device_index, uint8_t source_index);
-    static ev_captureformat CreateFormat_EV(uint16_t width, uint16_t height, uint8_t framerate, wchar_t const* subtype, bool shared, uint32_t group_index, uint32_t source_index, uint32_t profile_index);
+    static void SetEnable(SENSOR_ID id, bool enable);
+    static int GetByFramestamp(SENSOR_ID id, int stamp, void** frame, uint64_t* timestamp, int32_t* framestamp);
+    static int GetByTimestamp(SENSOR_ID id, uint64_t stamp, TIME_PREFERENCE time_preference, bool tiebreak_right, void** frame, uint64_t* timestamp, int32_t* framestamp);
+    static void Extract(SENSOR_ID id, void* frame, int32_t* valid, void const** b, int32_t* l);
+    static void Release(SENSOR_ID id, void* frame);
+    static void RM_SetEyeSelection(bool enable);
+    static void RM_GetIntrinsics(SENSOR_ID id, float* uv2xy, float* mapxy, float* k);
+    static void RM_GetExtrinsics(SENSOR_ID id, float* extrinsics);
+    static void RM_MapImagePointToCameraUnitPlane(SENSOR_ID id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
+    static void RM_MapCameraSpaceToImagePoint(SENSOR_ID id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
     static void PV_SetFocus(PV_FocusMode focusmode, PV_AutoFocusRange autofocusrange, PV_ManualFocusDistance distance, uint32_t value, PV_DriverFallback disabledriverfallback);
     static void PV_SetVideoTemporalDenoising(PV_VideoTemporalDenoisingMode mode);
     static void PV_SetWhiteBalance_Preset(PV_ColorTemperaturePreset preset);
@@ -426,6 +488,15 @@ public:
     static void PV_SetSceneMode(PV_CaptureSceneMode mode);
     static void PV_SetIsoSpeed(PV_IsoSpeedMode setauto, uint32_t value);
     static void PV_SetBacklightCompensation(PV_BacklightCompensationState enable);
+    static void PV_SetDesiredOptimization(PV_MediaCaptureOptimization mode);
+    static void PV_SetPrimaryUse(PV_CaptureUse mode);
+    static void PV_SetOpticalImageStabilization(PV_OpticalImageStabilizationMode mode);
+    static void PV_SetHdrVideo(PV_HdrVideoMode mode);
+    static void PV_SetRegionsOfInterest(bool clear, bool set, bool auto_exposure, bool auto_focus, bool bounds_normalized, float x, float y, float w, float h, PV_RegionOfInterestType type, uint32_t weight);
+    static void EX_Request();
+    static uint32_t EX_Status();
+    static void EX_SetInterfacePriority(SENSOR_ID id, int32_t priority);
+    static int32_t EX_GetInterfacePriority(SENSOR_ID id);
     static void IMT_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out);
     static void IMT_ZLTInvalidate(uint8_t const* sigma_in, uint16_t const* depth_in, uint16_t* depth_out);
     static void IMT_YUV2RGB(uint8_t const* image, uint32_t stride, uint32_t height, IMT_Format format_in, IMT_Format format_out, void** fc);

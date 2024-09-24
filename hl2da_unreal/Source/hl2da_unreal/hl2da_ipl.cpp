@@ -165,7 +165,7 @@ void Uhl2da_ipl::PrintDebugInfo()
 
 	for (int id = 0; id <= 7; ++id)
 	{
-		hl2da_api::GetExtrinsics_RM((hl2da_api::SENSOR_ID)id, &extrinsics[0][0]);
+		hl2da_api::RM_GetExtrinsics((hl2da_api::SENSOR_ID)id, &extrinsics[0][0]);
 		hl2da_api::DebugMessage(StringCast<ANSICHAR>(*(FString::Printf(TEXT("RM %d extrinsics "), id) + PoseToString(&extrinsics[0][0]))).Get());
 	}
 
@@ -181,8 +181,8 @@ void Uhl2da_ipl::PrintDebugInfo()
 		case 5: image_points[0] = 160; image_points[1] = 144; camera_points[0] = 0; camera_points[1] = 0; break;
 		}
 
-		hl2da_api::MapImagePointToCameraUnitPlane_RM((hl2da_api::SENSOR_ID)id, image_points, mpoint, sizeof(image_points) / sizeof(float) / 2);
-		hl2da_api::MapCameraSpaceToImagePoint_RM((hl2da_api::SENSOR_ID)id, camera_points, ppoint, sizeof(camera_points) / sizeof(float) / 2);
+		hl2da_api::RM_MapImagePointToCameraUnitPlane((hl2da_api::SENSOR_ID)id, image_points, 2, mpoint, 2, sizeof(image_points) / sizeof(float) / 2);
+		hl2da_api::RM_MapCameraSpaceToImagePoint((hl2da_api::SENSOR_ID)id, camera_points, 2, ppoint, 2, sizeof(camera_points) / sizeof(float) / 2);
 		hl2da_api::DebugMessage(StringCast<ANSICHAR>(*FString::Printf(TEXT("RM %d calibration %f %f %f %f"), id, mpoint[0], mpoint[1], ppoint[0], ppoint[1])).Get());
 	}
 
