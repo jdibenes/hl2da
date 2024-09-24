@@ -37,10 +37,10 @@ It is compatible with Unity, Unreal, and native UWP applications.
 **Additional features**
 
 - Per-frame pose for the Research Mode sensors, Front Camera, and Extended Eye Tracking.
-- Access to Research Mode sensor extrinsics and image-camera space conversions (intrinsics, undistort).
-- Per-frame [metadata](https://github.com/jdibenes/hl2da/blob/021ca4360d033c317d28e19dbb4d6353dcf9a5e2/hl2da/hl2da/stream_rm.cpp#L21) for RM VLC sensors.
+- Access to Research Mode sensor extrinsics and image-camera space conversions (intrinsics).
+- Per-frame [metadata](https://github.com/jdibenes/hl2da/blob/021ca4360d033c317d28e19dbb4d6353dcf9a5e2/hl2da/hl2da/stream_rm.cpp#L21) for Research Mode VLC sensors.
 - Per-frame intrinsics and [metadata](https://github.com/jdibenes/hl2da/blob/021ca4360d033c317d28e19dbb4d6353dcf9a5e2/hl2da/hl2da/stream_pv.cpp#L36) for the Front Camera.
-- RGB-D alignment [[example](hl2da_unity/Assets/Scripts/rgbd_align.cs)]. (Experimental)
+- Optional OpenCV coprocessor for undistorting Research Mode images, converting Research Mode depth maps to 3D points, and RGB-D alignment [[example](hl2da_unity/Assets/Scripts/rgbd_align.cs)]. (Experimental)
 - Configurable focus, white balance, and exposure for the Front Camera.
 - Support for Mixed Reality Capture (holograms in Front Camera video).
 - Support for Shared capture for Front Camera and Extended Video.
