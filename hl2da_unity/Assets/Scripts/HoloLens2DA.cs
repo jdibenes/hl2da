@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-using System.Runtime.InteropServices;
 
 public class HoloLens2DA : MonoBehaviour
 {
