@@ -12,6 +12,7 @@
 #include "stream_ea.h"
 #include "stream_ev.h"
 #include "converter.h"
+#include "timestamps.h"
 #include "log.h"
 
 #include <winrt/Windows.Foundation.h>
@@ -84,56 +85,128 @@ struct App : winrt::implements<App, IFrameworkViewSource, IFrameworkView>
 
         window.Activate();
 
-        ev_captureformat cf;
+        pv_captureformat pv_cf;
+        MRCAudioOptions ea_cf;
+        ev_captureformat ev_cf;
+
+        memset(&pv_cf, 0, sizeof(pv_cf));
+        pv_cf.vf.width = 640;
+        pv_cf.vf.height = 360;
+        pv_cf.vf.framerate = 30;
+        pv_cf.mrcvo.enable = false;
+        pv_cf.mrcvo.shared = false;
+
+        ea_cf.loopback_gain = 1.0;
+        ea_cf.microphone_gain = 1.0;
+        ea_cf.mixer_mode = 0;
+
+        memset(&ev_cf, 0, sizeof(ev_cf));
+        ev_cf.vf.width = 640;
+        ev_cf.vf.height = 360;
+        ev_cf.vf.framerate = 30;
+        wcscpy_s(ev_cf.vf.subtype, L"NV12");
+        ev_cf.mrcvo.shared = false;
+        ev_cf.mrcvo.global_opacity = 0; // index group
+        ev_cf.mrcvo.output_width = 2; // index source
+        ev_cf.mrcvo.output_height = 4; // index profile        
+        
+        int32_t stamp = 0;
         void* frame;
         uint64_t timestamp;
-        int32_t framestamp;
-        int32_t last_fs = -1;
-        void const* buffer;
-        int32_t length;
-        void const* format_buffer;
-        int32_t format_length;
-        void* rgb_frame;
-        void const* rgb_image;
-        int32_t rgb_length;
+        int32_t translated_stamp;
+        int64_t start = GetCurrentQPCTimestamp();
+        bool pv_status = true;
 
-        cf.vf.width = 1280;
-        cf.vf.height = 720;
-        cf.vf.framerate = 30;
-        wcscpy_s(cf.vf.subtype, 5, L"YUY2");
+        RM_BypassDepthLock(true);
 
-        cf.mrcvo.shared = false;
-        cf.mrcvo.global_opacity = 2; // index group
-        cf.mrcvo.output_width = 0; // index source
-        cf.mrcvo.output_height = 0; // index profile
+        PV_SetFormat(pv_cf);
+        MC_SetFormat(true);
+        EE_SetFormat(0);
+        EA_SetFormat(ea_cf);
+        EV_SetFormat(ev_cf);
+        
+        RM_Initialize(0, 15);
+        RM_Initialize(1, 15);
+        RM_Initialize(2, 15);
+        RM_Initialize(3, 15);
+        RM_Initialize(4, 15);
+        RM_Initialize(5, 15);
+        RM_Initialize(6, 15);
+        RM_Initialize(7, 15);
+        RM_Initialize(8, 15);
 
-        EV_SetFormat(cf);
-        EV_Initialize(18);
-        EV_SetEnable(true);
+        PV_Initialize(15);
+        MC_Initialize(15);
+        SI_Initialize(15);
+        EE_Initialize(15);
+        EA_Initialize(15);
+        EV_Initialize(15);
 
+        RM_SetEnable(0, true);
+        RM_SetEnable(1, true);
+        RM_SetEnable(2, true);
+        RM_SetEnable(3, true);
+        RM_SetEnable(4, true);
+        RM_SetEnable(5, true);
+        RM_SetEnable(6, true);
+        RM_SetEnable(7, true);
+        RM_SetEnable(8, true);
+
+        PV_SetEnable(true);
+        MC_SetEnable(true);
+        SI_SetEnable(true);
+        EE_SetEnable(true);
+        EA_SetEnable(true);
+        EV_SetEnable(true);      
+        
         while (!m_windowClosed)
 		{
 		window.Dispatcher().ProcessEvents(CoreProcessEventsOption::ProcessAllIfPresent);
 
-        int v = EV_Get(-1, frame, timestamp, framestamp);
-        if (v == 0)
+        uint64_t vlc_timestamp;
+        int32_t vlc_translated_stamp;
+        void* vlc_frame;
+        int status_vlc = RM_Get(0, -1, vlc_frame, vlc_timestamp, vlc_translated_stamp);
+        if (status_vlc == 0) { RM_Release(vlc_frame); }
+
+        int status = PV_Get(stamp, frame, timestamp, translated_stamp);
+        if (status < 0)
         {
-            if (last_fs < framestamp)
-            {
-                last_fs = framestamp;
-
-                EV_Extract(frame, &buffer, &length, &format_buffer, &format_length);
-                Converter_YUV2RGB((uint8_t*)buffer, cf.vf.width, cf.vf.height, 107, 87, &rgb_frame);
-                Converter_Extract(rgb_frame, &rgb_image, &rgb_length);
-
-                ShowMessage(L"GOT EV FRAME %d %lld - %d %d %d %s - as RGB %p %d", framestamp, timestamp, ((uint16_t*)format_buffer)[0], ((uint16_t*)format_buffer)[1], ((uint8_t*)format_buffer)[4], (wchar_t*)(((uint16_t*)format_buffer) + 3), rgb_image, rgb_length);
-            
-                Converter_Release(rgb_frame);
-            }
-
-            EV_Release(frame);
+            stamp++;
+        }
+        else if (status == 0)
+        {
+            stamp++;
+            PV_Release(frame);
+        }
+        else
+        {
         }
 
+        int64_t end = GetCurrentQPCTimestamp();
+        if ((end - start) > (60 * 10000000))
+        {
+            start = end;
+            pv_status = !pv_status;
+            ShowMessage("Switch state to %d at stamp %lld", (int)pv_status, stamp);
+            
+            RM_SetEnable(0, pv_status);
+            RM_SetEnable(1, pv_status);
+            RM_SetEnable(2, pv_status);
+            RM_SetEnable(3, pv_status);
+            RM_SetEnable(4, pv_status);
+            RM_SetEnable(5, pv_status);
+            RM_SetEnable(6, pv_status);
+            RM_SetEnable(7, pv_status);
+            RM_SetEnable(8, pv_status);
+
+            PV_SetEnable(pv_status);
+            MC_SetEnable(pv_status);
+            SI_SetEnable(pv_status);
+            EE_SetEnable(pv_status);
+            EA_SetEnable(pv_status);
+            EV_SetEnable(pv_status);
+        }
         }
 
 		CoreApplication::Exit();
@@ -152,181 +225,3 @@ int __stdcall wWinMain(HINSTANCE, HINSTANCE, PWSTR, int)
 {
     CoreApplication::Run(winrt::make<App>());
 }
-
-
-/*
-RM_Initialize(0, 30);
-RM_Initialize(1, 30);
-RM_Initialize(2, 30);
-RM_Initialize(3, 30);
-
-RM_Initialize(4, 45);
-RM_Initialize(5, 5);
-
-RM_Initialize(6, 12);
-RM_Initialize(7, 24);
-RM_Initialize(8, 5);
-*/
-
-//PV_Initialize(18); // MAX 18
-//MC_Initialize(62); // Internal copies (no hard limit)
-//SI_Initialize(30); // Internal copies (no hard limit)
-//EE_Initialize(90); // Internal copies (no hard limit)
-
-/*
-RM_SetEnable(0, true);
-RM_SetEnable(1, true);
-RM_SetEnable(2, true);
-RM_SetEnable(3, true);
-
-RM_SetEnable(4, true);
-RM_SetEnable(5, true);
-
-RM_SetEnable(6, true);
-RM_SetEnable(7, true);
-RM_SetEnable(8, true);
-
-PV_SetEnable(true);
-MC_SetEnable(true);
-SI_SetEnable(true);
-EE_SetEnable(true);
-*/
-/*
-        v_ref = PV_Get(-PV_BUF_SIZE, f_ref, t_ref, s_ref);
-        if (v_ref == 0)
-        {
-            if (p_s_ref < s_ref)
-            {
-                PV_Extract(f_ref, buffer + 0, length + 0, buffer + 1, length + 1, buffer + 2, length + 2);
-
-                p_s_ref = s_ref;
-
-                v[0] = RM_Get(0, t_ref, 0, false, f[0], t[0], s[0]);
-                v[1] = RM_Get(1, t_ref, 0, false, f[1], t[1], s[1]);
-                v[2] = RM_Get(2, t_ref, 0, false, f[2], t[2], s[2]);
-                v[3] = RM_Get(3, t_ref, 0, false, f[3], t[3], s[3]);
-                v[4] = RM_Get(4, t_ref, 0, false, f[4], t[4], s[4]);
-                v[5] = RM_Get(5, t_ref, 0, false, f[5], t[5], s[5]);
-                v[6] = RM_Get(6, t_ref, 0, false, f[6], t[6], s[6]);
-                v[7] = RM_Get(7, t_ref, 0, false, f[7], t[7], s[7]);
-                v[8] = RM_Get(8, t_ref, 0, false, f[8], t[8], s[8]);
-                v[9] = PV_Get(t_ref, 0, false, f[9], t[9], s[9]);
-                v[10] = MC_Get(t_ref, 0, false, f[10], t[10], s[10]);
-                v[11] = SI_Get(t_ref, 0, false, f[11], t[11], s[11]);
-                v[12] = EE_Get(t_ref, 0, false, f[12], t[12], s[12]);
-
-                for (int i = 0; i < 13; ++i)
-                {
-                    if (v[i] != 0) { continue; }
-
-                    ShowMessage("GOT PAIR %d (%d, %d) at (%lld, %lld) delta: %lld ", i, s_ref, s[i], t_ref, t[i], (int64_t)t_ref - (int64_t)t[i]);
-
-                    if (i <= 8) { RM_Release(f[i]); }
-                    if (i == 9) { PV_Release(f[i]); }
-                    if (i == 10) { MC_Release(f[i]); }
-                    if (i == 11) { SI_Release(f[i]); }
-                    if (i == 12) { EE_Release(f[i]); }
-                }
-            }
-
-            PV_Release(f_ref);
-        }
-        */
-        /*
-        v_ref = RM_Get(RM_ID, -RM_BUF_SIZE, f_ref, t_ref, s_ref);
-        if (v_ref == 0)
-        {
-            if (p_s_ref < s_ref)
-            {
-                switch (RM_ID)
-                {
-                case 0:
-                case 1:
-                case 2:
-                case 3: RM_Extract_VLC(f_ref, buffer + 0, length + 0, buffer + 0, length + 0); break;
-                case 4: RM_Extract_Depth_AHAT(f_ref, buffer + 0, length + 0, buffer + 0, length + 0, buffer + 0, length + 0); break;
-                case 5: RM_Extract_Depth_Longthrow(f_ref, buffer + 0, length + 0, buffer + 0, length + 0, buffer + 0, length + 0, buffer + 0, length + 0); break;
-                case 6: RM_Extract_IMU_Accelerometer(f_ref, buffer + 0, length + 0, buffer + 0, length + 0); break;
-                case 7: RM_Extract_IMU_Gyroscope(f_ref, buffer + 0, length + 0, buffer + 0, length + 0); break;
-                case 8: RM_Extract_IMU_Magnetometer(f_ref, buffer + 0, length + 0, buffer + 0, length + 0); break;
-                }
-
-                p_s_ref = s_ref;
-                ShowMessage("GOT %d FRAME %d %lld", RM_ID, s_ref, t_ref);
-            }
-
-            RM_Release(f_ref);
-        }
-        */
-        /*
-                pv_captureformat pvcf;
-                pvcf.mrcvo.enable = false;
-                pvcf.mrcvo.shared = false;
-                pvcf.vf.width = 640;
-                pvcf.vf.height = 360;
-                pvcf.vf.framerate = 30;
-
-                PV_SetFormat(pvcf);
-                MC_SetFormat(false);
-                EE_SetFormat(2);
-
-                int const RM_ID = 5;
-                // 0-3: [, 8732) // MEM
-                // 4:   [, 2652) // MEM
-                // 5:   [18, 19) // SAME AS PV
-                // 6:   [, ) // MEM
-                // 7:   [, ) // MEM
-                // 8:   [, ) // MEM
-                int const RM_BUF_SIZE = 18;
-                //int const PV_BUF_SIZE = 18; // [18,19)
-
-                RM_Initialize(RM_ID, RM_BUF_SIZE);
-                RM_SetEnable(RM_ID, true);
-
-                //void* f[13];
-                //uint64_t t[13];
-                //int32_t s[13];
-                //int v[13];
-                void* f_ref;
-                uint64_t t_ref;
-                int32_t s_ref;
-                int v_ref;
-                int p_s_ref = -1;
-                void const* buffer[4];
-                int32_t length[4];
-                */
-
-                /*
-                int v = EA_Get(-1, frame, timestamp, framestamp);
-                if (v == 0)
-                {
-                    if (last_fs < framestamp)
-                    {
-                        last_fs = framestamp;
-                        EA_Extract(frame, &buffer, &length, &format_buffer, &format_length);
-
-                        ShowMessage(L"GOT EA %d %lld FRAME %f %d %d %d %d %d %s", framestamp, timestamp, *(float*)buffer, length, ((uint32_t*)format_buffer)[0], ((uint32_t*)format_buffer)[1], ((uint32_t*)format_buffer)[2], ((uint32_t*)format_buffer)[3], (wchar_t*)((uint32_t*)format_buffer + 4));
-                    }
-
-                    EA_Release(frame);
-                }
-                */
-                /*
-                        MRCAudioOptions cf;
-                        void* frame;
-                        uint64_t timestamp;
-                        int32_t framestamp;
-                        int32_t last_fs = -1;
-                        void const* buffer;
-                        void const* format_buffer;
-                        int32_t length;
-                        int32_t format_length;
-
-                        cf.loopback_gain = 1.0;
-                        cf.microphone_gain = 1.0;
-                        cf.mixer_mode = 0 | (2 << 8) | (0 << 16);
-
-                        EA_SetFormat(cf);
-                        EA_Initialize(125);
-                        EA_SetEnable(true);
-                        */
