@@ -3318,7 +3318,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 188c15c69595ec146846c827ad698126, type: 3}
   m_Name: 
@@ -3406,14 +3406,14 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c18e439115898dc4f8595d3578cccedc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   rgb_image: {fileID: 1697855562}
   d_image: {fileID: 1337432206}
-  align_algorithm: 0
+  align_algorithm: 1
   colormap_texture: {fileID: 2800000, guid: f8823966125179643958b389d1e178fb, type: 3}
   colormap_shader: {fileID: 4800000, guid: f017371a9afcd7d458e607a958b44462, type: 3}
 --- !u!114 &963194234
