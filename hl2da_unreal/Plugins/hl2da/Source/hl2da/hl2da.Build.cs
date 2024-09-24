@@ -55,5 +55,6 @@ public class hl2da : ModuleRules
 
         RuntimeDependencies.Add(Path.Combine(ModuleDirectory, BinariesPath, "Microsoft.MixedReality.EyeTracking.dll"));
         RuntimeDependencies.Add(Path.Combine(ModuleDirectory, BinariesPath, "hl2da.dll"));
+        RuntimeDependencies.Add(Path.Combine(ModuleDirectory, BinariesPath, "hl2da_itc.dll"));
     }
 }
