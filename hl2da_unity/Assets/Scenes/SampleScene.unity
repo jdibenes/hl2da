@@ -3413,7 +3413,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   rgb_image: {fileID: 1697855562}
   d_image: {fileID: 1337432206}
-  align_algorithm: 1
+  align_algorithm: 0
   colormap_texture: {fileID: 2800000, guid: f8823966125179643958b389d1e178fb, type: 3}
   colormap_shader: {fileID: 4800000, guid: f017371a9afcd7d458e607a958b44462, type: 3}
 --- !u!114 &963194234
