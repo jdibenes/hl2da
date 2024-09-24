@@ -3,6 +3,7 @@
 
 #include "hl2da_ipl.h"
 #include "hl2da_api.h"
+#include "hl2da_itc.h"
 #include "hl2da_framebuffer.h"
 
 // Sets default values for this component's properties
@@ -32,6 +33,8 @@ void Uhl2da_ipl::BeginPlay()
 	pv_settings_latch = false;
 
 	hl2da_api::InitializeLibrary();
+	hl2da_itc::InitializeLibrary();
+
 	hl2da_api::InitializeComponents();
 
 	// TODO: Link coordinate systems
