@@ -91,15 +91,6 @@ HRESULT MicrophoneCapture::Configure(IActivateAudioInterfaceAsyncOperation* oper
 
 	wfe = reinterpret_cast<WAVEFORMATEXTENSIBLE*>(m_wfx);
 
-	if (!m_raw)
-	{
-	wfe->SubFormat                   = KSDATAFORMAT_SUBTYPE_PCM;
-	wfe->Format.wBitsPerSample       = 16;
-	wfe->Format.nBlockAlign          = wfe->Format.nChannels * (wfe->Format.wBitsPerSample / 8);
-	wfe->Format.nAvgBytesPerSec      = wfe->Format.nBlockAlign * wfe->Format.nSamplesPerSec;
-	wfe->Samples.wValidBitsPerSample = wfe->Format.wBitsPerSample;
-	}
-
 	m_audio_client->GetSharedModeEnginePeriod(m_wfx, &defaultPeriodInFrames, &fundamentalPeriodInFrames, &minPeriodInFrames, &maxPeriodInFrames);
 	activateStatus = m_audio_client->InitializeSharedAudioStream(AUDCLNT_STREAMFLAGS_EVENTCALLBACK, minPeriodInFrames, m_wfx, NULL);
 	if (FAILED(activateStatus)) { return activateStatus; }
