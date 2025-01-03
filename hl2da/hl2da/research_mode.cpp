@@ -467,6 +467,8 @@ void ResearchMode_SetEyeSelection(bool enable)
 // OK
 void ResearchMode_GetIntrinsics(int id, float* uv2xy, float* mapxy, float* k)
 {
+	if (!g_ready) { return; }
+
 	IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
 	std::vector<float> uv2x;
 	std::vector<float> uv2y;
@@ -486,6 +488,7 @@ void ResearchMode_GetIntrinsics(int id, float* uv2xy, float* mapxy, float* k)
 // OK
 void ResearchMode_GetExtrinsics(int id, float* out)
 {
+	if (!g_ready) { return; }
 	IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
 	ResearchMode_GetExtrinsics(sensor, *(DirectX::XMFLOAT4X4*)out);
 }
@@ -493,6 +496,8 @@ void ResearchMode_GetExtrinsics(int id, float* out)
 // OK
 void ResearchMode_MapImagePointToCameraUnitPlane(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
 {
+	if (!g_ready) { return; }
+
 	IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
 	IResearchModeCameraSensor* pCameraSensor; // Release
 
@@ -515,6 +520,8 @@ void ResearchMode_MapImagePointToCameraUnitPlane(int id, float const* in, int in
 // OK
 void ResearchMode_MapCameraSpaceToImagePoint(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count)
 {
+	if (!g_ready) { return; }
+
 	IResearchModeSensor* sensor = ResearchMode_GetSensor((ResearchModeSensorType)id);
 	IResearchModeCameraSensor* pCameraSensor; // Release
 
