@@ -132,6 +132,12 @@ void ExtendedExecution_Request()
 }
 
 // OK
+bool ExtendedExecution_Status()
+{
+	return g_status;
+}
+
+// OK
 void ExtendedExecution_GetApplicationVersion(uint16_t data[4])
 {
 	PackageVersion version = Package::Current().Id().Version();

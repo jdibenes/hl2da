@@ -21,6 +21,7 @@ enum Exception : uint32_t
 
 void ExtendedExecution_Initialize();
 void ExtendedExecution_Request();
+bool ExtendedExecution_Status();
 void ExtendedExecution_GetApplicationVersion(uint16_t data[4]);
 void ExtendedExecution_RunOnMainThread(std::function<void()> f);
 void ExtendedExecution_EnterException(Exception e);
