@@ -37,21 +37,24 @@
   <ItemGroup>
     <ClInclude Include="..\hl2da\converter.h" />
     <ClInclude Include="..\hl2da\custom_audio_effect.h" />
+    <ClInclude Include="..\hl2da\custom_media_types.h" />
     <ClInclude Include="..\hl2da\custom_video_effect.h" />
     <ClInclude Include="..\hl2da\extended_audio.h" />
     <ClInclude Include="..\hl2da\extended_execution.h" />
     <ClInclude Include="..\hl2da\extended_eye_tracking.h" />
     <ClInclude Include="..\hl2da\extended_video.h" />
     <ClInclude Include="..\hl2da\frame_buffer.h" />
+    <ClInclude Include="..\hl2da\ipl.h" />
     <ClInclude Include="..\hl2da\locator.h" />
     <ClInclude Include="..\hl2da\lock.h" />
     <ClInclude Include="..\hl2da\log.h" />
     <ClInclude Include="..\hl2da\microphone_capture.h" />
-    <ClInclude Include="..\hl2da\neon.h" />
     <ClInclude Include="..\hl2da\nfo.h" />
     <ClInclude Include="..\hl2da\personal_video.h" />
+    <ClInclude Include="..\hl2da\queue.h" />
     <ClInclude Include="..\hl2da\research_mode.h" />
     <ClInclude Include="..\hl2da\ring_buffer.h" />
+    <ClInclude Include="..\hl2da\server_ports.h" />
     <ClInclude Include="..\hl2da\spatial_input.h" />
     <ClInclude Include="..\hl2da\stream_ea.h" />
     <ClInclude Include="..\hl2da\stream_ee.h" />
@@ -60,7 +63,7 @@
     <ClInclude Include="..\hl2da\stream_pv.h" />
     <ClInclude Include="..\hl2da\stream_rm.h" />
     <ClInclude Include="..\hl2da\stream_si.h" />
-    <ClInclude Include="..\hl2da\timestamps.h" />
+    <ClInclude Include="..\hl2da\timestamp.h" />
     <ClInclude Include="..\hl2da\types.h" />
     <ClInclude Include="export.h" />
     <ClInclude Include="hl2da_itc.h" />
@@ -74,11 +77,12 @@
     <ClCompile Include="..\hl2da\extended_eye_tracking.cpp" />
     <ClCompile Include="..\hl2da\extended_video.cpp" />
     <ClCompile Include="..\hl2da\frame_buffer.cpp" />
+    <ClCompile Include="..\hl2da\ipl.cpp" />
     <ClCompile Include="..\hl2da\locator.cpp" />
     <ClCompile Include="..\hl2da\lock.cpp" />
     <ClCompile Include="..\hl2da\log.cpp" />
+    <ClCompile Include="..\hl2da\main.cpp" />
     <ClCompile Include="..\hl2da\microphone_capture.cpp" />
-    <ClCompile Include="..\hl2da\neon.cpp" />
     <ClCompile Include="..\hl2da\nfo.cpp" />
     <ClCompile Include="..\hl2da\personal_video.cpp" />
     <ClCompile Include="..\hl2da\research_mode.cpp" />
@@ -90,7 +94,7 @@
     <ClCompile Include="..\hl2da\stream_pv.cpp" />
     <ClCompile Include="..\hl2da\stream_rm.cpp" />
     <ClCompile Include="..\hl2da\stream_si.cpp" />
-    <ClCompile Include="..\hl2da\timestamps.cpp" />
+    <ClCompile Include="..\hl2da\timestamp.cpp" />
     <ClCompile Include="depth.cpp" />
     <ClCompile Include="transform.cpp" />
     <ClCompile Include="effect.cpp" />
