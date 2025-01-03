@@ -131,28 +131,31 @@
     <ClCompile Include="extended_eye_tracking.cpp" />
     <ClCompile Include="extended_video.cpp" />
     <ClCompile Include="frame_buffer.cpp" />
+    <ClCompile Include="ipl.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="locator.cpp" />
     <ClCompile Include="lock.cpp" />
     <ClCompile Include="log.cpp" />
     <ClCompile Include="microphone_capture.cpp" />
-    <ClCompile Include="neon.cpp" />
     <ClCompile Include="nfo.cpp" />
     <ClCompile Include="personal_video.cpp" />
     <ClCompile Include="research_mode.cpp" />
+    <ClCompile Include="timestamp.cpp" />
     <ClInclude Include="converter.h" />
     <ClInclude Include="custom_audio_effect.h" />
+    <ClInclude Include="custom_media_types.h" />
     <ClInclude Include="custom_video_effect.h" />
     <ClInclude Include="extended_audio.h" />
     <ClInclude Include="extended_execution.h" />
     <ClInclude Include="extended_eye_tracking.h" />
     <ClInclude Include="extended_video.h" />
     <ClInclude Include="frame_buffer.h" />
+    <ClInclude Include="ipl.h" />
     <ClInclude Include="microphone_capture.h" />
-    <ClInclude Include="neon.h" />
     <ClInclude Include="nfo.h" />
     <ClInclude Include="personal_video.h" />
     <ClInclude Include="ring_buffer.h" />
+    <ClInclude Include="server_ports.h" />
     <ClInclude Include="spatial_input.h" />
     <ClInclude Include="stream_ea.h" />
     <ClInclude Include="stream_ee.h" />
@@ -168,7 +171,6 @@
     <ClCompile Include="stream_pv.cpp" />
     <ClCompile Include="stream_rm.cpp" />
     <ClCompile Include="stream_si.cpp" />
-    <ClCompile Include="timestamps.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -180,7 +182,7 @@
     <ClInclude Include="log.h" />
     <ClInclude Include="research_mode.h" />
     <ClInclude Include="stream_si.h" />
-    <ClInclude Include="timestamps.h" />
+    <ClInclude Include="timestamp.h" />
     <ClInclude Include="types.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

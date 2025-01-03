@@ -95,7 +95,7 @@ public class HoloLens2DA : MonoBehaviour
         // List of supported resolutions and framerates at https://github.com/jdibenes/hl2ss/blob/main/etc/pv_configurations.txt
         // enable_mrc: Enable Mixed Reality Capture (holograms in video)
         // shared: Enable Shared Mode (for when other apps or modules are already using the PV camera, resolution and framerate parameters are ignored)
-        pvcf = hl2da.user.CreateFormat_PV(760, 428, 30, false, false);
+        pvcf = hl2da.user.CreateFormat_PV(640, 360, 30, false, false);
 
         // Additional PV capture settings
         // To change the focus mode, temporal denoising, white balance, exposure, scene mode, iso speed, or backlight compensation,

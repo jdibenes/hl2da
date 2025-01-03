@@ -60,6 +60,12 @@
     <Filter Include="Source Files\sink">
       <UniqueIdentifier>{bc0c34be-b5d6-4019-9176-dddd7af36296}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\system">
+      <UniqueIdentifier>{c1b748d2-200e-4390-ae6e-353772bf9455}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\system">
+      <UniqueIdentifier>{53466c7c-6be1-435e-be1d-ec7df31d9dbe}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
@@ -78,12 +84,6 @@
     </ClCompile>
     <ClCompile Include="stream_rm.cpp">
       <Filter>Source Files\interfaces</Filter>
-    </ClCompile>
-    <ClCompile Include="timestamps.cpp">
-      <Filter>Source Files\utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="locator.cpp">
-      <Filter>Source Files\devices</Filter>
     </ClCompile>
     <ClCompile Include="lock.cpp">
       <Filter>Source Files\utilities</Filter>
@@ -106,9 +106,6 @@
     <ClCompile Include="microphone_capture.cpp">
       <Filter>Source Files\devices</Filter>
     </ClCompile>
-    <ClCompile Include="neon.cpp">
-      <Filter>Source Files\utilities</Filter>
-    </ClCompile>
     <ClCompile Include="stream_mc.cpp">
       <Filter>Source Files\interfaces</Filter>
     </ClCompile>
@@ -123,9 +120,6 @@
     </ClCompile>
     <ClCompile Include="stream_ee.cpp">
       <Filter>Source Files\interfaces</Filter>
-    </ClCompile>
-    <ClCompile Include="frame_buffer.cpp">
-      <Filter>Source Files\utilities</Filter>
     </ClCompile>
     <ClCompile Include="extended_audio.cpp">
       <Filter>Source Files\devices</Filter>
@@ -143,10 +137,22 @@
       <Filter>Source Files\devices</Filter>
     </ClCompile>
     <ClCompile Include="converter.cpp">
-      <Filter>Source Files\devices</Filter>
+      <Filter>Source Files\system</Filter>
     </ClCompile>
     <ClCompile Include="extended_execution.cpp">
-      <Filter>Source Files\devices</Filter>
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="locator.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="timestamp.cpp">
+      <Filter>Source Files\system</Filter>
+    </ClCompile>
+    <ClCompile Include="frame_buffer.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="ipl.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -156,23 +162,14 @@
     <ClInclude Include="lock.h">
       <Filter>Header Files\utilities</Filter>
     </ClInclude>
-    <ClInclude Include="timestamps.h">
-      <Filter>Header Files\utilities</Filter>
-    </ClInclude>
     <ClInclude Include="types.h">
       <Filter>Header Files\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="locator.h">
-      <Filter>Header Files\devices</Filter>
     </ClInclude>
     <ClInclude Include="research_mode.h">
       <Filter>Header Files\devices</Filter>
     </ClInclude>
     <ClInclude Include="stream_rm.h">
       <Filter>Header Files\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="ring_buffer.h">
-      <Filter>Header Files\utilities</Filter>
     </ClInclude>
     <ClInclude Include="nfo.h">
       <Filter>Header Files\utilities</Filter>
@@ -189,9 +186,6 @@
     <ClInclude Include="microphone_capture.h">
       <Filter>Header Files\devices</Filter>
     </ClInclude>
-    <ClInclude Include="neon.h">
-      <Filter>Header Files\utilities</Filter>
-    </ClInclude>
     <ClInclude Include="stream_mc.h">
       <Filter>Header Files\interfaces</Filter>
     </ClInclude>
@@ -206,9 +200,6 @@
     </ClInclude>
     <ClInclude Include="stream_ee.h">
       <Filter>Header Files\interfaces</Filter>
-    </ClInclude>
-    <ClInclude Include="frame_buffer.h">
-      <Filter>Header Files\utilities</Filter>
     </ClInclude>
     <ClInclude Include="extended_audio.h">
       <Filter>Header Files\devices</Filter>
@@ -226,10 +217,31 @@
       <Filter>Header Files\devices</Filter>
     </ClInclude>
     <ClInclude Include="converter.h">
-      <Filter>Header Files\devices</Filter>
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="custom_media_types.h">
+      <Filter>Header Files\sink</Filter>
+    </ClInclude>
+    <ClInclude Include="locator.h">
+      <Filter>Header Files\system</Filter>
     </ClInclude>
     <ClInclude Include="extended_execution.h">
-      <Filter>Header Files\devices</Filter>
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="frame_buffer.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ring_buffer.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="timestamp.h">
+      <Filter>Header Files\system</Filter>
+    </ClInclude>
+    <ClInclude Include="server_ports.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="ipl.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

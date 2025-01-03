@@ -14,5 +14,4 @@ void MC_Release(void* frame);
 void MC_Extract(void* frame, void const** buffer, int32_t* length);
 
 void MC_Initialize(int32_t buffer_size);
-void MC_Quit();
 void MC_Cleanup();

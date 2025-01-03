@@ -475,14 +475,14 @@ uint32_t hl2da_api::EX_Status()
     return reinterpret_cast<pfn_EX_Status>(p_EX_Status)();
 }
 
-void hl2da_api::EX_SetInterfacePriority(SENSOR_ID id, int32_t priority)
+void hl2da_api::EX_SetInterfacePriority(SENSOR_ID id, InterfacePriority priority)
 {
     reinterpret_cast<pfn_EX_SetInterfacePriority>(p_EX_SetInterfacePriority)((uint32_t)id, (int32_t)priority);
 }
 
-int32_t hl2da_api::EX_GetInterfacePriority(SENSOR_ID id)
+hl2da_api::InterfacePriority hl2da_api::EX_GetInterfacePriority(SENSOR_ID id)
 {
-    return reinterpret_cast<pfn_EX_GetInterfacePriority>(p_EX_GetInterfacePriority)((int)id);
+    return static_cast<InterfacePriority>(reinterpret_cast<pfn_EX_GetInterfacePriority>(p_EX_GetInterfacePriority)((int)id));
 }
 
 void hl2da_api::IMT_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out)

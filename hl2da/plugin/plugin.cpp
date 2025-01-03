@@ -1,18 +1,24 @@
 ﻿
-#include "../hl2da/locator.h"
-#include "../hl2da/research_mode.h"
-#include "../hl2da/personal_video.h"
-#include "../hl2da/spatial_input.h"
-#include "../hl2da/extended_execution.h"
-#include "../hl2da/stream_rm.h"
-#include "../hl2da/stream_pv.h"
-#include "../hl2da/stream_mc.h"
-#include "../hl2da/stream_si.h"
-#include "../hl2da/stream_ee.h"
-#include "../hl2da/stream_ea.h"
-#include "../hl2da/stream_ev.h"
+#include <Windows.h>
+
+#include "../hl2da/ipl.h"
+
 #include "../hl2da/converter.h"
-#include "../hl2da/timestamps.h"
+#include "../hl2da/extended_execution.h"
+#include "../hl2da/locator.h"
+#include "../hl2da/timestamp.h"
+
+#include "../hl2da/personal_video.h"
+#include "../hl2da/research_mode.h"
+
+#include "../hl2da/stream_ea.h"
+#include "../hl2da/stream_ee.h"
+#include "../hl2da/stream_ev.h"
+#include "../hl2da/stream_mc.h"
+#include "../hl2da/stream_pv.h"
+#include "../hl2da/stream_rm.h"
+#include "../hl2da/stream_si.h"
+
 #include "../hl2da/log.h"
 
 #include <winrt/Windows.Foundation.Collections.h>
@@ -42,13 +48,7 @@ void DebugMessage(char const* str)
 PLUGIN_EXPORT
 void InitializeComponents()
 {
-    Locator_Initialize();
-    ResearchMode_Initialize();
-    PersonalVideo_Initialize();
-    SpatialInput_Initialize();
-    Converter_Initialize();
-
-    RM_InitializeDepthLock();
+    HL2DA_Load();
 }
 
 // OK
@@ -56,7 +56,7 @@ PLUGIN_EXPORT
 void InitializeComponentsOnUI()
 {
     HANDLE event_done = CreateEvent(NULL, TRUE, FALSE, NULL);
-    CoreApplication::Views().GetAt(0).Dispatcher().RunAsync(CoreDispatcherPriority::High, [=]() { InitializeComponents(); SetEvent(event_done); }).get();
+    ExtendedExecution_RunOnMainThread([=]() { InitializeComponents(); SetEvent(event_done); });
     WaitForSingleObject(event_done, INFINITE);
     CloseHandle(event_done);
 }
@@ -80,7 +80,8 @@ int OverrideWorldCoordinateSystem(void* scs_ptr)
 PLUGIN_EXPORT
 uint64_t GetUTCOffset(int32_t samples)
 {
-    return GetQPCToUTCOffset(samples);
+    (void)samples;
+    return Timestamp_GetQPCToUTCOffset();
 }
 
 // OK

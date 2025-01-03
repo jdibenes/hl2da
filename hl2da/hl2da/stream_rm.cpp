@@ -1,22 +1,11 @@
 
-#include "research_mode.h"
-#include "locator.h"
 #include "extended_execution.h"
+#include "research_mode.h"
 #include "frame_buffer.h"
-#include "timestamps.h"
-#include "log.h"
 
 #include <winrt/Windows.Foundation.Numerics.h>
-#include <winrt/Windows.Perception.h>
-#include <winrt/Windows.Perception.Spatial.h>
-#include <winrt/Windows.Perception.Spatial.h>
-#include <winrt/Windows.Perception.Spatial.Preview.h>
 
 using namespace winrt::Windows::Foundation::Numerics;
-using namespace winrt::Windows::Perception;
-using namespace winrt::Windows::Perception::Spatial;
-using namespace winrt::Windows::Perception::Spatial;
-using namespace winrt::Windows::Perception::Spatial::Preview;
 
 struct vlc_metadata
 {
@@ -30,9 +19,9 @@ class rm_frame : public sensor_frame
 public:
     IResearchModeSensorFrame* rmsf;
     vlc_metadata vlc;
-    winrt::Windows::Foundation::Numerics::float4x4 pose;
+    float4x4 pose;
 
-    rm_frame(IResearchModeSensorFrame* f, winrt::Windows::Foundation::Numerics::float4x4 const& p);
+    rm_frame(IResearchModeSensorFrame* f, float4x4 const& p);
     ~rm_frame();
 };
 
@@ -67,11 +56,10 @@ rm_frame::~rm_frame()
 }
 
 // OK
-static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const& locator, int base_priority)
+static void RM_Acquire(IResearchModeSensor* sensor, int id, int base_priority)
 {
     bool is_depth_camera = ((id == DEPTH_AHAT) || (id == DEPTH_LONG_THROW)) && !g_bypass_lock;
     bool is_vlc = (id >= LEFT_FRONT) && (id <= RIGHT_RIGHT);
-    PerceptionTimestamp perception_timestamp = nullptr;
     HANDLE event_enable = g_event_enable[id];
     IResearchModeSensorFrame* pSensorFrame; // Release
     uint64_t host_ticks;
@@ -79,6 +67,7 @@ static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const
     float4x4 pose;
 
     WaitForSingleObject(event_enable, INFINITE);
+
     SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(id));
 
     if (is_depth_camera) { EnterCriticalSection(&g_depth_lock); }
@@ -91,50 +80,38 @@ static void RM_Acquire(IResearchModeSensor* sensor, int id, SpatialLocator const
 
     pSensorFrame->GetTimeStamp(&timestamp);
     host_ticks = timestamp.HostTicks + (is_vlc ? g_vlc_constant_factor : 0); // workaround for https://github.com/microsoft/HoloLens2ForCV/issues/134
-    perception_timestamp = QPCTimestampToPerceptionTimestamp(host_ticks);
-    pose = Locator_Locate(perception_timestamp, locator, Locator_GetWorldCoordinateSystem(perception_timestamp));
+    pose = ResearchMode_GetRigNodeWorldPose(host_ticks);
 
     g_buffer[id].Insert(new rm_frame(pSensorFrame, pose), host_ticks);
     }
-    while (WaitForSingleObject(event_enable, 0) == WAIT_OBJECT_0);
-
-    g_buffer[id].Clear();
+    while (WaitForSingleObject(event_enable, 0) == WAIT_TIMEOUT);
 
     sensor->CloseStream();
 
     if (is_depth_camera) { LeaveCriticalSection(&g_depth_lock); }
 
     SetThreadPriority(GetCurrentThread(), base_priority);
+
+    g_buffer[id].Clear();
 }
 
 // OK
 static DWORD WINAPI RM_EntryPoint(void* param)
 {
-    SpatialLocator locator = nullptr;
-    IResearchModeSensor* sensor;
-    ResearchModeSensorType type;
-    int base_priority;
-    bool ok;
-
-    sensor = (IResearchModeSensor*)param;
-    type = sensor->GetSensorType();
-
-    ok = ResearchMode_WaitForConsent(sensor);
-    if (!ok) { return false; }
-
-    locator = ResearchMode_GetLocator();
-    base_priority = GetThreadPriority(GetCurrentThread());
-
-    do { RM_Acquire(sensor, type, locator, base_priority); } while (WaitForSingleObject(g_event_quit[type], 0) == WAIT_TIMEOUT);
-
+    if (!ResearchMode_Status()) { return 0; }
+    IResearchModeSensor* sensor = (IResearchModeSensor*)param;
+    ResearchModeSensorType type = sensor->GetSensorType();
+    if (!ResearchMode_WaitForConsent(sensor)) { return 0; }
+    int base_priority = GetThreadPriority(GetCurrentThread());
+    do { RM_Acquire(sensor, type, base_priority); } while (WaitForSingleObject(g_event_quit[type], 0) == WAIT_TIMEOUT);
     return 0;
 }
 
 // OK
 void RM_SetEnable(int id, bool enable)
 {
-    HANDLE event_enable = g_event_enable[id];
-    if (enable) { SetEvent(event_enable); } else { ResetEvent(event_enable); }
+    (void)enable;
+    SetEvent(g_event_enable[id]);
 }
 
 // OK
@@ -169,10 +146,10 @@ void RM_Extract_VLC(void* frame, void const** buffer, int32_t* length, void cons
     pVLCFrame->GetGain(&f->vlc.gain);
     pVLCFrame->Release();
 
-    *buffer = b;
-    *length = (int32_t)l;
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+    *buffer          = b;
+    *length          = (int32_t)l;
+    *pose_buffer     = &f->pose;
+    *pose_length     = sizeof(rm_frame::pose) / sizeof(float);
     *metadata_buffer = &f->vlc;
     *metadata_length = sizeof(rm_frame::vlc) / sizeof(vlc_metadata);
 }
@@ -192,12 +169,12 @@ void RM_Extract_Depth_AHAT(void* frame, void const** buffer, int32_t* length, vo
     pDepthFrame->GetAbDepthBuffer(&ab_depth_b, &ab_depth_l);
     pDepthFrame->Release();
 
-    *buffer = b;
-    *length = (int32_t)l;
+    *buffer          = b;
+    *length          = (int32_t)l;
     *ab_depth_buffer = ab_depth_b;
     *ab_depth_length = (int32_t)ab_depth_l;
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+    *pose_buffer     = &f->pose;
+    *pose_length     = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 // OK
@@ -218,14 +195,14 @@ void RM_Extract_Depth_Longthrow(void* frame, void const** buffer, int32_t* lengt
     pDepthFrame->GetSigmaBuffer(&sigma_b, &sigma_l);
     pDepthFrame->Release();
 
-    *buffer = b;
-    *length = (int32_t)l;
+    *buffer          = b;
+    *length          = (int32_t)l;
     *ab_depth_buffer = ab_depth_b;
     *ab_depth_length = (int32_t)ab_depth_l;
-    *sigma_buffer = sigma_b;
-    *sigma_length = (int32_t)sigma_l;
-    *pose_buffer = &f->pose;
-    *pose_length = sizeof(rm_frame::pose) / sizeof(float);
+    *sigma_buffer    = sigma_b;
+    *sigma_length    = (int32_t)sigma_l;
+    *pose_buffer     = &f->pose;
+    *pose_length     = sizeof(rm_frame::pose) / sizeof(float);
 }
 
 // OK
@@ -240,8 +217,8 @@ void RM_Extract_IMU_Accelerometer(void* frame, void const** buffer, int32_t* len
     pAccFrame->GetCalibratedAccelarationSamples(&b, &l);
     pAccFrame->Release();
 
-    *buffer = b;
-    *length = (int32_t)l;
+    *buffer      = b;
+    *length      = (int32_t)l;
     *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -258,8 +235,8 @@ void RM_Extract_IMU_Gyroscope(void* frame, void const** buffer, int32_t* length,
     pGyroFrame->GetCalibratedGyroSamples(&b, &l);
     pGyroFrame->Release();
 
-    *buffer = b;
-    *length = (int32_t)l;
+    *buffer      = b;
+    *length      = (int32_t)l;
     *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -276,8 +253,8 @@ void RM_Extract_IMU_Magnetometer(void* frame, void const** buffer, int32_t* leng
     pMagFrame->GetMagnetometerSamples(&b, &l);
     pMagFrame->Release();
 
-    *buffer = b;
-    *length = (int32_t)l;
+    *buffer      = b;
+    *length      = (int32_t)l;
     *pose_buffer = &f->pose;
     *pose_length = sizeof(rm_frame::pose) / sizeof(float);
 }
@@ -310,23 +287,17 @@ void RM_VLC_SetConstantFactor(int64_t factor)
 void RM_Initialize(int id, int32_t buffer_size)
 {
     g_buffer[id].Reset(buffer_size);
-    g_event_enable[id] = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_event_quit[id] = CreateEvent(NULL, TRUE, FALSE, NULL);
+    g_event_enable[id] = CreateEvent(NULL, FALSE, FALSE, NULL);
     g_thread[id] = CreateThread(NULL, 0, RM_EntryPoint, ResearchMode_GetSensor((ResearchModeSensorType)id), NULL, NULL);
-}
-
-// OK
-void RM_Quit(int id)
-{
-    SetEvent(g_event_quit[id]);
 }
 
 // OK
 void RM_Cleanup(int id)
 {
+    SetEvent(g_event_quit[id]);
     WaitForSingleObject(g_thread[id], INFINITE);
-
     CloseHandle(g_thread[id]);
-    CloseHandle(g_event_quit[id]);
     CloseHandle(g_event_enable[id]);
+    CloseHandle(g_event_quit[id]);
 }

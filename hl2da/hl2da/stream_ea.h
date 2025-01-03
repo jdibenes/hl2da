@@ -15,5 +15,4 @@ void EA_Release(void* frame);
 void EA_Extract(void* frame, void const** buffer, int32_t* length, void const** format_buffer, int32_t* format_length);
 
 void EA_Initialize(int32_t buffer_size);
-void EA_Quit();
 void EA_Cleanup();

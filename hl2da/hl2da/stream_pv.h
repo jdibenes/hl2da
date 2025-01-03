@@ -29,5 +29,4 @@ void PV_Release(void* frame);
 void PV_Extract(void* frame, void const** buffer, int32_t* length, void const** intrinsics_buffer, int32_t* intrinsics_length, void const** pose_buffer, int32_t* pose_length);
 
 void PV_Initialize(int32_t buffer_size);
-void PV_Quit();
 void PV_Cleanup();

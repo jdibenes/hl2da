@@ -1,24 +1,16 @@
 
-#include "extended_audio.h"
 #include "extended_execution.h"
+#include "extended_audio.h"
 #include "frame_buffer.h"
-#include "timestamps.h"
-#include "log.h"
+#include "server_ports.h"
 
-#include <winrt/Windows.Foundation.Collections.h>
 #include <winrt/Windows.Media.h>
 #include <winrt/Windows.Media.MediaProperties.h>
-#include <winrt/Windows.Media.Capture.h>
 #include <winrt/Windows.Media.Capture.Frames.h>
-#include <winrt/Windows.Media.Devices.Core.h>
-#include <winrt/Windows.Foundation.Numerics.h>
 
 using namespace winrt::Windows::Media;
-using namespace winrt::Windows::Media::Capture;
-using namespace winrt::Windows::Media::Capture::Frames;
-using namespace winrt::Windows::Media::Devices::Core;
 using namespace winrt::Windows::Media::MediaProperties;
-using namespace winrt::Windows::Foundation::Numerics;
+using namespace winrt::Windows::Media::Capture::Frames;
 
 struct ea_audioformat
 {
@@ -45,12 +37,9 @@ public:
 //-----------------------------------------------------------------------------
 
 static frame_buffer g_buffer;
-static HANDLE g_event_client = NULL; // CloseHandle
 static HANDLE g_event_enable = NULL; // CloseHandle
 static HANDLE g_event_quit = NULL; // CloseHandle
 static HANDLE g_thread = NULL; // CloseHandle
-
-static std::atomic<bool> g_reader_status = false;
 static MRCAudioOptions g_options;
 
 //-----------------------------------------------------------------------------
@@ -75,15 +64,9 @@ ea_frame::~ea_frame()
 }
 
 // OK
-static void EA_OnAudioFrameArrived(MediaFrameReader const& sender, MediaFrameArrivedEventArgs const& args)
+static void EA_Push(MediaFrameReference const& frame, void* param)
 {
-    (void)args;
-
-    MediaFrameReference frame = nullptr;
-
-    if (!g_reader_status) { return; }
-    frame = sender.TryAcquireLatestFrame();
-    if (!frame) { return; }
+    (void)param;
 
     int64_t         timestamp = frame.SystemRelativeTime().Value().count();
     AudioMediaFrame amf       = frame.AudioMediaFrame();
@@ -102,52 +85,26 @@ static void EA_OnAudioFrameArrived(MediaFrameReader const& sender, MediaFrameArr
     reference.Close();
     buffer.Close();
     audio.Close();
-
-    if (WaitForSingleObject(g_event_enable, 0) != WAIT_OBJECT_0) { SetEvent(g_event_client); }    
 }
 
 // OK
 static void EA_Acquire(int base_priority)
 {
-    MediaFrameReader reader = nullptr;
-    bool ok;
-
     WaitForSingleObject(g_event_enable, INFINITE);
-    WaitForSingleObject(g_event_client, 0);
-
-    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(INTERFACE_ID::ID_EA));
-
-    ok = ExtendedAudio_Open(g_options);
-    if (ok) 
-    {
-    reader = ExtendedAudio_CreateFrameReader(); 
-
-    reader.AcquisitionMode(MediaFrameReaderAcquisitionMode::Buffered);
-    reader.FrameArrived(EA_OnAudioFrameArrived);
-
-    g_reader_status = true;
-    reader.StartAsync().get();
-    WaitForSingleObject(g_event_client, INFINITE);
-    g_reader_status = false;
-    reader.StopAsync().get();
-
-    reader.Close();
-
-    g_buffer.Clear();
-
-    ExtendedAudio_Close();
-    }
-
+    
+    ExtendedAudio_Open(g_options);
+    if (!ExtendedAudio_Status()) { return; }
+    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(PORT_ID_EA));
+    ExtendedAudio_ExecuteSensorLoop(EA_Push, NULL, g_event_enable);
     SetThreadPriority(GetCurrentThread(), base_priority);
-
-    while (WaitForSingleObject(g_event_enable, 0) == WAIT_OBJECT_0) { Sleep(1); }
+    ExtendedAudio_Close();
+    g_buffer.Clear();
 }
 
 // OK
 static DWORD WINAPI EA_EntryPoint(void* param)
 {
     (void)param;
-    ExtendedAudio_RegisterEvent(g_event_client);
     int base_priority = GetThreadPriority(GetCurrentThread());
     do { EA_Acquire(base_priority); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
     return 0;
@@ -162,7 +119,8 @@ void EA_SetFormat(MRCAudioOptions const& cf)
 // OK
 void EA_SetEnable(bool enable)
 {
-    if (enable) { SetEvent(g_event_enable); } else { ResetEvent(g_event_enable); }
+    (void)enable;
+    SetEvent(g_event_enable);
 }
 
 // OK
@@ -188,8 +146,8 @@ void EA_Extract(void* frame, void const** buffer, int32_t* length, void const** 
 {
     ea_frame* f = (ea_frame*)frame;
 
-    *buffer = f->buffer;
-    *length = (int32_t)f->length;
+    *buffer        = f->buffer;
+    *length        = (int32_t)f->length;
     *format_buffer = &f->format;
     *format_length = sizeof(ea_frame::format) / sizeof(ea_audioformat);
 }
@@ -198,30 +156,17 @@ void EA_Extract(void* frame, void const** buffer, int32_t* length, void const** 
 void EA_Initialize(int32_t buffer_size)
 {
     g_buffer.Reset(buffer_size);
-    g_event_client = CreateEvent(NULL, FALSE, FALSE, NULL);
-    g_event_enable = CreateEvent(NULL, TRUE, FALSE, NULL);
     g_event_quit = CreateEvent(NULL, TRUE, FALSE, NULL);
+    g_event_enable = CreateEvent(NULL, FALSE, FALSE, NULL);
     g_thread = CreateThread(NULL, 0, EA_EntryPoint, NULL, 0, NULL);
-}
-
-// OK
-void EA_Quit()
-{
-    SetEvent(g_event_quit);
 }
 
 // OK
 void EA_Cleanup()
 {
+    SetEvent(g_event_quit);
     WaitForSingleObject(g_thread, INFINITE);
-
-    CloseHandle(g_thread);
-    CloseHandle(g_event_quit);
+    CloseHandle(g_thread);    
     CloseHandle(g_event_enable);
-    CloseHandle(g_event_client);
-
-    g_thread = NULL;
-    g_event_quit = NULL;
-    g_event_enable = NULL;
-    g_event_client = NULL;
+    CloseHandle(g_event_quit);
 }

@@ -14,5 +14,4 @@ void EE_Release(void* frame);
 void EE_Extract(void* frame, int32_t* valid, void const** buffer, int32_t* length, void const** pose_buffer, int32_t* pose_length);
 
 void EE_Initialize(int buffer_size);
-void EE_Quit();
 void EE_Cleanup();
