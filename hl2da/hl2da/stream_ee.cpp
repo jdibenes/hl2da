@@ -80,7 +80,7 @@ static void EE_Push(EyeGazeTrackerReading const& frame, UINT64 timestamp, void* 
     }
     else
     {
-    memset(f, 0, sizeof(ee_frame));
+    f->valid = 0;
     }
 
     g_buffer.Insert(f, timestamp);
