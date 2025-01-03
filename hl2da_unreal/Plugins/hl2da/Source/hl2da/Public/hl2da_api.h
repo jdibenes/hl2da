@@ -495,8 +495,8 @@ public:
     static void PV_SetRegionsOfInterest(bool clear, bool set, bool auto_exposure, bool auto_focus, bool bounds_normalized, float x, float y, float w, float h, PV_RegionOfInterestType type, uint32_t weight);
     static void EX_Request();
     static uint32_t EX_Status();
-    static void EX_SetInterfacePriority(SENSOR_ID id, int32_t priority);
-    static int32_t EX_GetInterfacePriority(SENSOR_ID id);
+    static void EX_SetInterfacePriority(SENSOR_ID id, InterfacePriority priority);
+    static InterfacePriority EX_GetInterfacePriority(SENSOR_ID id);
     static void IMT_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out);
     static void IMT_ZLTInvalidate(uint8_t const* sigma_in, uint16_t const* depth_in, uint16_t* depth_out);
     static void IMT_YUV2RGB(uint8_t const* image, uint32_t stride, uint32_t height, IMT_Format format_in, IMT_Format format_out, void** fc);

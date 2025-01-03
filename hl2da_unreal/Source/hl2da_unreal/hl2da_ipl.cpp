@@ -57,6 +57,11 @@ void Uhl2da_ipl::BeginPlay()
 
 	hl2da_api::BypassDepthLock_RM(true);
 
+	hl2da_api::EX_SetInterfacePriority(hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT,  hl2da_api::InterfacePriority::ABOVE_NORMAL);
+	hl2da_api::EX_SetInterfacePriority(hl2da_api::SENSOR_ID::RM_VLC_LEFTLEFT,   hl2da_api::InterfacePriority::ABOVE_NORMAL);
+	hl2da_api::EX_SetInterfacePriority(hl2da_api::SENSOR_ID::RM_VLC_RIGHTFRONT, hl2da_api::InterfacePriority::ABOVE_NORMAL);
+	hl2da_api::EX_SetInterfacePriority(hl2da_api::SENSOR_ID::RM_VLC_RIGHTRIGHT, hl2da_api::InterfacePriority::ABOVE_NORMAL);
+
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_VLC_LEFTFRONT,       60);
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_VLC_LEFTLEFT,        60);
 	hl2da_api::Initialize(hl2da_api::SENSOR_ID::RM_VLC_RIGHTFRONT,      60);
