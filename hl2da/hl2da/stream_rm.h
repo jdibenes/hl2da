@@ -23,5 +23,4 @@ void RM_BypassDepthLock(bool bypass);
 void RM_VLC_SetConstantFactor(int64_t factor);
 
 void RM_Initialize(int id, int32_t buffer_size);
-void RM_Quit(int id);
 void RM_Cleanup(int id);

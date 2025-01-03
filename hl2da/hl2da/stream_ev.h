@@ -31,5 +31,4 @@ void EV_Release(void* frame);
 void EV_Extract(void* frame, void const** buffer, int32_t* length, void const** format_buffer, int32_t* format_length);
 
 void EV_Initialize(int32_t buffer_size);
-void EV_Quit();
 void EV_Cleanup();

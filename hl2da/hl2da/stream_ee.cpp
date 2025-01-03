@@ -59,7 +59,7 @@ ee_frame::~ee_frame()
 }
 
 // OK
-static void EE_Push(EyeGazeTrackerReading const& frame, UINT64 host_ticks, void* param)
+static void EE_Push(EyeGazeTrackerReading const& frame, UINT64 timestamp, void* param)
 {
     (void)param;
 
@@ -76,29 +76,22 @@ static void EE_Push(EyeGazeTrackerReading const& frame, UINT64 host_ticks, void*
     bool ec_valid = frame.IsCalibrationValid();
 
     f->valid = (vd_valid << 6) | (ro_valid << 5) | (lo_valid << 4) | (rg_valid << 3) | (lg_valid << 2) | (cg_valid << 1) | (ec_valid << 0);
-    f->pose  = ExtendedEyeTracking_GetNodeWorldPose(host_ticks);
+    f->pose  = ExtendedEyeTracking_GetNodeWorldPose(timestamp);
     }
     else
     {
     memset(f, 0, sizeof(ee_frame));
     }
 
-    g_buffer.Insert(f, host_ticks);
+    g_buffer.Insert(f, timestamp);
 }
 
 // OK
-static void EE_Acquire()
+static void EE_Acquire(int base_priority)
 {
-    int base_priority = GetThreadPriority(GetCurrentThread());
-    uint8_t fps;
-
     WaitForSingleObject(g_event_enable, INFINITE);
 
-    ExtendedEyeTracking_Open(true);
-
-    if (!ExtendedEyeTracking_Status()) { goto _fail; }
-
-    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(PORT_ID_EET));
+    uint8_t fps;
 
     switch (g_fps_index & 3)
     {
@@ -108,20 +101,14 @@ static void EE_Acquire()
     default: fps = 30;
     }
 
+    ExtendedEyeTracking_Open(true);
+    if (!ExtendedEyeTracking_Status()) { return; }
     ExtendedEyeTracking_SetTargetFrameRate(fps);
-
+    SetThreadPriority(GetCurrentThread(), ExtendedExecution_GetInterfacePriority(PORT_ID_EET));
     ExtendedEyeTracking_ExecuteSensorLoop(EE_Push, NULL, g_event_enable);
-
-    ExtendedEyeTracking_Close();
-
-    g_buffer.Clear();
-
     SetThreadPriority(GetCurrentThread(), base_priority);
-
-    return;
-
-_fail:
-    WaitForSingleObject(g_event_enable, INFINITE);
+    ExtendedEyeTracking_Close();
+    g_buffer.Clear();
 }
 
 // OK
@@ -129,7 +116,8 @@ static DWORD WINAPI EE_EntryPoint(void* param)
 {
     (void)param;
     if (!ExtendedEyeTracking_WaitForConsent()) { return 0; }
-    do { EE_Acquire(); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
+    int base_priority = GetThreadPriority(GetCurrentThread());
+    do { EE_Acquire(base_priority); } while (WaitForSingleObject(g_event_quit, 0) == WAIT_TIMEOUT);
     return 0;
 }
 
@@ -143,7 +131,7 @@ void EE_SetFormat(int fps_index)
 void EE_SetEnable(bool enable)
 {
     (void)enable;
-    ReleaseSemaphore(g_event_enable, 1, NULL);
+    SetEvent(g_event_enable);
 }
 
 // OK
@@ -181,7 +169,7 @@ void EE_Initialize(int buffer_size)
 {
     g_buffer.Reset(buffer_size);
     g_event_quit = CreateEvent(NULL, TRUE, FALSE, NULL);
-    g_event_enable = CreateSemaphore(NULL, 0, LONG_MAX, NULL);
+    g_event_enable = CreateEvent(NULL, FALSE, FALSE, NULL);
     g_thread = CreateThread(NULL, 0, EE_EntryPoint, NULL, 0, NULL);
 }
 
