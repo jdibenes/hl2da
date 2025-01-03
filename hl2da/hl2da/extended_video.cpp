@@ -89,7 +89,7 @@ static bool ExtendedVideo_FindVideoSource(winrt::hstring const& sourceId)
 }
 
 // OK
-static bool ExtendedVideo_ParseSubtype(winrt::hstring const& s, VideoSubtype& v)
+bool ExtendedVideo_ParseSubtype(winrt::hstring const& s, VideoSubtype& v)
 {
     if (s == L"NV12") { v = VideoSubtype::VideoSubtype_NV12; return true; }
     if (s == L"YUY2") { v = VideoSubtype::VideoSubtype_YUY2; return true; }
