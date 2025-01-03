@@ -58,3 +58,8 @@ void ResearchMode_ProcessSample_GYR(IResearchModeSensorFrame* pSensorFrame, HOOK
 void ResearchMode_ProcessSample_MAG(IResearchModeSensorFrame* pSensorFrame, HOOK_RM_MAG_PROC hook, void* param);
 
 void ResearchMode_SetEyeSelection(bool enable);
+
+void ResearchMode_GetIntrinsics(int id, float* uv2xy, float* mapxy, float* k);
+void ResearchMode_GetExtrinsics(int id, float* out);
+void ResearchMode_MapImagePointToCameraUnitPlane(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
+void ResearchMode_MapCameraSpaceToImagePoint(int id, float const* in, int in_pitch, float* out, int out_pitch, int point_count);
