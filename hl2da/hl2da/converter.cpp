@@ -1,7 +1,6 @@
 
 #include <mfapi.h>
-#include "neon.h"
-#include "log.h"
+#include "research_mode.h"
 
 #include <winrt/Windows.Foundation.h>
 #include <winrt/Windows.Graphics.Imaging.h>
@@ -256,13 +255,45 @@ void Converter_Cleanup()
 // OK
 void Converter_ZHTInvalidate(uint16_t const* depth_in, uint16_t* depth_out)
 {
-    Neon_ZHTInvalidate(depth_in, depth_out);
+    uint16x8_t threshold = vdupq_n_u16(RM_ZHT_MASK);
+
+	for (int i = 0; i < (RM_ZHT_PIXELS / 32); ++i)
+	{
+	uint16x8x4_t d = vld1q_u16_x4(depth_in);
+
+	d.val[0] = vandq_u16(d.val[0], vcltq_u16(d.val[0], threshold));
+	d.val[1] = vandq_u16(d.val[1], vcltq_u16(d.val[1], threshold));
+	d.val[2] = vandq_u16(d.val[2], vcltq_u16(d.val[2], threshold));
+	d.val[3] = vandq_u16(d.val[3], vcltq_u16(d.val[3], threshold));
+
+	vst1q_u16_x4(depth_out, d);
+
+    depth_in  += 32;
+    depth_out += 32;
+	}
 }
 
 // OK
 void Converter_ZLTInvalidate(uint8_t const* sigma_in, uint16_t const* depth_in, uint16_t* depth_out)
 {
-    Neon_ZLTInvalidate(sigma_in, depth_in, depth_out);
+    uint16x8_t threshold = vdupq_n_u16(RM_ZLT_MASK);
+
+	for (int i = 0; i < (RM_ZLT_PIXELS / 32); ++i)
+	{
+	uint8x8x4_t  s = vld1_u8_x4(sigma_in);
+	uint16x8x4_t d = vld1q_u16_x4(depth_in);
+
+	d.val[0] = vandq_u16(d.val[0], vcltq_u16(vmovl_u8(s.val[0]), threshold));
+	d.val[1] = vandq_u16(d.val[1], vcltq_u16(vmovl_u8(s.val[1]), threshold));
+	d.val[2] = vandq_u16(d.val[2], vcltq_u16(vmovl_u8(s.val[2]), threshold));
+	d.val[3] = vandq_u16(d.val[3], vcltq_u16(vmovl_u8(s.val[3]), threshold));
+
+	vst1q_u16_x4(depth_out, d);
+
+    sigma_in  += 32;
+    depth_in  += 32;
+    depth_out += 32;
+	}
 }
 
 // OK
